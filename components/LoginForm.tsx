@@ -41,21 +41,24 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[var(--background)] text-[var(--foreground)] font-sans">
-      <div className="w-full max-w-[400px] px-9 pb-8 animate-fade-up">
+    <div className="min-h-screen w-full flex items-center justify-center bg-background font-sans">
+      <div className="w-full max-w-100 px-9 pb-8 animate-fade-up">
+        
+        {/* Logo */}
         <div className="text-center mb-6">
-          <span className="font-serif text-[32px] font-medium tracking-[-0.5px]">
+          <span className="font-serif text-[32px] font-medium text-foreground tracking-[-0.5px]">
             UrbanPulse
           </span>
-          <span className="inline-block w-[7px] h-[7px] bg-[var(--color-green-light)] rounded-full ml-0.75 align-middle mb-[6px]" />
+          <span className="inline-block w-1.75 h-1.75 bg-green-light rounded-full ml-0.75 align-middle mb-1.5" />
         </div>
 
-        <div className="flex rounded-[14px] p-1 mb-7 gap-1 bg-[var(--color-input)]">
+        {/* Tabs */}
+        <div className="flex rounded-[14px] p-1 mb-7 gap-1 bg-[#161616]">
           <button
-            className={`flex-1 p-[10px] border-none rounded-[10px] text-[14px] font-semibold cursor-pointer transition-all duration-200 ${
+            className={`flex-1 p-2.5 border-none rounded-[10px] text-[14px] font-semibold cursor-pointer transition-all duration-200 ${
               activeTab === "login"
-                ? "bg-[var(--color-green-light)] text-[var(--background)]"
-                : "bg-transparent text-[var(--foreground)]/50 hover:text-[var(--foreground)]/80"
+                ? "bg-green-light text-background"
+                : "bg-transparent text-foreground/35 hover:text-foreground/50"
             }`}
             onClick={() => setActiveTab("login")}
             type="button"
@@ -63,10 +66,10 @@ export default function LoginForm() {
             Log In
           </button>
           <button
-            className={`flex-1 p-[10px] border-none rounded-[10px] text-[14px] font-semibold cursor-pointer transition-all duration-200 ${
+            className={`flex-1 p-2.5 border-none rounded-[10px] text-[14px] font-semibold cursor-pointer transition-all duration-200 ${
               activeTab === "signup"
-                ? "bg-[var(--color-green-light)] text-[var(--background)]"
-                : "bg-transparent text-[var(--foreground)]/50 hover:text-[var(--foreground)]/80"
+                ? "bg-green-light text-background"
+                : "bg-transparent text-foreground/35 hover:text-foreground/50"
             }`}
             onClick={() => setActiveTab("signup")}
             type="button"
@@ -75,14 +78,15 @@ export default function LoginForm() {
           </button>
         </div>
 
+        {/* Form */}
         <form onSubmit={handleSubmit}>
           {activeTab === "signup" && (
             <div className="mb-3">
-              <label className="block text-[12px] font-medium text-[var(--foreground)]/50 uppercase tracking-[0.8px] mb-[7px]">
+              <label className="block text-[12px] font-medium text-foreground/35 uppercase tracking-[0.8px] mb-1.75">
                 Full Name
               </label>
               <input
-                className="w-full py-[13px] px-4 bg-[var(--color-input)] border border-white/10 rounded-[12px] text-[var(--foreground)] text-[15px] outline-none transition-colors duration-200 placeholder:text-[var(--foreground)]/30 focus:border-[var(--color-green-light)]"
+                className="w-full py-3.25 px-4 bg-[#161616] border border-[#222] rounded-xl text-foreground text-[15px] outline-none transition-colors duration-200 placeholder:text-foreground/20 focus:border-green-light"
                 type="text"
                 placeholder="FullStack Fusion"
               />
@@ -90,11 +94,11 @@ export default function LoginForm() {
           )}
 
           <div className="mb-3">
-            <label className="block text-[12px] font-medium text-[var(--foreground)]/50 uppercase tracking-[0.8px] mb-[7px]">
+            <label className="block text-[12px] font-medium text-foreground/35 uppercase tracking-[0.8px] mb-1.75">
               Email
             </label>
             <input
-              className="w-full py-[13px] px-4 bg-input border border-white/10 rounded-[12px] text-[var(--foreground)] text-[15px] outline-none transition-colors duration-200 placeholder:text-[var(--foreground)]/30 focus:border-[var(--color-green-light)]"
+              className="w-full py-3.25 px-4 bg-[#161616] border border-[#222] rounded-xl text-foreground text-[15px] outline-none transition-colors duration-200 placeholder:text-foreground/20 focus:border-green-light"
               type="email"
               placeholder="you@example.com"
               value={email}
@@ -104,11 +108,11 @@ export default function LoginForm() {
           </div>
 
           <div className="mb-3">
-            <label className="block text-[12px] font-medium text-[var(--foreground)]/50 uppercase tracking-[0.8px] mb-[7px]">
+            <label className="block text-[12px] font-medium text-foreground/35 uppercase tracking-[0.8px] mb-1.75">
               Password
             </label>
             <input
-              className="w-full py-[13px] px-4 bg-[var(--color-input)] border border-white/10 rounded-[12px] text-[var(--foreground)] text-[15px] outline-none transition-colors duration-200 placeholder:text-[var(--foreground)]/30 focus:border-[var(--color-green-light)]"
+              className="w-full py-3.25 px-4 bg-[#161616] border border-[#222] rounded-xl text-foreground text-[15px] outline-none transition-colors duration-200 placeholder:text-foreground/20 focus:border-green-light"
               type="password"
               placeholder="••••••••"
               value={password}
@@ -121,7 +125,7 @@ export default function LoginForm() {
             <div className="text-right mt-1.5 mb-5">
               <Link
                 href="/forgot-password"
-                className="text-[12px] text-[var(--foreground)]/40 no-underline transition-colors duration-200 hover:text-[var(--foreground)]/80"
+                className="text-[12px] text-foreground/30 no-underline transition-colors duration-200 hover:text-foreground/60"
               >
                 Forgot password?
               </Link>
@@ -131,13 +135,13 @@ export default function LoginForm() {
           {activeTab === "signup" && <div className="mb-5" />}
 
           {error && (
-            <div className="text-[13px] text-red-400 text-center mb-[14px] py-[10px] px-[14px] bg-red-400/10 rounded-[10px] border border-red-400/20">
+            <div className="text-[13px] text-[#ff6b6b] text-center mb-3.5 py-2.5 px-3.5 bg-[#ff6b6b]/10 rounded-[10px] border border-[#ff6b6b]/15">
               {error}
             </div>
           )}
 
           <button
-            className="w-full p-[14px] bg-[var(--color-green-light)] text-[var(--background)] border-none rounded-[12px] text-[15px] font-bold cursor-pointer transition-all duration-200 hover:opacity-90 hover:-translate-y-[1px] active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full p-3.5 bg-green-light text-background border-none rounded-xl text-[15px] font-bold cursor-pointer transition-all duration-200 hover:opacity-90 hover:-translate-y-px active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed"
             type="submit"
             disabled={loading}
           >
@@ -145,14 +149,16 @@ export default function LoginForm() {
           </button>
         </form>
 
+        {/* Divider */}
         <div className="flex items-center gap-3 my-5">
-          <div className="flex-1 h-[1px] bg-white/10" />
-          <span className="text-[12px] text-[var(--foreground)]/30 font-medium">or</span>
-          <div className="flex-1 h-[1px] bg-white/10" />
+          <div className="flex-1 h-px bg-[#222]" />
+          <span className="text-[12px] text-foreground/20 font-medium">or</span>
+          <div className="flex-1 h-px bg-[#222]" />
         </div>
 
+        {/* Google */}
         <button
-          className="w-full py-[13px] bg-[var(--color-input)] border border-white/10 rounded-[12px] text-[var(--foreground)]/70 text-[14px] font-medium cursor-pointer flex items-center justify-center gap-2.5 transition-all duration-200 hover:bg-white/10 hover:border-white/20 hover:text-[var(--foreground)]"
+          className="w-full py-3.25 bg-[#161616] border border-[#222] rounded-xl text-foreground/65 text-[14px] font-medium cursor-pointer flex items-center justify-center gap-2.5 transition-all duration-200 hover:bg-[#1e1e1e] hover:border-[#333] hover:text-foreground"
           type="button"
         >
           <svg width="18" height="18" viewBox="0 0 24 24">
@@ -164,13 +170,14 @@ export default function LoginForm() {
           Continue with Google
         </button>
 
-        <p className="text-center mt-5 text-[11.5px] text-[var(--foreground)]/40 leading-[1.6]">
+        {/* Terms */}
+        <p className="text-center mt-5 text-[11.5px] text-foreground/20 leading-[1.6]">
           By continuing, you agree to our{" "}
-          <Link href="/terms" className="text-[var(--foreground)]/60 underline decoration-[var(--foreground)]/20 underline-offset-2 transition-colors duration-200 hover:text-[var(--foreground)]/90">
+          <Link href="/terms" className="text-foreground/30 underline decoration-foreground/10 underline-offset-2 transition-colors duration-200 hover:text-foreground/55">
             Terms of Service
           </Link>{" "}
           and{" "}
-          <Link href="/privacy" className="text-[var(--foreground)]/60 underline decoration-[var(--foreground)]/20 underline-offset-2 transition-colors duration-200 hover:text-[var(--foreground)]/90">
+          <Link href="/privacy" className="text-foreground/30 underline decoration-foreground/10 underline-offset-2 transition-colors duration-200 hover:text-foreground/55">
             Privacy Policy
           </Link>
         </p>

@@ -1,49 +1,50 @@
 @import "tailwindcss";
 
-:root {
-  /* Culorile tale */
-  --color-green-dark: #003C12;
-  --color-green-light: #82B892;
+@theme {
+  /* Culorile tale personalizate */
+  --color-green-light: #4ade80;
   
   --color-weather-nice: #5DC786;
   --color-weather-gloomy: #F6FC82;
   --color-weather-severe: #FF5C3B;
   
   --color-safety-dark: #860012;
-  --color-input: #D9D9D94A;
 
+  /* Transformăm culorile de bază în variabile de temă Tailwind */
+  --color-background: #0a0a0a;
+  --color-foreground: #ffffff;
+
+  /* Fonturile */
   --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
 
+  /* Animația */
   --animate-fade-up: fadeUp 0.4s ease both;
 
-  --background: #0a0a0a;
-  --foreground: #ffffff;
-}
-
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
+/* Aplicăm culorile pe body */
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: var(--color-foreground);
+  background: var(--color-background);
 }
 
+/* Fix-ul pentru Autofill-ul browserului */
 input:-webkit-autofill,
 input:-webkit-autofill:hover, 
 input:-webkit-autofill:focus, 
 input:-webkit-autofill:active {
-    -webkit-text-fill-color: var(--foreground) !important;
-    
-    caret-color: var(--foreground) !important;
-    
+    -webkit-text-fill-color: var(--color-foreground) !important;
+    caret-color: var(--color-foreground) !important;
     transition: background-color 5000s ease-in-out 0s;
 }
