@@ -17,13 +17,6 @@ export default function SignupPage() {
           Join our community now!
         </h5>
         <SignupForm />
-        <Image
-          src="/login_design.png"
-          alt="design"
-          width={500}
-          height={0}
-          className="absolute w-[200vw] h-[40vh] bottom-0 -z-10"
-        />
       </div>
     </div>
   );

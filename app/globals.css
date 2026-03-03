@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-@theme {
+:root {
+  /* Culorile tale */
   --color-green-dark: #003C12;
   --color-green-light: #82B892;
   
@@ -9,28 +10,40 @@
   --color-weather-severe: #FF5C3B;
   
   --color-safety-dark: #860012;
-
-  /* login & signup */
   --color-input: #D9D9D94A;
 
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
+
+  --animate-fade-up: fadeUp 0.4s ease both;
+
+  --background: #0a0a0a;
+  --foreground: #ffffff;
 }
 
-@layer utilities {
-  .font-montaga {
-    font-family: var(--font-montaga), serif;
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
   }
-
-  .font-slab {
-    font-family: var(--font-montagu-slab), serif;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-}
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--foreground) !important;
+    
+    caret-color: var(--foreground) !important;
+    
+    transition: background-color 5000s ease-in-out 0s;
 }

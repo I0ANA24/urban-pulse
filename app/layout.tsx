@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
-import { Montaga, Montagu_Slab } from "next/font/google";
+import { DM_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
-const montaga = Montaga({
-  weight: "400",
-  variable: "--font-montaga",
+// Configurăm DM Sans (fontul principal)
+const dmSans = DM_Sans({
   subsets: ["latin"],
+  variable: "--font-dm-sans",
+  weight: ["300", "400", "500", "600", "700"], // Am adăugat greutățile pe care le foloseai în vechiul CSS
 });
 
-const montaguSlab = Montagu_Slab({
-  variable: "--font-montagu-slab",
+// Configurăm Playfair Display (fontul pentru logo/titluri)
+const playfair = Playfair_Display({
   subsets: ["latin"],
+  variable: "--font-playfair",
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -26,8 +29,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      {/* Injectăm ambele variabile de font în <body> */}
       <body
-        className={`${montaga.variable} ${montaguSlab.variable} antialiased`}
+        className={`${dmSans.variable} ${playfair.variable} antialiased`}
       >
         {children}
       </body>
