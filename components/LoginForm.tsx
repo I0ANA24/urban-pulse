@@ -44,7 +44,6 @@ export default function LoginForm() {
     <div className="min-h-screen w-full flex items-center justify-center bg-background font-sans">
       <div className="w-full max-w-100 px-9 pb-8 animate-fade-up">
         
-        {/* Logo */}
         <div className="text-center mb-6">
           <span className="font-serif text-[32px] font-medium text-foreground tracking-[-0.5px]">
             UrbanPulse
@@ -52,7 +51,6 @@ export default function LoginForm() {
           <span className="inline-block w-1.75 h-1.75 bg-green-light rounded-full ml-0.75 align-middle mb-1.5" />
         </div>
 
-        {/* Tabs */}
         <div className="flex rounded-[14px] p-1 mb-7 gap-1 bg-[#161616]">
           <button
             className={`flex-1 p-2.5 border-none rounded-[10px] text-[14px] font-semibold cursor-pointer transition-all duration-200 ${
@@ -78,7 +76,6 @@ export default function LoginForm() {
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
           {activeTab === "signup" && (
             <div className="mb-3">
@@ -149,14 +146,12 @@ export default function LoginForm() {
           </button>
         </form>
 
-        {/* Divider */}
         <div className="flex items-center gap-3 my-5">
           <div className="flex-1 h-px bg-[#222]" />
           <span className="text-[12px] text-foreground/20 font-medium">or</span>
           <div className="flex-1 h-px bg-[#222]" />
         </div>
 
-        {/* Google */}
         <button
           className="w-full py-3.25 bg-[#161616] border border-[#222] rounded-xl text-foreground/65 text-[14px] font-medium cursor-pointer flex items-center justify-center gap-2.5 transition-all duration-200 hover:bg-[#1e1e1e] hover:border-[#333] hover:text-foreground"
           type="button"
@@ -170,7 +165,6 @@ export default function LoginForm() {
           Continue with Google
         </button>
 
-        {/* Terms */}
         <p className="text-center mt-5 text-[11.5px] text-foreground/20 leading-[1.6]">
           By continuing, you agree to our{" "}
           <Link href="/terms" className="text-foreground/30 underline decoration-foreground/10 underline-offset-2 transition-colors duration-200 hover:text-foreground/55">

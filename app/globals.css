@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 @theme {
-  /* Culorile tale personalizate */
   --color-green-light: #4ade80;
   
   --color-weather-nice: #5DC786;
@@ -10,15 +9,12 @@
   
   --color-safety-dark: #860012;
 
-  /* Transformăm culorile de bază în variabile de temă Tailwind */
   --color-background: #0a0a0a;
   --color-foreground: #ffffff;
 
-  /* Fonturile */
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
+  --font-sans: var(--font-dm-sans);
+  --font-serif: var(--font-playfair);
 
-  /* Animația */
   --animate-fade-up: fadeUp 0.4s ease both;
 
   @keyframes fadeUp {
@@ -33,13 +29,11 @@
   }
 }
 
-/* Aplicăm culorile pe body */
 body {
   color: var(--color-foreground);
   background: var(--color-background);
 }
 
-/* Fix-ul pentru Autofill-ul browserului */
 input:-webkit-autofill,
 input:-webkit-autofill:hover, 
 input:-webkit-autofill:focus, 
