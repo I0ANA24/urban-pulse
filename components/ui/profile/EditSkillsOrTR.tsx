@@ -3,9 +3,11 @@ import { PlusCircleIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
-interface EditSkillsProps {}
+interface EditSkillsOrTRProps {
+  add: "Skills" | "TR";
+}
 
-export default function EditSkills({}: EditSkillsProps) {
+export default function EditSkillsOrTR({ add }: EditSkillsOrTRProps) {
   const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
   const [mounted, setMounted] = useState<boolean>(false);
 
@@ -30,10 +32,10 @@ export default function EditSkills({}: EditSkillsProps) {
       <button
         type="button"
         onClick={() => setIsPopupOpen(true)}
-        className="w-35 h-9 bg-yellow-primary flex justify-center items-center gap-2 rounded-full shadow-md shadow-neutral-800 hover:shadow-neutral-700 cursor-pointer transition-all duration-200"
+        className="w-fit px-4 h-9 bg-yellow-primary flex justify-center items-center gap-2 rounded-full shadow-md shadow-neutral-800 hover:shadow-neutral-700 cursor-pointer transition-all duration-200"
       >
         <PlusCircleIcon className="fill-black stroke-yellow-primary" />
-        <p className="text-black font-medium">Add a skill</p>
+        <p className="text-black font-medium">Add a {add === "Skills" ? "skill" : "tool/resource"}</p>
       </button>
 
       {isPopupOpen &&
@@ -47,7 +49,7 @@ export default function EditSkills({}: EditSkillsProps) {
               className="bg-secondary w-80 max-w-[80vw] rounded-[20px] p-6 flex flex-col gap-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <h5 className="text-white text-2xl font-bold">Add a skill</h5>
+              <h5 className="text-center text-white text-2xl font-bold">Add a {add === "Skills" ? "skill" : "tool or resource to lend"}</h5>
 
               <div className="w-full h-px bg-white/90 " />
 
