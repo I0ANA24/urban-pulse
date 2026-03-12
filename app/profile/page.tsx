@@ -25,7 +25,7 @@ export default function ProfilePage() {
             {[1, 2, 3].map((i) => (
               <svg
                 key={`full-${i}`}
-                className="w-5 h-5 text-[#FFF197] drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)]"
+                className="w-5 h-5 text-yellow-primary drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)]"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
@@ -40,7 +40,7 @@ export default function ProfilePage() {
             {[1, 2].map((i) => (
               <svg
                 key={`empty-${i}`}
-                className="w-5 h-5 text-[#FFF197]"
+                className="w-5 h-5 text-yellow-primary"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.5"
@@ -60,56 +60,89 @@ export default function ProfilePage() {
       <section className="w-full">
         <div className="w-full mb-4 border border-[#383838]"></div>
         <p className="w-full flex">
-          <span className="block font-bold">Bio:</span> 🌿 Plant lover | Yard Designer
-          | Creator
+          <span className="block font-bold">Bio:</span> 🌿 Plant lover | Yard
+          Designer | Creator
           <br />I like to connect with people and give a lot of help!
         </p>
         <div className="w-full mt-4 border border-[#383838]"></div>
       </section>
 
       <div className="w-full flex flex-col justify-center items-center gap-6">
-        <section className="w-full border border-[#E7CC65] rounded-xl flex items-center py-5 shadow-sm bg-[#121212]/50">
+        <section className="w-full h-25 border-2 border-yellow-primary rounded-2xl flex items-center py-2 shadow-sm bg-[#1C1C1C]">
           <div className="flex-1 flex flex-col items-center justify-center gap-1">
-            <h3 className="text-[15px] font-bold">Helped</h3>
-            <p className="text-[#E7CC65] text-3xl font-bold">23</p>
+            <h3 className="text-lg font-bold">Helped</h3>
+            <p className="text-yellow-primary text-3xl font-bold">23</p>
           </div>
-          {/* Linia despărțitoare verticală */}
-          <div className="w-px h-12 bg-white/30"></div>
+          <div className="w-px h-15 my-2 bg-yellow-secondary"></div>
           <div className="flex-1 flex flex-col items-center justify-center gap-1">
-            <h3 className="text-[15px] font-bold">Posts</h3>
-            <p className="text-[#E7CC65] text-3xl font-bold">3</p>
+            <h3 className="text-lg font-bold">Posts</h3>
+            <p className="text-yellow-primary text-3xl font-bold">3</p>
           </div>
         </section>
-        {/* 4. Best At Card */}
-        <section className="w-full border border-[#E7CC65] rounded-xl px-5 py-4 flex justify-between items-center bg-[#121212]/50">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-[#E7CC65] font-bold text-xl font-serif">
+
+        <section className="w-full h-25 border-2 border-yellow-primary rounded-2xl flex justify-between items-center py-2 px-6 shadow-sm bg-[#1C1C1C]">
+          <div className="flex flex-col items-baseline justify-center gap-1">
+            <h2 className="text-yellow-primary text-xl font-bold font-montagu">
               Best at
             </h2>
-            <p className="text-[17px]">Gardening</p>
+            <p className="text-xl">Gardening</p>
           </div>
-          {/* Iconița de plantă (SVG custom ca să semene cu designul) */}
           <div className="text-white w-12 h-12 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10">
-              <path d="M12 22C12 22 12 16 12 14C12 14 10 14 8 12C6 10 6 6 6 6C6 6 8 8 10 8C12 8 12 14 12 14C12 14 14 14 16 12C18 10 18 6 18 6C18 6 16 8 14 8C12 8 12 14 12 14C12 16 12 22 12 22ZM9 22H15V20H9V22Z" />
-            </svg>
+            <Image src="./sprout.svg" alt="icon" width={50} height={50} />
           </div>
         </section>
-        {/* 5. Skills Card */}
-        <section className="w-full border border-[#E7CC65] rounded-xl px-5 py-4 flex flex-col gap-3 bg-[#121212]/50">
-          <h2 className="text-[#E7CC65] font-bold text-xl font-serif">Skills</h2>
-          <div className="flex items-center gap-6 text-[15px]">
+
+        <section className="w-full min-h-25 border-2 border-yellow-primary rounded-2xl flex flex-col justify-center gap-2 items-baseline py-4 px-6 shadow-sm bg-[#1C1C1C]">
+          <h2 className="text-yellow-primary text-xl font-bold font-montagu">
+            Skills
+          </h2>
+          <div className="flex flex-col gap-y-2">
             <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#E7CC65]"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
               Gardening
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#E7CC65]"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
               Cooking
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#E7CC65]"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
               DIY
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
+              Cooking
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
+              Cooking
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
+              Cooking
+            </div>
+          </div>
+        </section>
+        <section className="w-full min-h-25 border-2 border-yellow-primary rounded-2xl flex flex-col justify-center gap-2 items-baseline py-4 px-6 shadow-sm bg-[#1C1C1C]">
+          <h2 className="text-yellow-primary text-xl font-bold font-montagu">
+            Tools & Resources
+          </h2>
+          <div className="flex flex-col gap-y-2">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
+              White Paint
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
+              Pans
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
+              Flowers
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
+              Flower Fertilizer
             </div>
           </div>
         </section>
