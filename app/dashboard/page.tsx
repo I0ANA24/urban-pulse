@@ -38,44 +38,60 @@ export default function DashboardPage() {
 
     connection.start().catch(console.error);
 
-    return () => { connection.stop(); };
+    return () => {
+      connection.stop();
+    };
   }, []);
 
-  const filteredEvents = activeFilter === "ALL"
-    ? events
-    : events.filter((e) => {
-        const typeMap: Record<number, string> = { 0: "GENERAL", 1: "EMERGENCY", 2: "SKILL", 3: "LEND" };
-        const typeName = typeof e.type === "number" ? typeMap[e.type] : e.type.toUpperCase();
-        return typeName === activeFilter;
-      });
+  const filteredEvents =
+    activeFilter === "ALL"
+      ? events
+      : events.filter((e) => {
+          const typeMap: Record<number, string> = {
+            0: "GENERAL",
+            1: "EMERGENCY",
+            2: "SKILL",
+            3: "LEND",
+          };
+          const typeName =
+            typeof e.type === "number" ? typeMap[e.type] : e.type.toUpperCase();
+          return typeName === activeFilter;
+        });
 
   return (
     <div className="w-full pb-[8vh]">
-      {/* Widget */}
-      <div className="px-4 pt-4 pb-2 flex flex-col items-center gap-4">
-
-        {/* Logo */}
+      {/* logo, event, weather and filter buttons */}
+      <div className="w-full py-4 flex flex-col items-center gap-4">
+        {/* logo */}
         <div className="flex items-center gap-1">
-          <span className="font-serif text-white text-2xl font-medium">UrbanPulse</span>
-          <span className="w-2 h-2 rounded-full bg-green-400 mb-1" />
+          <h1 className="font-montagu text-white text-[32px]">UrbanPulse</h1>
+          <span className="w-2 h-2 rounded-full bg-green-400" />
         </div>
 
-        {/* Cards row */}
-        <div className="flex gap-3 w-full">
-          <div className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl px-4 py-4">
-            <p className="text-white/50 text-xs font-medium mb-1">Event</p>
-            <p className="text-white text-sm font-semibold">Game Night</p>
+        {/* event and weather */}
+        <div className="w-full h-28 flex gap-3 items-center px-3 py-4 justify-center relative">
+          <Image
+            src="/rectangle.svg"
+            width={360}
+            height={200}
+            alt="Design Image"
+            priority
+            className="absolute object-cover z-0 top-0 w-full h-full rounded-3xl"
+          />
+          <div className="flex-1 h-full z-2 bg-weather-nice rounded-2xl flex flex-col justify-center p-4">
+            <p className="w-full font-bold text-lg">Event</p>
+            <p className="w-full font-light">Game Night</p>
           </div>
-          <div className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl px-4 py-4 flex items-center justify-between">
-            <div>
-              <p className="text-white text-lg font-bold">21° C</p>
-              <p className="text-white/50 text-xs">Sunny</p>
+          <div className="flex-1 h-full z-2 bg-weather-nice rounded-2xl flex justify-between items-center p-4">
+            <div className="flex flex-col">
+              <p className="w-full font-bold text-xl">21° C</p>
+              <p className="w-full font-light">Sunny</p>
             </div>
-            <span className="text-3xl">🌤️</span>
+            <Image src="/sun.svg" width={45} height={45} alt="sun icon" />
           </div>
         </div>
 
-        {/* Filter buttons */}
+        {/* filter buttons */}
         <div className="relative w-full overflow-hidden">
           <div
             ref={scrollRef}
@@ -89,7 +105,9 @@ export default function DashboardPage() {
             {FILTERS.map((filter) => (
               <button
                 key={filter}
-                onClick={() => setActiveFilter(filter === activeFilter ? "ALL" : filter)}
+                onClick={() =>
+                  setActiveFilter(filter === activeFilter ? "ALL" : filter)
+                }
                 className="shrink-0 py-3 rounded-2xl text-xs font-bold bg-[#facc15] text-black snap-start"
                 style={{ width: "calc(33.333% - 6px)" }}
               >
@@ -104,10 +122,13 @@ export default function DashboardPage() {
 
         {/* Dots indicator */}
         <div className="flex justify-center gap-1.5 -mt-2">
-          <div className={`h-1.5 rounded-full transition-all ${!scrolledRight ? "w-4 bg-white/60" : "w-1.5 bg-white/20"}`} />
-          <div className={`h-1.5 rounded-full transition-all ${scrolledRight ? "w-4 bg-white/60" : "w-1.5 bg-white/20"}`} />
+          <div
+            className={`h-1.5 rounded-full transition-all ${!scrolledRight ? "w-4 bg-white/60" : "w-1.5 bg-white/20"}`}
+          />
+          <div
+            className={`h-1.5 rounded-full transition-all ${scrolledRight ? "w-4 bg-white/60" : "w-1.5 bg-white/20"}`}
+          />
         </div>
-
       </div>
 
       {/* Feed */}
