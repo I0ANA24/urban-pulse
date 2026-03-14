@@ -18,7 +18,7 @@ export default function HorizontalCard({
   const [showPassword, setShowPassword] = useState(false);
   const inputType = type === "password" && showPassword ? "text" : type;
   const isDisabled =
-    title === "Email" || title === "Phone Number" || title === "Password";
+    title === "Email" || title === "Password";
 
   return (
     <div className="w-full px-5 py-4 bg-secondary rounded-2xl flex items-center justify-between">

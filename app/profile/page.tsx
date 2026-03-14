@@ -1,13 +1,37 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
+interface UserProfile {
+  email: string;
+  fullName: string | null;
+  bio: string | null;
+  skills: string[];
+  tools: string[];
+}
+
 export default function ProfilePage() {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch("http://localhost:5248/api/user/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setProfile(data));
+  }, []);
+
+  const displayName = profile?.fullName ?? profile?.email?.split("@")[0] ?? "User";
+
   return (
     <div className="w-full flex flex-col gap-12 mt-7">
       <section className="w-full flex justify-around items-center">
         <div className="size-35 rounded-full overflow-hidden">
           <Image
             src="/profile.png"
-            alt="Greta Bennett"
+            alt={displayName}
             width={140}
             height={140}
             className="object-cover w-full h-full"
@@ -16,9 +40,15 @@ export default function ProfilePage() {
 
         <div className="flex flex-col gap-3">
           <h1 className="text-2xl font-bold font-montagu text-center leading-tight">
-            Greta
-            <br />
-            Bennett
+            {displayName.includes(" ") ? (
+              <>
+                {displayName.split(" ")[0]}
+                <br />
+                {displayName.split(" ").slice(1).join(" ")}
+              </>
+            ) : (
+              displayName
+            )}
           </h1>
 
           <div className="flex justify-center items-center rounded-full px-3 py-1.5 h-8 bg-linear-to-b from-[#FFFADC]/50 to-[#FFF197]/50 shadow-[0px_11.3915px_22.3363px_rgba(255,227,42,0.19),inset_0px_-2px_1px_rgba(255,241,151,0.4)] backdrop-blur-[2px]">
@@ -36,7 +66,6 @@ export default function ProfilePage() {
                 />
               </svg>
             ))}
-
             {[1, 2].map((i) => (
               <svg
                 key={`empty-${i}`}
@@ -59,92 +88,68 @@ export default function ProfilePage() {
 
       <section className="w-full">
         <div className="w-full mb-4 border border-[#383838]"></div>
-        <p className="w-full flex">
-          <span className="block font-bold">Bio:</span> 🌿 Plant lover | Yard
-          Designer | Creator
-          <br />I like to connect with people and give a lot of help!
+        <p className="w-full">
+          <span className="font-bold">Bio: </span>
+          {profile?.bio ? (
+            profile.bio
+          ) : (
+            <span className="text-white/30 italic">
+              ✨ Tell your neighbors a bit about yourself!
+            </span>
+          )}
         </p>
-        <div className="w-full mt-4 border border-[#383838]"></div>
+        <div className="w-full mt-4 h-px bg-white"></div>
       </section>
 
       <div className="w-full flex flex-col justify-center items-center gap-6">
         <section className="w-full h-25 border-2 border-yellow-primary rounded-2xl flex items-center py-2 shadow-sm bg-[#1C1C1C]">
           <div className="flex-1 flex flex-col items-center justify-center gap-1">
             <h3 className="text-lg font-bold">Helped</h3>
-            <p className="text-yellow-primary text-3xl font-bold">23</p>
+            <p className="text-yellow-primary text-3xl font-bold">0</p>
           </div>
-          <div className="w-px h-15 my-2 bg-yellow-secondary"></div>
+          <div className="w-0.5 self-stretch my-3 bg-white"></div>
           <div className="flex-1 flex flex-col items-center justify-center gap-1">
             <h3 className="text-lg font-bold">Posts</h3>
-            <p className="text-yellow-primary text-3xl font-bold">3</p>
-          </div>
-        </section>
-
-        <section className="w-full h-25 border-2 border-yellow-primary rounded-2xl flex justify-between items-center py-2 px-6 shadow-sm bg-[#1C1C1C]">
-          <div className="flex flex-col items-baseline justify-center gap-1">
-            <h2 className="text-yellow-primary text-xl font-bold font-montagu">
-              Best at
-            </h2>
-            <p className="text-xl">Gardening</p>
-          </div>
-          <div className="text-white w-12 h-12 flex items-center justify-center">
-            <Image src="./sprout.svg" alt="icon" width={50} height={50} />
+            <p className="text-yellow-primary text-3xl font-bold">0</p>
           </div>
         </section>
 
         <section className="w-full min-h-25 border-2 border-yellow-primary rounded-2xl flex flex-col justify-center gap-2 items-baseline py-4 px-6 shadow-sm bg-[#1C1C1C]">
-          <h2 className="text-yellow-primary text-xl font-bold font-montagu">
-            Skills
-          </h2>
-          <div className="flex flex-col gap-y-2">
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
-              Gardening
+          <h2 className="text-yellow-primary text-xl font-bold font-montagu">Skills</h2>
+          {profile?.skills && profile.skills.length > 0 ? (
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 w-full">
+              {profile.skills.map((skill, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary flex-shrink-0"></span>
+                  {skill}
+                </div>
+              ))}
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
-              Cooking
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
-              DIY
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
-              Cooking
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
-              Cooking
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
-              Cooking
-            </div>
-          </div>
+          ) : (
+            <p className="text-white/30 text-sm italic">
+              ✏️ Add your skills so others know how you can help!
+            </p>
+          )}
         </section>
+
         <section className="w-full min-h-25 border-2 border-yellow-primary rounded-2xl flex flex-col justify-center gap-2 items-baseline py-4 px-6 shadow-sm bg-[#1C1C1C]">
           <h2 className="text-yellow-primary text-xl font-bold font-montagu">
             Tools & Resources
           </h2>
-          <div className="flex flex-col gap-y-2">
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
-              White Paint
+          {profile?.tools && profile.tools.length > 0 ? (
+            <div className="flex flex-col gap-y-2">
+              {profile.tools.map((tool, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
+                  {tool}
+                </div>
+              ))}
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
-              Pans
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
-              Flowers
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
-              Flower Fertilizer
-            </div>
-          </div>
+          ) : (
+            <p className="text-white/30 text-sm italic">
+              🔧 Share tools or resources you can lend to neighbors!
+            </p>
+          )}
         </section>
       </div>
     </div>

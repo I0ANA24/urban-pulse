@@ -10,6 +10,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fullName, setFullName] = useState("");
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,7 +23,7 @@ export default function LoginForm() {
       const res = await fetch(`http://localhost:5248/api/auth/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, role: "User" }),
+        body: JSON.stringify({ email, password, role: "User", fullName: activeTab === "signup" ? fullName : undefined  }),
       });
 
       if (!res.ok) {
@@ -86,6 +87,8 @@ export default function LoginForm() {
                 className="w-full py-3.25 px-4 bg-[#161616] border border-[#222] rounded-xl text-foreground text-[15px] outline-none transition-colors duration-200 placeholder:text-foreground/20 focus:border-green-light"
                 type="text"
                 placeholder="FullStack Fusion"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
               />
             </div>
           )}

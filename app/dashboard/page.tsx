@@ -54,16 +54,21 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl("http://localhost:5248/hubs/events")
-      .withAutomaticReconnect()
+      .withUrl("http://localhost:5248/hubs/events", {
+        accessTokenFactory: () => token ?? "",
+      })
+      .withAutomaticReconnect([2000, 5000, 10000])
+      .configureLogging(signalR.LogLevel.None)
       .build();
 
     connection.on("NewEvent", (newEvent: Event) => {
       setEvents((prev) => [newEvent, ...prev]);
     });
 
-    connection.start().catch(console.error);
+    connection.start().catch(() => {});
 
     return () => {
       connection.stop();
