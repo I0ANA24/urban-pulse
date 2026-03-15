@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import * as signalR from "@microsoft/signalr";
 import EventCard from "@/components/events/EventCard";
 import { Event, EventType } from "@/types/Event";
 import Image from "next/image";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
+import { useSignalR } from "@/context/SignalRContext";
 
 export default function DashboardPage() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -13,6 +13,8 @@ export default function DashboardPage() {
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [scrolledRight, setScrolledRight] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const { connection } = useSignalR();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -26,40 +28,18 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    let isMounted = true;
-    const token = localStorage.getItem("token");
+    if (!connection) return;
 
-    const connection = new signalR.HubConnectionBuilder()
-      .withUrl("http://localhost:5248/hubs/events", {
-        accessTokenFactory: () => token ?? "",
-      })
-      .withAutomaticReconnect([2000, 5000, 10000])
-      .configureLogging(signalR.LogLevel.None)
-      .build();
+    const handleNewEvent = (newEvent: Event) => {
+      setEvents((prev) => [newEvent, ...prev]);
+    };
 
-    connection.on("NewEvent", (newEvent: Event) => {
-      if (isMounted) setEvents((prev) => [newEvent, ...prev]);
-    });
-
-    async function startSignalR() {
-      try {
-        await connection.start();
-      } catch (err: any) {
-        if (!err.message?.includes("stopped during negotiation")) {
-          console.error("SignalR Error: ", err);
-        }
-      }
-    }
-
-    startSignalR();
+    connection.on("NewEvent", handleNewEvent);
 
     return () => {
-      isMounted = false;
-      if (connection.state !== signalR.HubConnectionState.Disconnected) {
-        connection.stop();
-      }
+      connection.off("NewEvent", handleNewEvent);
     };
-  }, []);
+  }, [connection]);
 
   const filteredEvents =
     activeFilter === "ALL"
