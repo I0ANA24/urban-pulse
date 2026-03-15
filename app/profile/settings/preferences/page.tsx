@@ -1,6 +1,6 @@
-import ProfilePageTemplate from "@/components/ui/profile/ProfilePageTemplate";
-import ProfileSettingsLink from "@/components/ui/profile/ProfileSettingsLink";
-import ThemeSelector from "@/components/ui/profile/ThemeSelector";
+import ProfilePageTemplate from "@/components/profile/ProfilePageTemplate";
+import ProfileSettingsLink from "@/components/profile/ProfileSettingsLink";
+import ThemeSelector from "@/components/profile/ThemeSelector";
 
 export default function PreferencesPage() {
   return (

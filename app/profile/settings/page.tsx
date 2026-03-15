@@ -1,4 +1,4 @@
-import ProfileSettingsLink from "@/components/ui/profile/ProfileSettingsLink";
+import ProfileSettingsLink from "@/components/profile/ProfileSettingsLink";
 import { ChevronRight, LogOut, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";

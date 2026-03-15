@@ -1,4 +1,4 @@
-import MainPageImage from "../ui/dashboard/MainPageImage";
+import MainPageImage from "../dashboard/MainPageImage";
 import NavBar from "./NavBar";
 
 export default function Container({ children }: { children: React.ReactNode }) {

@@ -31,7 +31,7 @@ export default function ThemeSelector() {
         Dark
       </button>
 
-      {/* Buton Light */}
+      {/* light button */}
       <button
         onClick={() => setTheme("light")}
         className={`flex-2 h-full flex justify-center items-center rounded-2xl font-bold transition-colors duration-200 cursor-pointer ${

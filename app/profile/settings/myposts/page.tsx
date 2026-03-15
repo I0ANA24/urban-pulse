@@ -1,5 +1,5 @@
-import HorizontalCard from "@/components/ui/profile/HorizontalCard";
-import ProfilePageTemplate from "@/components/ui/profile/ProfilePageTemplate";
+import HorizontalCard from "@/components/profile/HorizontalCard";
+import ProfilePageTemplate from "@/components/profile/ProfilePageTemplate";
 
 export default function MyPostsPage() {
   return (

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import * as signalR from "@microsoft/signalr";
-import EventCard from "@/components/EventCard";
+import EventCard from "@/components/events/EventCard";
 import { Event, EventType } from "@/types/Event";
 import Image from "next/image";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
@@ -26,19 +26,33 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
     const connection = new signalR.HubConnectionBuilder()
       .withUrl("http://localhost:5248/hubs/events")
       .withAutomaticReconnect()
       .build();
 
     connection.on("NewEvent", (newEvent: Event) => {
-      setEvents((prev) => [newEvent, ...prev]);
+      if (isMounted) setEvents((prev) => [newEvent, ...prev]);
     });
 
-    connection.start().catch(console.error);
+    async function startSignalR() {
+      try {
+        await connection.start();
+      } catch (err: any) {
+        if (!err.message?.includes("stopped during negotiation")) {
+          console.error("SignalR Error: ", err);
+        }
+      }
+    }
+
+    startSignalR();
 
     return () => {
-      connection.stop();
+      isMounted = false;
+      if (connection.state !== signalR.HubConnectionState.Disconnected) {
+        connection.stop();
+      }
     };
   }, []);
 
@@ -53,8 +67,10 @@ export default function DashboardPage() {
             3: "Lend",
           };
           const mappedType =
-            typeof e.type === "number" ? typeMap[e.type] : e.type;
-          
+            typeof e.type === "number"
+              ? typeMap[e.type]
+              : (e.type as EventType);
+
           return EVENT_TAG_STYLES[mappedType]?.title === activeFilter;
         });
 
@@ -107,9 +123,15 @@ export default function DashboardPage() {
               return (
                 <button
                   key={filter.title}
-                  onClick={() => setActiveFilter(activeFilter === filter.title ? "ALL" : filter.title)}
+                  onClick={() =>
+                    setActiveFilter(
+                      activeFilter === filter.title ? "ALL" : filter.title,
+                    )
+                  }
                   className={`shrink-0 w-25 h-11 rounded-[10px] text-xs font-bold snap-start transition-opacity ${
-                    activeFilter === "ALL" || activeFilter === filter.title ? "opacity-100" : "opacity-40"
+                    activeFilter === "ALL" || activeFilter === filter.title
+                      ? "opacity-100"
+                      : "opacity-40"
                   }`}
                   style={{
                     backgroundColor: filter.bgColor,
