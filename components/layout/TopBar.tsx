@@ -33,7 +33,7 @@ export default function TopBar({
         </GoBackButton>
       )}
       {addPost && (
-        <ProfileRoundButton route="./profile/settings">
+        <ProfileRoundButton route="/dashboard/add-post">
           <Plus width={47} height={30} strokeWidth={3} />
         </ProfileRoundButton>
       )}

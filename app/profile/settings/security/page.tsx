@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import HorizontalCard from "@/components/ui/profile/HorizontalCard";
-import ProfilePageTemplate from "@/components/ui/profile/ProfilePageTemplate";
+import HorizontalCard from "@/components/profile/HorizontalCard";
+import ProfilePageTemplate from "@/components/profile/ProfilePageTemplate";
 
 export default function SecurityPage() {
   const [email, setEmail] = useState("");

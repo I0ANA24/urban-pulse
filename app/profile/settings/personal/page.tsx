@@ -2,13 +2,13 @@
 
 import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
-import HorizontalCard from "@/components/ui/profile/HorizontalCard";
-import ProfilePageTemplate from "@/components/ui/profile/ProfilePageTemplate";
+import HorizontalCard from "@/components/profile/HorizontalCard";
+import ProfilePageTemplate from "@/components/profile/ProfilePageTemplate";
 
-const MapPicker = dynamic(() => import("@/components/ui/profile/MapPicker"), {
+const MapPicker = dynamic(() => import("@/components/profile/MapPicker"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[250px] rounded-2xl bg-[#1a1a1a] flex items-center justify-center">
+    <div className="w-full h-62.5 rounded-2xl bg-[#1a1a1a] flex items-center justify-center">
       <p className="text-white/30 text-sm">Loading map...</p>
     </div>
   ),

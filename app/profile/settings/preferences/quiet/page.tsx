@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import ProfilePageTemplate from "@/components/ui/profile/ProfilePageTemplate";
+import ProfilePageTemplate from "@/components/profile/ProfilePageTemplate";
 
 export default function QuietHoursPage() {
   const [selectedCertainDays, setSelectedCertainDays] = useState<number[]>([]);

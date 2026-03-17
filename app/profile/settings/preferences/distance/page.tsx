@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import ProfilePageTemplate from "@/components/ui/profile/ProfilePageTemplate";
+import ProfilePageTemplate from "@/components/profile/ProfilePageTemplate";
 
 export default function DistanceLimitPage() {
   const [distance, setDistance] = useState("100");

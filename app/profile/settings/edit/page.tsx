@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import BSTCard from "@/components/ui/profile/BSTCard";
-import EditSkillsOrTR from "@/components/ui/profile/EditSkillsOrTR";
-import HorizontalCard from "@/components/ui/profile/HorizontalCard";
+import BSTCard from "@/components/profile/BSTCard";
+import EditSkillsOrTR from "@/components/profile/EditSkillsOrTR";
+import HorizontalCard from "@/components/profile/HorizontalCard";
 import Image from "next/image";
 
 export default function EditProfile() {
