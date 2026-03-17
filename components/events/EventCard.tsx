@@ -42,7 +42,6 @@ export default function EventCard({
     setLiked(!liked);
     setLikes(liked ? likes - 1 : likes + 1);
   };
-{/*test*/}
   const typeMap: Record<number, EventType> = {
     0: "General",
     1: "Emergency",

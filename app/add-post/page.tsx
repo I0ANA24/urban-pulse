@@ -1,42 +1,60 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { X, ImagePlus, Bold, Underline } from "lucide-react";
+import { X, ImagePlus } from "lucide-react";
 import { EventType } from "@/types/Event";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
 
 export default function AddPostPage() {
   const router = useRouter();
 
-  // state pentru user
-  const [isVerified, setIsVerified] = useState(true);
+  const [isVerified, setIsVerified] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
 
-  // state pentru formular
-  const [description, setDescription] = useState("");
   const [selectedTag, setSelectedTag] = useState<EventType | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
 
-  // state specific pentru SKILL / LEND
   const [requestedItem, setRequestedItem] = useState("");
   const [isAddingItem, setIsAddingItem] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isBold, setIsBold] = useState(false);
+  const [isUnderlineActive, setIsUnderlineActive] = useState(false);
 
-  // fetch pentru a vedea daca e verified
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [StarterKit, Underline],
+    content: "",
+    onSelectionUpdate: ({ editor }) => {
+      setIsBold(editor.isActive("bold"));
+      setIsUnderlineActive(editor.isActive("underline"));
+    },
+    onUpdate: ({ editor }) => {
+      setIsBold(editor.isActive("bold"));
+      setIsUnderlineActive(editor.isActive("underline"));
+    },
+    editorProps: {
+      attributes: {
+        class:
+          "w-full bg-transparent text-white outline-none min-h-[150px] text-base focus:outline-none",
+      },
+    },
+  });
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     fetch("http://localhost:5248/api/user/profile", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Nu s-a putut aduce profilul");
+        if (!res.ok) throw new Error();
         return res.json();
       })
       .then((data) => {
-        setIsVerified(data.isVerified ?? true);
+        setIsVerified(data.isVerified ?? false);
       })
       .catch((err) => console.error(err))
       .finally(() => setLoadingUser(false));
@@ -49,6 +67,8 @@ export default function AddPostPage() {
   };
 
   const handlePost = async () => {
+    const description = editor?.getText() ?? "";
+
     if (!description || !selectedTag) {
       alert("Please write something and select a tag!");
       return;
@@ -59,33 +79,49 @@ export default function AddPostPage() {
       return;
     }
 
-    console.log("Description:", description);
-    console.log("Tag:", selectedTag);
-    console.log("Requested Item/Skill:", requestedItem);
-    console.log("Photo File:", photo);
+    const token = localStorage.getItem("token");
 
-    /* to do pentru backend dev:
-      const formData = new FormData();
-      formData.append("description", description);
-      formData.append("type", selectedTag);
-      formData.append("requestedItem", requestedItem);
-      if (photo) formData.append("image", photo);
+    const typeMap: Record<string, number> = {
+      General: 0,
+      Emergency: 1,
+      Skill: 2,
+      Lend: 3,
+    };
 
-      await fetch("http://localhost:5248/api/event", {
+    const formData = new FormData();
+    formData.append("description", editor?.getHTML() ?? description);
+    formData.append("type", typeMap[selectedTag].toString());
+    formData.append("latitude", "0");
+    formData.append("longitude", "0");
+
+    const tags = requestedItem ? [requestedItem] : [selectedTag];
+    tags.forEach((tag) => formData.append("tags", tag));
+
+    if (photo) formData.append("file", photo);
+
+    try {
+      const res = await fetch("http://localhost:5248/api/event", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` }, // Nu pune Content-Type cand folosesti FormData!
-        body: formData
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       });
-    */
 
-    router.push("/dashboard");
+      if (!res.ok) {
+        alert("Something went wrong. Please try again.");
+        return;
+      }
+
+      router.push("/dashboard");
+    } catch {
+      alert("Connection error. Please try again.");
+    }
   };
 
   if (loadingUser)
     return <div className="text-white text-center mt-20">Loading...</div>;
 
   return (
-    <div className="w-full h-screen bg-[#0E0E0E] px-6 py-8 flex flex-col font-inter">
+    <div className="w-full min-h-screen bg-[#0E0E0E] px-6 py-8 flex flex-col font-inter">
       {/* header buttons */}
       <div className="flex items-center justify-between mb-8">
         <button
@@ -102,19 +138,15 @@ export default function AddPostPage() {
         </button>
       </div>
 
-      {/* text area & image upload */}
+      {/* editor & image upload */}
       <div className="bg-[#383838] rounded-3xl p-5 border border-white/5 flex flex-col mb-8">
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Write something..."
-          className="w-full bg-transparent text-white placeholder-white/40 outline-none resize-none min-h-37.5 text-sm"
-        />
+
+        <EditorContent editor={editor} />
 
         <div className="flex items-center justify-between mt-4">
           <div className="flex gap-4 items-center text-white">
             <button
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => document.getElementById("fileInput")?.click()}
               className="relative"
             >
               <ImagePlus size={24} />
@@ -122,17 +154,37 @@ export default function AddPostPage() {
                 <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-400 rounded-full border border-[#383838]"></div>
               )}
             </button>
-            <button>
-              <Bold size={20} />
+
+            <button
+              onMouseDown={(e) => {
+                e.preventDefault();
+                editor?.chain().focus().toggleBold().run();
+                setIsBold(!isBold);
+              }}
+              className={`font-bold transition-all ${
+                isBold ? "text-white text-2xl" : "text-white/60 text-lg"
+              }`}
+            >
+              B
             </button>
-            <button>
-              <Underline size={20} />
+
+            <button
+              onMouseDown={(e) => {
+                e.preventDefault();
+                editor?.chain().focus().toggleUnderline().run();
+                setIsUnderlineActive(!isUnderlineActive);
+              }}
+              className={`underline font-bold transition-all ${
+                isUnderlineActive ? "text-white text-2xl" : "text-white/60 text-lg"
+              }`}
+            >
+              U
             </button>
           </div>
 
           <input
+            id="fileInput"
             type="file"
-            ref={fileInputRef}
             onChange={handlePhotoUpload}
             accept="image/*"
             className="hidden"
@@ -154,10 +206,7 @@ export default function AddPostPage() {
         {(Object.keys(EVENT_TAG_STYLES) as EventType[]).map((type) => {
           const style = EVENT_TAG_STYLES[type];
           const isSelected = selectedTag === type;
-
-          // daca e Skill sau Lend si nu e verificat, nu il lasam sa apese
-          const isDisabled =
-            (type === "Skill" || type === "Lend") && !isVerified;
+          const isDisabled = (type === "Skill" || type === "Lend") && !isVerified;
 
           return (
             <button
@@ -166,12 +215,11 @@ export default function AddPostPage() {
               disabled={isDisabled}
               className={`px-4 py-2.5 rounded-[10px] text-[10px] font-bold uppercase transition-all
                 ${isDisabled ? "opacity-30 cursor-not-allowed grayscale" : "cursor-pointer"}
-                ${isSelected ? "shadow-[0_0_15px_rgba(255,255,255,0.4)] scale-105" : ""}
+                ${isSelected ? "scale-105" : ""}
               `}
               style={{
                 backgroundColor: style.bgColor,
                 color: style.textColor,
-                // Umbra specifica daca e selectat
                 boxShadow: isSelected
                   ? `0 0 20px ${style.bgColor}80, inset 0 0 5px white`
                   : "none",
@@ -183,7 +231,7 @@ export default function AddPostPage() {
         })}
       </div>
 
-      {/* SKILL / LEND Input Section (apare doar cand sunt selectate) */}
+      {/* SKILL / LEND Input Section */}
       {(selectedTag === "Skill" || selectedTag === "Lend") && (
         <div className="animate-fade-up">
           <h2 className="text-white font-bold text-xl mb-2 border-b border-white/20 pb-2 uppercase">

@@ -2,7 +2,6 @@ import Image from "next/image";
 import GoBackButton from "../ui/GoBackButton";
 import ProfileRoundButton from "../ui/ProfileRoundButton";
 import { Plus } from "lucide-react";
-import as from "../../.next/dev/server/chunks/ssr/_b6f070ec._";
 
 interface TopBarProps {
   back: boolean;
@@ -33,7 +32,7 @@ export default function TopBar({
         </GoBackButton>
       )}
       {addPost && (
-        <ProfileRoundButton route="/dashboard/add-post">
+        <ProfileRoundButton route="/add-post">
           <Plus width={47} height={30} strokeWidth={3} />
         </ProfileRoundButton>
       )}
