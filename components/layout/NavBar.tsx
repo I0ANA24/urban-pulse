@@ -13,36 +13,43 @@ export default function NavBar() {
   }
 
   return (
-    <div className="h-[8vh] w-[calc(100vw-32px)] bg-white/40 border border-white/60 rounded-[18px] fixed bottom-4 flex justify-center items-center">
-      <nav className="container h-full w-full flex justify-between items-center px-5">
+    <div className="h-[8vh] w-[calc(100vw-32px)] rounded-[18px] fixed bottom-4 flex justify-center items-center overflow-hidden">
+      <Image
+        src="/navbar.svg"
+        alt="navbar"
+        fill
+        priority
+        className="object-cover"
+      />
+      <nav className="container h-full w-full flex justify-between items-center px-5 relative">
         <Link href="/dashboard">
           <Home
             size={28}
-            className="text-black cursor-pointer hover:scale-105 hover:text-white focus:text-white transition-all duration-200"
+            className="text-white cursor-pointer hover:text-black focus:text-white transition-all duration-200"
           />
         </Link>
         <Link href="/search">
           <Search
             size={28}
-            className="text-black cursor-pointer hover:scale-105 hover:text-white focus:text-white transition-all duration-200"
+            className="text-white cursor-pointer hover:text-black focus:text-white transition-all duration-200"
           />
         </Link>
         <Link href="/map">
           <Map
             size={28}
-            className="text-black cursor-pointer hover:scale-105 hover:text-white focus:text-white transition-all duration-200"
+            className="text-white cursor-pointer hover:text-black focus:text-white transition-all duration-200"
           />
         </Link>
         <Link href="/chat">
           <MessageCircle
             size={28}
-            className="text-black cursor-pointer hover:scale-105 hover:text-white focus:text-white transition-all duration-200"
+            className="text-white cursor-pointer hover:text-black focus:text-white transition-all duration-200"
           />
         </Link>
         <Link href="/profile">
           <User
             size={28}
-            className="text-black cursor-pointer hover:scale-105 hover:text-green-light focus:text-green-light transition-all duration-200"
+            className="text-white cursor-pointer hover:text-black focus:text-white transition-all duration-200"
           />
         </Link>
       </nav>
