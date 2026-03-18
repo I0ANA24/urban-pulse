@@ -34,7 +34,7 @@ export default function SavedPostsPage() {
 
   return (
     <ProfilePageTemplate title="Saved Posts">
-      <div className="w-full flex flex-col mt-4">
+      <div className="w-full flex flex-col">
         {loading && (
           <p className="text-white/40 text-sm text-center mt-10">Loading saved posts...</p>
         )}

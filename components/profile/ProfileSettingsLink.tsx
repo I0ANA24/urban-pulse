@@ -68,13 +68,13 @@ export default function ProfileSettingsLink({
     <Link href={content[text].route} className="w-full">
       <button
         {...restProps}
-        className="w-full h-14 bg-secondary rounded-full px-5 flex justify-between items-center cursor-pointer"
+        className="w-full h-13 bg-secondary rounded-full px-5 flex justify-between items-center cursor-pointer"
       >
         <div className="flex justify-center items-center gap-4">
-          <IconComponent className="size-7" strokeWidth={2} />
-          <span className="text-xl">{content[text].pageName}</span>
+          <IconComponent className="size-5" strokeWidth={2} />
+          <span className="text-lg">{content[text].pageName}</span>
         </div>
-        <ChevronRight className="size-7" />
+        <ChevronRight className="size-6" />
       </button>
     </Link>
   );

@@ -45,7 +45,7 @@ export default function MyPostsPage() {
 
   return (
     <ProfilePageTemplate title="My Posts">
-      <div className="w-full flex flex-col mt-4">
+      <div className="w-full flex flex-col">
         {loading && (
           <p className="text-white/40 text-sm text-center mt-10">Loading your posts...</p>
         )}
