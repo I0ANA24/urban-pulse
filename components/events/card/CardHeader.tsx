@@ -44,7 +44,7 @@ export default function CardHeader({
             {isVerifiedUser && (
               <BadgeCheck
                 size={18}
-                className="text-green-400 fill-green-400/20"
+                className="text-green-light fill-green-light/20"
               />
             )}
           </div>

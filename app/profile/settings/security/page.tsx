@@ -115,7 +115,7 @@ export default function SecurityPage() {
 
         {success && (
           <div className="w-full px-4 py-3 bg-green-500/10 border border-green-500/20 rounded-2xl">
-            <p className="text-green-400 text-sm">{success}</p>
+            <p className="text-green-light text-sm">{success}</p>
           </div>
         )}
 

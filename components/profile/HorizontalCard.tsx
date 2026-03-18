@@ -32,7 +32,7 @@ export default function HorizontalCard({
             type={inputType}
             placeholder={placeholder}
             disabled={isDisabled}
-            className="text-sm outline-none bg-transparent flex-1"
+            className="w-full text-sm outline-none bg-transparent flex-1 overflow-hidden"
             {...(props as React.InputHTMLAttributes<HTMLInputElement>)}
           />
         </div>

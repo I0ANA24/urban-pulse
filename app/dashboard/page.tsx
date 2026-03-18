@@ -64,7 +64,7 @@ export default function DashboardPage() {
       <div className="w-full py-2 flex flex-col items-center gap-4 mb-4">
         <div className="flex items-center gap-1">
           <h1 className="font-montagu text-white text-[32px]">UrbanPulse</h1>
-          <span className="w-2 h-2 rounded-full bg-green-400" />
+          <span className="w-2 h-2 rounded-full bg-green-light" />
         </div>
 
         <DashboardBanner />

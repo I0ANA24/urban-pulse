@@ -90,7 +90,7 @@ export default function PersonalInfoPage() {
         <MapPicker onSelect={handleMapSelect} />
 
         {saved && (
-          <p className="text-green-400 text-sm animate-fade-up text-center">✓ Saved</p>
+          <p className="text-green-light text-sm animate-fade-up text-center">✓ Saved</p>
         )}
 
       </div>
