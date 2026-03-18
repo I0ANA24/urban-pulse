@@ -43,11 +43,11 @@ export default function EditSkillsOrTR({ add, items, onItemsChange }: EditSkills
           {items.map((item, i) => (
             <div
               key={i}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1e1e1e] rounded-full border border-white/10"
+              className="w-full h-12 px-4 flex items-center justify-between bg-yellow-secondary rounded-[10px]"
             >
-              <span className="text-white text-xs font-medium">{item}</span>
-              <button onClick={() => handleRemove(i)} className="text-white/40 hover:text-white transition-colors">
-                <X size={12} />
+              <span className="text-black">{item}</span>
+              <button onClick={() => handleRemove(i)} className="text-red-emergency hover:text-secondary transition-colors duration-200 cursor-pointer">
+                <X size={22} strokeWidth={3.5} />
               </button>
             </div>
           ))}
@@ -89,7 +89,7 @@ export default function EditSkillsOrTR({ add, items, onItemsChange }: EditSkills
             <div className="flex justify-center">
               <button
                 type="button"
-                className="bg-yellow-primary text-black font-medium h-10 w-35 rounded-full shadow-md shadow-neutral-800 cursor-pointer transition-all duration-200"
+                className="bg-yellow-primary text-black font-medium h-10 w-35 rounded-full shadow-md shadow-neutral-800 cursor-pointer hover:bg-yellow-primary/85 transition-all duration-200"
                 onClick={handleAdd}
               >
                 Add

@@ -67,11 +67,11 @@ export default function EditProfile() {
       </div>
 
       <div className="w-full flex items-center justify-between px-1">
-        <h1 className="text-2xl font-montagu font-bold text-center leading-[1.15]">
+        <h1 className="w-full text-center text-2xl font-montagu font-bold leading-[1.15]">
           Edit profile
         </h1>
         {saved && (
-          <p className="text-green-400 text-sm animate-fade-up">✓ Saved</p>
+          <p className="text-green-light text-sm animate-fade-up">✓ Saved</p>
         )}
       </div>
 
