@@ -6,6 +6,7 @@ import { X, ImagePlus } from "lucide-react";
 import { EventType } from "@/types/Event";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
 import { useEditor, EditorContent } from "@tiptap/react";
+import Placeholder from "@tiptap/extension-placeholder";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 
@@ -26,7 +27,13 @@ export default function AddPostPage() {
 
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [StarterKit, Underline],
+    extensions: [
+      StarterKit,
+      Underline,
+      Placeholder.configure({
+        placeholder: "Write something...",
+      }),
+    ],
     content: "",
     onSelectionUpdate: ({ editor }) => {
       setIsBold(editor.isActive("bold"));
@@ -123,65 +130,62 @@ export default function AddPostPage() {
   return (
     <div className="w-full pb-[8vh] flex flex-col">
       {/* header buttons */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-10">
         <button
           onClick={() => router.back()}
-          className="border border-red-emergency text-red-emergency font-bold w-24 py-2 rounded-xl cursor-pointer hover:bg-white/5 transition-colors duration-200"
+          className="border border-red-emergency text-red-emergency font-bold w-30 h-11 rounded-xl cursor-pointer hover:bg-white/5 transition-colors duration-200"
         >
           Discard
         </button>
         <button
           onClick={handlePost}
-          className="bg-green-light text-black w-25 py-2 rounded-xl font-bold cursor-pointer hover:bg-green-light/85 transition-colors duration-200"
+          className="bg-green-light text-black w-30 py-2 rounded-xl font-bold cursor-pointer hover:bg-green-light/85 transition-colors duration-200"
         >
           Post
         </button>
       </div>
 
       {/* editor & image upload */}
-      <div className="bg-[#383838] rounded-3xl p-5 border border-white/5 flex flex-col mb-8">
-
-        <EditorContent editor={editor} />
-
-        <div className="flex items-center justify-between mt-4">
+      <div className="w-full p-4 bg-secondary rounded-[30px] mb-8">
+        <div className="bg-[#464646] w-full h-50 rounded-[20px] p-5 border border-white/5 flex flex-col overflow-scroll">
+          <EditorContent editor={editor} />
+        </div>
+        <div className="flex items-center justify-between mt-4 px-4">
           <div className="flex gap-4 items-center text-white">
             <button
               onClick={() => document.getElementById("fileInput")?.click()}
               className="relative cursor-pointer"
             >
-              <ImagePlus size={24} />
+              <ImagePlus size={30} />
               {photo && (
                 <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-light rounded-full border border-secondary"></div>
               )}
             </button>
-
             <button
               onMouseDown={(e) => {
                 e.preventDefault();
                 editor?.chain().focus().toggleBold().run();
                 setIsBold(!isBold);
               }}
-              className={`text-xl transition-all cursor-pointer ${
+              className={`text-2xl transition-all cursor-pointer font-montagu ${
                 isBold ? "font-bold" : "font-normal"
               }`}
             >
               B
             </button>
-
             <button
               onMouseDown={(e) => {
                 e.preventDefault();
                 editor?.chain().focus().toggleUnderline().run();
                 setIsUnderlineActive(!isUnderlineActive);
               }}
-              className={`underline transition-all cursor-pointer text-xl ${
+              className={`underline transition-all cursor-pointer text-2xl font-montagu ${
                 isUnderlineActive ? "font-bold" : "font-normal"
               }`}
             >
               U
             </button>
           </div>
-
           <input
             id="fileInput"
             type="file"
@@ -189,9 +193,8 @@ export default function AddPostPage() {
             accept="image/*"
             className="hidden"
           />
-
           {photo && (
-            <div className="border border-green-400 text-green-400 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1">
+            <div className="border border-green-light text-green-light text-sm px-3 py-1.5 rounded-[10px] flex items-center gap-1">
               Photo added
             </div>
           )}
@@ -199,14 +202,15 @@ export default function AddPostPage() {
       </div>
 
       {/* tags section */}
-      <h2 className="text-white font-bold text-xl mb-4 border-b border-white/20 pb-2">
+      <h2 className="text-white font-bold text-2xl mb-4 border-b-2 border-white/20 pb-2">
         TAGS
       </h2>
       <div className="flex flex-wrap gap-3 mb-8">
         {(Object.keys(EVENT_TAG_STYLES) as EventType[]).map((type) => {
           const style = EVENT_TAG_STYLES[type];
           const isSelected = selectedTag === type;
-          const isDisabled = (type === "Skill" || type === "Lend") && !isVerified;
+          const isDisabled =
+            (type === "Skill" || type === "Lend") && !isVerified;
 
           return (
             <button
@@ -221,7 +225,7 @@ export default function AddPostPage() {
                 backgroundColor: style.bgColor,
                 color: style.textColor,
                 boxShadow: isSelected
-                  ? `0 0 20px ${style.bgColor}80, inset 0 0 5px white`
+                  ? `0 0 10px ${style.bgColor}80, inset 0 0 3px white`
                   : "none",
               }}
             >
