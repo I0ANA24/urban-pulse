@@ -195,6 +195,8 @@ export default function Settings() {
                 </h2>
               </div>
 
+              <div className="border-b border-white/10 w-[80%] mx-auto"></div>
+
               <div className="px-6 py-5 text-center">
                 <p className="text-white leading-relaxed">
                   Are you sure you want to{" "}
