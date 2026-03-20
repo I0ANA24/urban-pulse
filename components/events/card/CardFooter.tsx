@@ -9,9 +9,11 @@ interface CardFooterProps {
   saved: boolean;
   onSave: () => void;
   type: EventType;
+  comments: number;
+  onComment: () => void;
 }
 
-export default function CardFooter({ likes, liked, onLike, saved, onSave, type }: CardFooterProps) {
+export default function CardFooter({ likes, liked, onLike, saved, onSave, type, comments, onComment }: CardFooterProps) {
   return (
     <div className="flex items-center justify-between pt-1 border-t-2 border-white/10 mt-2">
       <div className="flex items-center gap-5 mt-3">
@@ -20,9 +22,9 @@ export default function CardFooter({ likes, liked, onLike, saved, onSave, type }
           <span className="text-white font-bold">{likes}</span>
         </button>
         
-        <button className="flex items-center gap-1.5 transition-transform active:scale-90">
+        <button onClick={onComment} className="flex items-center gap-1.5 transition-transform active:scale-90">
           <MessageCircle size={22} className="fill-green-400 text-green-400" />
-          <span className="text-white font-bold">10</span>
+          <span className="text-white font-bold">{comments}</span>
         </button>
 
         <button onClick={onSave} className="flex items-center transition-transform active:scale-90">

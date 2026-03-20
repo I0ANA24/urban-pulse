@@ -38,7 +38,7 @@ export const SignalRProvider = ({
     ) {
       connection
         .start()
-        .then(() => console.log("🟢 SignalR Conectat Global!"))
+        .then(() => console.log(""))
         .catch((err) => console.error("🔴 Eroare SignalR Globală: ", err));
     }
   }, [connection]);
