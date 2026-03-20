@@ -15,7 +15,7 @@ const severeConditions = [
   "gale", "blizzard", "hail", "sleet", "freezing rain",
   "freezing drizzle", "heavy snow", "heavy rain",
   "heavy intensity rain", "very heavy rain", "extreme rain",
-  "dense fog", "freezing fog", "dust", "sand", "volcanic ash", "clear sky"
+  "dense fog", "freezing fog", "dust", "sand", "volcanic ash"
 ];
 
 export default function DashboardBanner({
