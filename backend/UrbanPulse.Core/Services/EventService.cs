@@ -51,6 +51,12 @@ namespace UrbanPulse.Core.Services
             return events.Select(MapToDto).ToList();
         }
 
+        public async Task<IEnumerable<EventResponseDto>> GetByUserIdAsync(int userId)
+        {
+            var events = await _eventRepository.GetByUserIdAsync(userId);
+            return events.Select(MapToDto);
+        }
+
         public async Task<List<EventResponseDto>> GetByTypeAsync(string type)
         {
             if (!Enum.TryParse<EventType>(type, true, out var eventType))

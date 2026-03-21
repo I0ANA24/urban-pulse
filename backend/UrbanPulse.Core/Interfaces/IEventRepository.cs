@@ -14,6 +14,7 @@ namespace UrbanPulse.Core.Interfaces
         Task<List<Event>> GetAllActiveAsync();
         Task<List<Event>> GetByRadiusAsync(double latitude, double longitude, double radiusKm);
         Task<List<Event>> GetByTypeAsync(EventType type);
+        Task<IEnumerable<Event>> GetByUserIdAsync(int userId);
         Task DeactivateAsync(int id);
     }
 }

@@ -60,6 +60,13 @@ namespace UrbanPulse.Infrastructure.Repositories
             }).ToList();
         }
 
+        public async Task<IEnumerable<Event>> GetByUserIdAsync(int userId)
+            => await _db.Events
+                .Include(e => e.CreatedByUser)
+                .Where(e => e.CreatedByUserId == userId && e.IsActive)
+                .OrderByDescending(e => e.CreatedAt)
+                .ToListAsync();
+
         public async Task<List<Event>> GetByTypeAsync(EventType type)
             => await _db.Events
                 .Include(e => e.CreatedByUser)
