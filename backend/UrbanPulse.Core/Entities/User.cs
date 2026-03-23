@@ -17,6 +17,7 @@ namespace UrbanPulse.Core.Entities
         public string? Address { get; set; }
         public string? Bio { get; set; }
         public bool IsVerified { get; set; } = false;
+        public double TrustScore { get; set; } = 0;
         public string? Skills { get; set; }
         public string? Tools { get; set; }
     }

@@ -14,6 +14,7 @@ interface CardFooterProps {
   /** Admin mode: afișează "View insights" + flag count în loc de like/comment/bookmark */
   flagCount?: number;
   onViewInsights?: () => void;
+  isMyPost?: boolean;
 }
 
 export default function CardFooter({

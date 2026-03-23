@@ -12,10 +12,12 @@ using UrbanPulse.Core.Interfaces;
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IEventService _eventService;
 
-    public UserController(IUserService userService)
+    public UserController(IUserService userService, IEventService eventService)
     {
         _userService = userService;
+        _eventService = eventService;
     }
 
     [HttpGet("profile")]
@@ -25,6 +27,14 @@ public class UserController : ControllerBase
         var profile = await _userService.GetProfileAsync(userId);
         if (profile == null) return NotFound();
         return Ok(profile);
+    }
+
+    [HttpGet("my-posts")]
+    public async Task<IActionResult> GetMyPosts()
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var events = await _eventService.GetByUserIdAsync(userId);
+        return Ok(events);
     }
 
     [HttpPut("profile")]

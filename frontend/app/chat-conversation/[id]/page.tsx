@@ -1,0 +1,256 @@
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Send } from "lucide-react";
+import Image from "next/image";
+import { useSignalR } from "@/context/SignalRContext";
+
+interface Message {
+  id: number;
+  text: string;
+  senderId: number;
+  senderEmail: string;
+  senderFullName: string | null;
+  createdAt: string;
+  isRead: boolean;
+  messageType?: string;
+}
+
+function formatTime(dateStr: string) {
+  const date = new Date(dateStr);
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+
+export default function ChatPage() {
+  const { id } = useParams();
+  const router = useRouter();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [text, setText] = useState("");
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [otherUserName, setOtherUserName] = useState("");
+  const [ratedMessages, setRatedMessages] = useState<Set<number>>(new Set());
+  const [helpedMessages, setHelpedMessages] = useState<Set<number>>(new Set());
+  const [hasRated, setHasRated] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const { connection } = useSignalR();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    fetch("http://localhost:5248/api/user/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setCurrentUserId(data.id));
+
+    fetch("http://localhost:5248/api/chat/conversations", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const conv = data.find((c: any) => c.id === Number(id));
+        if (conv) {
+          setOtherUserName(conv.otherUserFullName ?? conv.otherUserEmail?.split("@")[0]);
+        }
+      });
+
+    fetch(`http://localhost:5248/api/chat/conversations/${id}/messages`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setMessages(data));
+
+    fetch(`http://localhost:5248/api/chat/conversations/${id}/rating/check`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setHasRated(data.hasRated));
+  }, [id]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  useEffect(() => {
+    if (!connection) return;
+
+    const handleNewMessage = (msg: Message) => {
+      setMessages((prev) => [...prev, msg]);
+    };
+
+    connection.on(`NewMessage_${id}`, handleNewMessage);
+    return () => connection.off(`NewMessage_${id}`, handleNewMessage);
+  }, [connection, id]);
+
+  const handleSend = async () => {
+    if (!text.trim()) return;
+    const token = localStorage.getItem("token");
+    await fetch(`http://localhost:5248/api/chat/conversations/${id}/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text }),
+    });
+    setText("");
+  };
+
+  const handleHelped = (msgId: number, helped: boolean) => {
+    if (helped) {
+      setHelpedMessages((prev) => new Set([...prev, msgId]));
+    } else {
+      setRatedMessages((prev) => new Set([...prev, msgId]));
+      setHasRated(true);
+    }
+  };
+
+  const handleRating = async (msgId: number, rating: string) => {
+    const token = localStorage.getItem("token");
+    await fetch(`http://localhost:5248/api/chat/conversations/${id}/rating`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ rating }),
+    });
+    setRatedMessages((prev) => new Set([...prev, msgId]));
+    setHasRated(true);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-background flex flex-col z-50">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-4 border-b border-white/10 bg-background">
+        <button onClick={() => router.back()}>
+          <Image src="/undo.svg" alt="back" width={40} height={30} />
+        </button>
+        <div className="w-9 h-9 rounded-full bg-[#2e2e2e] border border-white/10 flex items-center justify-center">
+          <span className="text-xs font-semibold text-white/60">
+            {otherUserName?.slice(0, 2).toUpperCase()}
+          </span>
+        </div>
+        <span className="text-white font-bold">{otherUserName}</span>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
+        {messages.length === 0 && (
+          <p className="text-white/30 text-sm text-center mt-10">
+            No messages yet. Say hi! 👋
+          </p>
+        )}
+        {messages.map((msg) => {
+          const isMe = msg.senderId === currentUserId;
+          const hasHelped = helpedMessages.has(msg.id);
+          const hasRatedThis = ratedMessages.has(msg.id) || hasRated;
+
+          // Ascunde rating_check pentru celalalt user
+          if (msg.messageType === "rating_check" && !isMe) {
+            return null;
+          }
+
+          // Rating check message - doar pentru owner
+          if (msg.messageType === "rating_check" && isMe) {
+            return (
+              <div key={msg.id} className="flex flex-col items-center gap-3 my-4 px-2">
+                <div className="bg-[#1e1e1e] border border-white/10 rounded-2xl p-4 w-full flex flex-col gap-3">
+                  <p className="text-white/80 text-sm text-center font-medium">
+                    {msg.text}
+                  </p>
+
+                  {!hasHelped && !hasRatedThis && (
+                    <div className="flex gap-2 justify-center">
+                      <button
+                        onClick={() => handleHelped(msg.id, true)}
+                        className="flex-1 py-2.5 bg-green-400 text-black rounded-full text-xs font-bold"
+                      >
+                        Yes, they helped!
+                      </button>
+                      <button
+                        onClick={() => handleHelped(msg.id, false)}
+                        className="flex-1 py-2.5 bg-white/10 text-white rounded-full text-xs font-bold"
+                      >
+                        No, they didn't
+                      </button>
+                    </div>
+                  )}
+
+                  {hasHelped && !hasRatedThis && (
+                    <>
+                      <p className="text-white/50 text-xs text-center">
+                        How would you rate the help?
+                      </p>
+                      <div className="flex gap-2 justify-center">
+                        <button
+                          onClick={() => handleRating(msg.id, "helpful")}
+                          className="flex-1 py-2.5 bg-green-400 text-black rounded-full text-xs font-bold"
+                        >
+                          👍 Helpful
+                        </button>
+                        <button
+                          onClick={() => handleRating(msg.id, "not_helpful")}
+                          className="flex-1 py-2.5 bg-red-600 text-white rounded-full text-xs font-bold"
+                        >
+                          👎 Not Helpful
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {hasRatedThis && (
+                    <p className="text-white/40 text-xs text-center">
+                      ✓ Thank you for your feedback!
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          // Mesaj normal
+          return (
+            <div
+              key={msg.id}
+              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
+                  isMe
+                    ? "bg-green-400 text-black rounded-br-sm"
+                    : "bg-[#BEDCF5] text-[#003A69] rounded-bl-sm"
+                }`}
+              >
+                <p>{msg.text}</p>
+                <p className={`text-[10px] mt-1 ${isMe ? "text-black/50 text-right" : "text-[#003A69]/50"}`}>
+                  {formatTime(msg.createdAt)}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input */}
+      <div className="px-4 py-4 border-t border-white/10 flex gap-3 items-center bg-background">
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          placeholder="Type..."
+          className="flex-1 bg-[#2e2e2e] text-white text-sm px-4 py-3 rounded-full outline-none placeholder:text-white/30"
+        />
+        <button
+          onClick={handleSend}
+          disabled={!text.trim()}
+          className="w-10 h-10 bg-green-400 rounded-full flex items-center justify-center disabled:opacity-40"
+        >
+          <Send size={16} className="text-black" />
+        </button>
+      </div>
+    </div>
+  );
+}

@@ -66,6 +66,7 @@ public class UserService : IUserService
         Tools = string.IsNullOrWhiteSpace(user.Tools) ? new() : user.Tools.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList(),
         Role = user.Role,
         IsVerified = user.IsVerified,
+        TrustScore = user.TrustScore,
         CreatedAt = user.CreatedAt
     };
 }

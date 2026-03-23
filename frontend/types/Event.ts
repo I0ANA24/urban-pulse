@@ -12,4 +12,5 @@ export interface Event {
   createdByUserId: number;
   createdAt: string;
   isActive: boolean;
+  isCompleted?: boolean;
 }

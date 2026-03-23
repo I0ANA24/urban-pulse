@@ -60,6 +60,13 @@ namespace UrbanPulse.Infrastructure.Repositories
             }).ToList();
         }
 
+        public async Task<IEnumerable<Event>> GetByUserIdAsync(int userId)
+            => await _db.Events
+                .Include(e => e.CreatedByUser)
+                .Where(e => e.CreatedByUserId == userId && e.IsActive)
+                .OrderByDescending(e => e.CreatedAt)
+                .ToListAsync();
+
         public async Task<List<Event>> GetByTypeAsync(EventType type)
             => await _db.Events
                 .Include(e => e.CreatedByUser)
@@ -75,6 +82,15 @@ namespace UrbanPulse.Infrastructure.Repositories
                 ev.IsActive = false;
                 await _db.SaveChangesAsync();
             }
+        }
+
+        public async Task CompleteAsync(int eventId)
+        {
+            var ev = await _db.Events.FindAsync(eventId);
+            if (ev == null) return;
+            ev.IsCompleted = true;
+            ev.UpdatedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
         }
 
         private static double ToRad(double deg) => deg * Math.PI / 180;

@@ -20,5 +20,6 @@ namespace UrbanPulse.Core.DTOs.Events
         public string CreatedByEmail { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public bool IsActive { get; set; }
+        public bool IsCompleted { get; set; }
     }
 }

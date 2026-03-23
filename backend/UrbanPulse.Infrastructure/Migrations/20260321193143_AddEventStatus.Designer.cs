@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UrbanPulse.Infrastructure.Data;
@@ -11,9 +12,11 @@ using UrbanPulse.Infrastructure.Data;
 namespace UrbanPulse.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260321193143_AddEventStatus")]
+    partial class AddEventStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -186,9 +189,6 @@ namespace UrbanPulse.Infrastructure.Migrations
                     b.Property<bool>("IsRead")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("MessageType")
-                        .HasColumnType("text");
-
                     b.Property<int>("SenderId")
                         .HasColumnType("integer");
 
@@ -206,44 +206,6 @@ namespace UrbanPulse.Infrastructure.Migrations
                     b.HasIndex("SenderId");
 
                     b.ToTable("Messages");
-                });
-
-            modelBuilder.Entity("UrbanPulse.Core.Entities.Rating", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ConversationId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("RatedByUserId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("RatedUserId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConversationId");
-
-                    b.HasIndex("RatedByUserId");
-
-                    b.HasIndex("RatedUserId");
-
-                    b.ToTable("Ratings");
                 });
 
             modelBuilder.Entity("UrbanPulse.Core.Entities.User", b =>
@@ -295,9 +257,6 @@ namespace UrbanPulse.Infrastructure.Migrations
 
                     b.Property<string>("Tools")
                         .HasColumnType("text");
-
-                    b.Property<double>("TrustScore")
-                        .HasColumnType("double precision");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -401,33 +360,6 @@ namespace UrbanPulse.Infrastructure.Migrations
                     b.Navigation("Conversation");
 
                     b.Navigation("Sender");
-                });
-
-            modelBuilder.Entity("UrbanPulse.Core.Entities.Rating", b =>
-                {
-                    b.HasOne("UrbanPulse.Core.Entities.Conversation", "Conversation")
-                        .WithMany()
-                        .HasForeignKey("ConversationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("UrbanPulse.Core.Entities.User", "RatedByUser")
-                        .WithMany()
-                        .HasForeignKey("RatedByUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("UrbanPulse.Core.Entities.User", "RatedUser")
-                        .WithMany()
-                        .HasForeignKey("RatedUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Conversation");
-
-                    b.Navigation("RatedByUser");
-
-                    b.Navigation("RatedUser");
                 });
 
             modelBuilder.Entity("UrbanPulse.Core.Entities.Conversation", b =>

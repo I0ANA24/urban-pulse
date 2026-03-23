@@ -2,9 +2,13 @@ import { EventType } from "@/types/Event";
 
 interface CardActionsProps {
   type: EventType;
+  isMyPost?: boolean;
+  onMessage?: () => void;
+  isCompleted?: boolean;
+  onComplete?: () => void;
 }
 
-export default function CardActions({ type }: CardActionsProps) {
+export default function CardActions({ type, isMyPost, onMessage, isCompleted, onComplete }: CardActionsProps) {
   if (type === "Emergency") {
     return (
       <div className="flex flex-col gap-3 pb-3 mt-1">
@@ -28,11 +32,33 @@ export default function CardActions({ type }: CardActionsProps) {
   }
 
   if (type === "Skill" || type === "Lend") {
+    if (!isMyPost) {
+      return (
+        <div className="mt-4 mb-4 w-50 h-8 mx-auto flex justify-center">
+          <button
+            onClick={onMessage}
+            className="w-full h-full bg-[#BEDCF5] text-[#003A69] rounded-[10px] font-bold transition-transform active:scale-95 cursor-pointer"
+          >
+            Message
+          </button>
+        </div>
+      );
+    }
+
     return (
-      <div className="mt-4 mb-4 w-50 h-8 mx-auto flex justify-center">
-        <button className="w-full h-full bg-blue text-[#003A69] rounded-[10px] font-bold transition-transform active:scale-95 cursor-pointer">
-          Message
-        </button>
+      <div className="mt-4 mb-4 mx-auto flex justify-center w-full">
+        {isCompleted ? (
+          <div className="flex items-center gap-2 px-4 py-2 bg-green-400/10 border border-green-400/30 rounded-full">
+            <span className="text-green-400 text-xs font-bold">✓ Completed</span>
+          </div>
+        ) : (
+          <button
+            onClick={onComplete}
+            className="w-full h-8 bg-green-light text-black rounded-[10px] font-bold transition-transform active:scale-95 cursor-pointer"
+          >
+            Mark as Completed
+          </button>
+        )}
       </div>
     );
   }

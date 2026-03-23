@@ -18,6 +18,7 @@ namespace UrbanPulse.Core.DTOs.User
         public bool IsVerified { get; set; }
         public List<string> Tools { get; set; } = new();
         public string Role { get; set; } = string.Empty;
+        public double TrustScore { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }
