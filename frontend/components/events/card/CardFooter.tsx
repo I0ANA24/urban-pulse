@@ -37,13 +37,13 @@ export default function CardFooter({
         <div className="flex items-center gap-3 mt-3">
           <button
             onClick={onViewInsights}
-            className="px-4 py-1.5 rounded-full border border-white/20 bg-secondary text-white text-xs font-semibold transition-transform active:scale-95 cursor-pointer hover:bg-white/5"
+            className="h-10 w-30 rounded-[20] bg-blue text-[#04007D] text-sm font-bold transition-transform active:scale-95 cursor-pointer hover:bg-blue/95 duration-200"
           >
             View insights
           </button>
 
           <div className="flex items-center gap-1.5">
-            <Flag size={16} className="text-red-emergency fill-red-emergency" />
+            <Flag size={20} className="text-red-emergency fill-red-emergency" />
             <span className="text-white font-bold text-sm">{flagCount}</span>
           </div>
         </div>
@@ -58,18 +58,40 @@ export default function CardFooter({
   return (
     <div className="flex items-center justify-between pt-1 border-t-2 border-white/10 mt-2">
       <div className="flex items-center gap-5 mt-3">
-        <button onClick={onLike} className="flex items-center gap-1.5 transition-transform active:scale-90">
-          <Heart size={22} className={liked ? "fill-green-light text-green-light" : "text-green-light"} />
+        <button
+          onClick={onLike}
+          className="flex items-center gap-1.5 transition-transform active:scale-90"
+        >
+          <Heart
+            size={22}
+            className={
+              liked ? "fill-green-light text-green-light" : "text-green-light"
+            }
+          />
           <span className="text-white font-bold">{likes}</span>
         </button>
 
-        <button onClick={onComment} className="flex items-center gap-1.5 transition-transform active:scale-90">
-          <MessageCircle size={22} className="fill-green-light text-green-light" />
+        <button
+          onClick={onComment}
+          className="flex items-center gap-1.5 transition-transform active:scale-90"
+        >
+          <MessageCircle
+            size={22}
+            className="fill-green-light text-green-light"
+          />
           <span className="text-white font-bold">{comments}</span>
         </button>
 
-        <button onClick={onSave} className="flex items-center transition-transform active:scale-90">
-          <Bookmark size={22} className={saved ? "fill-green-light text-green-light" : "text-green-light"} />
+        <button
+          onClick={onSave}
+          className="flex items-center transition-transform active:scale-90"
+        >
+          <Bookmark
+            size={22}
+            className={
+              saved ? "fill-green-light text-green-light" : "text-green-light"
+            }
+          />
         </button>
       </div>
 

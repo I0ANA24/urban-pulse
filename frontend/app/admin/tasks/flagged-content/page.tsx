@@ -85,7 +85,7 @@ export default function FlaggedContentPage() {
   return (
     <div className="w-full flex flex-col gap-4 animate-fade-up pb-20">
       {/* Header */}
-      <div className="flex items-center relative">
+      <div className="flex items-center relative mb-4">
         <button
           onClick={() => router.back()}
           className="cursor-pointer hover:scale-105 active:scale-95 z-10"
@@ -101,7 +101,7 @@ export default function FlaggedContentPage() {
 
         <div className="absolute inset-0 flex items-center justify-center gap-2">
           <h1 className="text-white font-bold text-xl">Flagged content</h1>
-          <span className="w-2.5 h-2.5 rounded-full bg-red-emergency" />
+          <span className="w-2.5 h-2.5 rounded-full bg-blue" />
         </div>
       </div>
 
