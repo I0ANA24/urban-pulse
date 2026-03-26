@@ -80,11 +80,7 @@ export default function AdminTasksPage() {
                 </p>
               </div>
 
-              <ChevronRight
-                size={36}
-                className={task.chevronColor}
-                strokeWidth={2.5}
-              />
+              <ChevronRight className={`size-12 -mr-4 ${task.chevronColor}`} strokeWidth={1.5} />
             </div>
           </Link>
         ))}

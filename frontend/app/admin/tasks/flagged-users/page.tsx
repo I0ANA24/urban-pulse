@@ -50,7 +50,7 @@ export default function FlaggedUsersPage() {
 
         <div className="absolute inset-0 flex items-center justify-center gap-2">
           <h1 className="text-white font-bold text-xl">Flagged users</h1>
-          <span className="w-2.5 h-2.5 rounded-full bg-[#C0392B]" />
+          <span className="w-2.5 h-2.5 rounded-full bg-red-emergency" />
         </div>
       </div>
 
@@ -60,7 +60,7 @@ export default function FlaggedUsersPage() {
           <button
             key={user.id}
             onClick={() => handleUserClick(user.id)}
-            className="w-full bg-[#1e1e1e] border border-[#C0392B] rounded-2xl px-5 py-4 flex items-center justify-between transition-transform active:scale-[0.98] cursor-pointer"
+            className="w-full bg-secondary border border-red-emergency rounded-2xl px-5 py-4 flex items-center justify-between transition-transform active:scale-[0.98] cursor-pointer"
           >
             <div className="flex items-center gap-4">
               {/* Avatar */}
@@ -75,17 +75,13 @@ export default function FlaggedUsersPage() {
               </div>
 
               {/* Name */}
-              <span className="text-white font-semibold text-lg">
+              <span className="text-white text-xl">
                 {user.name}
               </span>
             </div>
 
             {/* Chevron */}
-            <ChevronRight
-              size={24}
-              className="text-white/40"
-              strokeWidth={2}
-            />
+            <ChevronRight className={`size-9`} strokeWidth={1.5} />
           </button>
         ))}
       </div>
