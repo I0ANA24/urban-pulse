@@ -11,20 +11,20 @@ const tasks = [
     title: "Flagged users",
     subtitle: "10 users",
     href: "/admin/tasks/flagged-users",
-    bgColor: "bg-[#A53A3A]",
+    bgColor: "bg-red-emergency",
     textColor: "text-white",
-    subtitleColor: "text-white/70",
-    chevronColor: "text-white/50",
+    subtitleColor: "text-white",
+    chevronColor: "text-white",
   },
   {
     id: "flagged-content",
     title: "Flagged content",
     subtitle: "3 posts",
     href: "/admin/tasks/flagged-content",
-    bgColor: "bg-[#C8D8E8]",
-    textColor: "text-[#1a1a1a]",
-    subtitleColor: "text-[#1a1a1a]/60",
-    chevronColor: "text-[#1a1a1a]/40",
+    bgColor: "bg-blue",
+    textColor: "text-black",
+    subtitleColor: "text-black",
+    chevronColor: "text-black",
   },
   {
     id: "merge-duplicates",
@@ -32,9 +32,9 @@ const tasks = [
     subtitle: "4 tasks",
     href: "/admin/tasks/merge-duplicates",
     bgColor: "bg-yellow-primary",
-    textColor: "text-[#1a1a1a]",
-    subtitleColor: "text-[#1a1a1a]/60",
-    chevronColor: "text-[#1a1a1a]/40",
+    textColor: "text-black",
+    subtitleColor: "text-black",
+    chevronColor: "text-black",
   },
 ];
 
@@ -60,7 +60,7 @@ export default function AdminTasksPage() {
 
         <div className="absolute inset-0 flex items-center justify-center gap-2">
           <h1 className="text-white font-bold text-xl">Tasks</h1>
-          <span className="w-2.5 h-2.5 rounded-full bg-[#C0392B]" />
+          <span className="w-2.5 h-2.5 rounded-full bg-red-emergency" />
         </div>
       </div>
 
@@ -69,9 +69,9 @@ export default function AdminTasksPage() {
         {tasks.map((task) => (
           <Link key={task.id} href={task.href}>
             <div
-              className={`${task.bgColor} w-full rounded-2xl p-6 flex items-center justify-between transition-transform active:scale-[0.98] cursor-pointer min-h-32.5`}
+              className={`${task.bgColor} w-full rounded-[20] p-8 flex items-center justify-between transition-transform active:scale-[0.98] cursor-pointer h-34`}
             >
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col h-full justify-between gap-1.5">
                 <h2 className={`${task.textColor} font-bold text-2xl`}>
                   {task.title}
                 </h2>
