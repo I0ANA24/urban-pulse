@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Check, ClipboardCheck, TriangleAlert } from "lucide-react";
+import { ClipboardCheck, TriangleAlert } from "lucide-react";
 import EventTag from "@/components/ui/EventTag";
 import UserReportCard from "@/components/admin/UserReportCard";
 import PortalModal from "@/components/ui/PortalModal";
@@ -11,6 +11,8 @@ import ConfirmModal from "@/components/ui/ConfirmModal";
 import { EventType } from "@/types/Event";
 import { Trash2 } from "lucide-react";
 import ResolveTaskModal from "@/components/ui/ResolveTaskModal";
+import NumberOfReports from "@/components/admin/NumberOfReports";
+import CheckButton from "@/components/admin/CheckButton";
 
 interface Report {
   id: string;
@@ -84,18 +86,8 @@ export default function FlaggedContentDetailPage() {
               className="-ml-2"
             />
           </button>
-
-          <button
-            onClick={() => setShowResolveModal(true)}
-            className={`p-3 rounded-full transition-all bg-green-light hover:bg-green-light/90 active:scale-95 cursor-pointer z-100"
-            }`}
-          >
-            <ClipboardCheck
-              size={26}
-              className="text-black"
-              strokeWidth={1.8}
-            />
-          </button>
+          
+          <CheckButton onClick={() => setShowResolveModal(true)} />
         </div>
 
         {/* ── Post detail card ── */}
@@ -147,17 +139,7 @@ export default function FlaggedContentDetailPage() {
         </div>
 
         {/* ── Number of reports ── */}
-        <div className="flex items-center gap-2 px-2 mt-8">
-          <TriangleAlert
-            size={36}
-            fill="#A53A3A"
-            color="black"
-            className="text-red-emergency"
-          />
-          <span className="text-red-emergency text-xl">
-            Number of reports: {mockPostData.reports.length}
-          </span>
-        </div>
+        <NumberOfReports />
 
         {/* ── Reports list ── */}
         <div className="flex flex-col gap-4">
@@ -185,29 +167,6 @@ export default function FlaggedContentDetailPage() {
         redButtonText="Delete post"
       />
 
-      {/* <PortalModal
-        isOpen={showResolveModal}
-        onClose={() => setShowResolveModal(false)}
-      >
-        <div className="flex items-center justify-center py-4 border-b border-white/10">
-          <h2 className="text-base font-bold text-white">Resolve task</h2>
-        </div>
-        <div className="flex flex-col p-5 gap-3">
-          <button
-            onClick={handleDismiss}
-            className="w-full py-4 rounded-xl bg-green-light hover:bg-green-light/80 active:scale-95 transition-all font-bold text-white text-base cursor-pointer"
-          >
-            Dismiss
-          </button>
-          <button
-            onClick={handleOpenDeleteConfirm}
-            className="w-full py-4 rounded-xl bg-red-emergency hover:bg-red-emergency/80 active:scale-95 transition-all font-bold text-white text-base cursor-pointer"
-          >
-            Delete post
-          </button>
-        </div>
-      </PortalModal> */}
-
       {/* ── Delete Post Confirmation Modal ── */}
       <ConfirmModal
         isOpen={showDeleteConfirm}
@@ -216,7 +175,23 @@ export default function FlaggedContentDetailPage() {
         icon={<Trash2 />}
         title="Delete post"
         boldText="delete this post?"
-      />
+      >
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="reason"
+            className="text-white font-bold"
+          >
+            Reason
+          </label>
+
+          <input
+            type="text"
+            id="reason"
+            placeholder="e.g.: Wrong tag"
+            className="w-full bg-input border border-red-emergency rounded-[10] px-3 py-2 text-white text-sm outline-none"
+          />
+        </div>
+      </ConfirmModal>
     </>
   );
 }

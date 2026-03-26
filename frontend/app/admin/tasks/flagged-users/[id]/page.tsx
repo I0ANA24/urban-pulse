@@ -3,10 +3,14 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Check } from "lucide-react";
+import { Ban, Check, ClipboardCheck } from "lucide-react";
 import UserReportCard from "@/components/admin/UserReportCard";
 import PortalModal from "@/components/ui/PortalModal";
 import BanUserModal from "@/components/admin/BanUserModal";
+import NumberOfReports from "@/components/admin/NumberOfReports";
+import CheckButton from "@/components/admin/CheckButton";
+import ResolveTaskModal from "@/components/ui/ResolveTaskModal";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 // ── Mock data — înlocuiește cu fetch-uri din API ──
 interface Report {
@@ -15,7 +19,7 @@ interface Report {
   reporterAvatar: string;
   date: string;
   time: string;
-  category: string;
+  title: string;
   description: string;
 }
 
@@ -31,7 +35,7 @@ const mockUserData = {
       reporterAvatar: "/profile.png",
       date: "15.02.2026",
       time: "7:20",
-      category: "Harassment and abuse",
+      title: "Harassment and abuse",
       description:
         "This user has been repeatedly sending me offensive messages and using abusive language towards me.",
     },
@@ -41,7 +45,7 @@ const mockUserData = {
       reporterAvatar: "/profile.png",
       date: "15.02.2026",
       time: "7:20",
-      category: "Spamming",
+      title: "Spamming",
       description: "He continues to send messages out of nowhere. Every day!",
     },
     {
@@ -50,7 +54,7 @@ const mockUserData = {
       reporterAvatar: "/profile.png",
       date: "15.02.2026",
       time: "7:20",
-      category: "Abuse",
+      title: "Abuse",
       description:
         "I received messages from this user constantly and it really bothered me. I also blocked him, but please do something.",
     },
@@ -63,6 +67,7 @@ export default function FlaggedUserDetailPage() {
   const [resolved, setResolved] = useState(false);
   const [showResolveModal, setShowResolveModal] = useState(false);
   const [showBanModal, setShowBanModal] = useState(false);
+  const [banReason, setBanReason] = useState("");
 
   const handleDismiss = () => {
     setShowResolveModal(false);
@@ -103,22 +108,12 @@ export default function FlaggedUserDetailPage() {
             />
           </button>
 
-          <button
-            onClick={() => setShowResolveModal(true)}
-            disabled={resolved}
-            className={`p-3 rounded-full transition-all ${
-              resolved
-                ? "bg-green-500"
-                : "bg-green-light hover:bg-green-600 active:scale-95"
-            }`}
-          >
-            <Check size={24} className="text-white" strokeWidth={3} />
-          </button>
+          <CheckButton onClick={() => setShowResolveModal(true)} />
         </div>
 
         {/* User info */}
         <section className="w-full flex justify-around items-center px-2">
-          <div className="w-36 h-36 rounded-full overflow-hidden flex-shrink-0">
+          <div className="w-36 h-36 rounded-full overflow-hidden shrink-0">
             <Image
               src={mockUserData.avatar}
               alt={mockUserData.name}
@@ -169,21 +164,10 @@ export default function FlaggedUserDetailPage() {
         </section>
 
         {/* Reports count */}
-        <div className="flex items-center gap-2 justify-center">
-          <div className="flex items-center justify-center w-7 h-7">
-            <svg viewBox="0 0 24 24" className="w-6 h-6">
-              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-emergency" />
-              <path d="M2 17L12 22L22 17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-emergency" />
-              <path d="M2 12L12 17L22 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-emergency" />
-            </svg>
-          </div>
-          <span className="text-red-emergency font-semibold text-base">
-            Number of reports: {mockUserData.reports.length}
-          </span>
-        </div>
+        <NumberOfReports />
 
         {/* Reports list */}
-        <div className="flex flex-col gap-4 mt-2">
+        <div className="flex flex-col gap-4">
           {mockUserData.reports.map((report) => (
             <UserReportCard
               key={report.id}
@@ -191,7 +175,7 @@ export default function FlaggedUserDetailPage() {
               reporterAvatar={report.reporterAvatar}
               date={report.date}
               time={report.time}
-              category={report.category}
+              title={report.title}
               description={report.description}
             />
           ))}
@@ -199,36 +183,46 @@ export default function FlaggedUserDetailPage() {
       </div>
 
       {/* Resolve Task Modal */}
-      <PortalModal
+      <ResolveTaskModal
         isOpen={showResolveModal}
         onClose={() => setShowResolveModal(false)}
-      >
-        <div className="flex items-center justify-center py-4 border-b border-white/10">
-          <h2 className="text-base font-bold text-white">Resolve task</h2>
-        </div>
-        <div className="flex flex-col p-5 gap-3">
-          <button
-            onClick={handleDismiss}
-            className="w-full py-4 rounded-xl bg-green-light hover:bg-green-light/80 active:scale-95 transition-all font-bold text-white text-base cursor-pointer"
-          >
-            Dismiss
-          </button>
-          <button
-            onClick={handleOpenBanModal}
-            className="w-full py-4 rounded-xl bg-red-emergency hover:bg-red-emergency/80 active:scale-95 transition-all font-bold text-white text-base cursor-pointer"
-          >
-            Ban user
-          </button>
-        </div>
-      </PortalModal>
+        handleDismiss={handleDismiss}
+        handleOpenDeleteConfirm={handleOpenBanModal}
+        greenButtonText="Dismiss"
+        redButtonText="Ban user"
+      />
 
       {/* Ban User Modal */}
-      <BanUserModal
+      {/* <BanUserModal
         isOpen={showBanModal}
         onClose={() => setShowBanModal(false)}
         onConfirm={handleBanUser}
         defaultReason="Harassment and abuse"
-      />
+      /> */}
+
+      <ConfirmModal
+        isOpen={showBanModal}
+        onClose={() => setShowBanModal(false)}
+        onConfirm={() => handleBanUser(banReason)}
+        icon={<Ban />}
+        title="Ban user"
+        boldText="ban this user?"
+      >
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="reason" className="text-white font-bold">
+            Reason
+          </label>
+
+          <input
+            type="text"
+            id="reason"
+            value={banReason}
+            onChange={(e) => setBanReason(e.target.value)}
+            placeholder="e.g. Harassment and abuse: "
+            className="w-full bg-input border border-red-emergency rounded-[10] px-3 py-2 text-white text-sm outline-none"
+          />
+        </div>
+      </ConfirmModal>
     </>
   );
 }

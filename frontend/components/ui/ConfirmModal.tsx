@@ -4,7 +4,7 @@ import PortalModal from "@/components/ui/PortalModal";
 interface ConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (reason?: string) => void;
   icon: ReactNode;
   title: string;
   boldText: string;
@@ -40,7 +40,7 @@ export default function ConfirmModal({
       <div className="h-0.5 bg-white/10 mx-6" />
 
       {/* Body */}
-      <div className="px-5 py-6 flex flex-col gap-6">
+      <div className="px-6 py-6 flex flex-col gap-6">
         {children}
 
         {/* Question */}
@@ -52,7 +52,7 @@ export default function ConfirmModal({
         {/* YES / NO */}
         <div className="flex items-center justify-center mb-4 w-[80%] rounded-xl overflow-hidden h-10 mx-auto">
           <button
-            onClick={onConfirm}
+            onClick={() => onConfirm()}
             disabled={loading}
             className="flex-1 h-full font-bold text-white bg-third cursor-pointer hover:bg-third/80 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >

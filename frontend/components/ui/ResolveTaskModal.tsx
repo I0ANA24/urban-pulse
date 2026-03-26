@@ -1,6 +1,6 @@
 import PortalModal from "./PortalModal";
 
-interface ResolveTaskModal {
+interface ResolveTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   handleDismiss: () => void;
@@ -16,7 +16,7 @@ export default function ResolveTaskModal({
   handleOpenDeleteConfirm,
   greenButtonText,
   redButtonText,
-}: ResolveTaskModal) {
+}: ResolveTaskModalProps) {
   return (
     <PortalModal isOpen={isOpen} onClose={onClose}>
       <div className="flex flex-col items-center justify-center p-6">
