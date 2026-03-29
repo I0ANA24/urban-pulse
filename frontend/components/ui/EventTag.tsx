@@ -13,7 +13,7 @@ export default function EventTag({ type, className = "" }: EventTagProps) {
 
   return (
     <span
-      className={`w-21 text-center py-2 rounded-[10px] text-[10px] font-bold uppercase ${className}`}
+      className={`block w-21 text-center py-2 rounded-[10px] text-[10px] font-bold uppercase ${className}`}
       style={{
         backgroundColor: style.bgColor,
         color: style.textColor,

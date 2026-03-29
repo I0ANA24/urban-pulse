@@ -23,7 +23,7 @@ export default function HorizontalCard({
   return (
     <div className="w-full px-5 py-4 bg-secondary rounded-2xl flex items-center justify-between">
       <div className="w-full flex items-center flex-1 relative">
-        <h5 className="font-bold text-sm min-w-17.5">{title}</h5>
+        <h5 className="font-bold text-sm">{title}</h5>
 
         <div className="w-px h-5 bg-white/90 mx-3"></div>
 

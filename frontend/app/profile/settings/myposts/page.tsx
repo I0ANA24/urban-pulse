@@ -1,22 +1,19 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import ProfilePageTemplate from "@/components/profile/ProfilePageTemplate";
 import EventCard from "@/components/events/EventCard";
+import EventFilters from "@/components/dashboard/EventFilters";
 import { Event, EventType } from "@/types/Event";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
 import { Trash2 } from "lucide-react";
-
-const FILTERS = ["ALL", "GENERAL", "EMERGENCY", "SKILL", "LEND"];
 
 export default function MyPostsPage() {
   const [myEvents, setMyEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("ALL");
-  const [scrolledRight, setScrolledRight] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchMyPosts = async () => {
@@ -82,52 +79,10 @@ export default function MyPostsPage() {
     <ProfilePageTemplate title="My Posts">
       <div className="w-full flex flex-col gap-4 mt-4">
 
-        {/* Filter buttons */}
-        <div className="relative w-full">
-          <div
-            ref={scrollRef}
-            className="flex gap-2 overflow-x-auto scrollbar-none pb-1"
-            onScroll={(e) => {
-              setScrolledRight(e.currentTarget.scrollLeft > 50);
-            }}
-          >
-            {FILTERS.map((filter) => {
-              const isActive = activeFilter === filter;
-              const style = filter !== "ALL"
-                ? EVENT_TAG_STYLES[filter.charAt(0) + filter.slice(1).toLowerCase() as EventType]
-                : null;
-
-              return (
-                <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className="flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all"
-                  style={
-                    style
-                      ? {
-                          backgroundColor: style.bgColor,
-                          color: style.textColor,
-                          opacity: isActive ? 1 : 0.5,
-                        }
-                      : {
-                          backgroundColor: isActive ? "white" : "rgba(255,255,255,0.15)",
-                          color: isActive ? "black" : "rgba(255,255,255,0.6)",
-                        }
-                  }
-                >
-                  {filter}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="absolute right-0 top-0 bottom-1 w-10 bg-gradient-to-l from-background to-transparent pointer-events-none" />
-        </div>
-
-        <div className="flex justify-center gap-1.5 -mt-2">
-          <div className={`h-1.5 rounded-full transition-all ${!scrolledRight ? "w-4 bg-white/60" : "w-1.5 bg-white/20"}`} />
-          <div className={`h-1.5 rounded-full transition-all ${scrolledRight ? "w-4 bg-white/60" : "w-1.5 bg-white/20"}`} />
-        </div>
+        <EventFilters 
+          activeFilter={activeFilter} 
+          setActiveFilter={setActiveFilter} 
+        />
 
         {loading && (
           <p className="text-white/40 text-sm text-center mt-10">Loading your posts...</p>

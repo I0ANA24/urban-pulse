@@ -102,7 +102,7 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 w-full overflow-hidden">
               {profile.skills.map((skill, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary flex-shrink-0"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary shrink-0"></span>
                   {skill}
                 </div>
               ))}
