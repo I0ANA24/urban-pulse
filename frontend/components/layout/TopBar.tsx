@@ -20,17 +20,7 @@ export default function TopBar({
     <div
       className={`flex ${back || addPost ? "justify-between" : "justify-end"} ${addPost ? "mb-[calc(15vh-78px)]" : ""} items-center`}
     >
-      {back && (
-        <GoBackButton>
-          <Image
-            src="/undo.svg"
-            alt="go_back"
-            width={69}
-            height={49}
-            className="-ml-2"
-          />
-        </GoBackButton>
-      )}
+      {back && <GoBackButton />}
       {addPost && (
         <ProfileRoundButton route="/addPost">
           <Plus width={47} height={30} strokeWidth={3} />

@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, Bookmark } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Flag, ThumbsUp } from "lucide-react";
 import EventTag from "@/components/ui/EventTag";
 import { EventType } from "@/types/Event";
 
@@ -11,28 +11,90 @@ interface CardFooterProps {
   type: EventType;
   comments: number;
   onComment: () => void;
+  /** Admin mode: afișează "View insights" + flag count în loc de like/comment/bookmark */
+  flagCount?: number;
+  onViewInsights?: () => void;
   isMyPost?: boolean;
 }
 
-export default function CardFooter({ likes, liked, onLike, saved, onSave, type, comments, onComment }: CardFooterProps) {
+export default function CardFooter({
+  likes,
+  liked,
+  onLike,
+  saved,
+  onSave,
+  type,
+  comments,
+  onComment,
+  flagCount,
+  onViewInsights,
+}: CardFooterProps) {
+  const isAdmin = flagCount !== undefined;
+
+  if (isAdmin) {
+    return (
+      <div className="flex items-center justify-between pt-1 border-t-2 border-white/10 mt-2">
+        <div className="flex items-center gap-3 mt-3">
+          <button
+            onClick={onViewInsights}
+            className="h-10 w-30 rounded-[20] bg-blue text-[#04007D] text-sm font-bold transition-transform active:scale-95 cursor-pointer hover:bg-blue/95 duration-200"
+          >
+            View insights
+          </button>
+
+          <div className="flex items-center gap-1.5">
+            <Flag size={20} className="text-red-emergency fill-red-emergency" />
+            <span className="text-white font-bold text-sm">{flagCount}</span>
+          </div>
+        </div>
+
+        <div className="mt-3">
+          <EventTag type={type} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center justify-between pt-1 border-t-2 border-white/10 mt-2">
       <div className="flex items-center gap-5 mt-3">
-        <button onClick={onLike} className="flex items-center gap-1.5 transition-transform active:scale-90">
-          <Heart size={22} className={liked ? "fill-green-light text-green-light" : "text-green-light"} />
+        <button
+          onClick={onLike}
+          className="flex items-center gap-1.5 transition-transform active:scale-90"
+        >
+          <ThumbsUp
+            size={22}
+            className={
+              liked ? "fill-green-light text-green-light" : "text-green-light"
+            }
+          />
           <span className="text-white font-bold">{likes}</span>
         </button>
-        
-        <button onClick={onComment} className="flex items-center gap-1.5 transition-transform active:scale-90">
-          <MessageCircle size={22} className="fill-green-400 text-green-400" />
+
+        <button
+          onClick={onComment}
+          className="flex items-center gap-1.5 transition-transform active:scale-90"
+        >
+          <MessageCircle
+            size={22}
+            className="fill-green-light text-green-light"
+          />
           <span className="text-white font-bold">{comments}</span>
         </button>
 
-        <button onClick={onSave} className="flex items-center transition-transform active:scale-90">
-          <Bookmark size={22} className={saved ? "fill-green-light text-green-light" : "text-green-light"} />
+        <button
+          onClick={onSave}
+          className="flex items-center transition-transform active:scale-90"
+        >
+          <Bookmark
+            size={22}
+            className={
+              saved ? "fill-green-light text-green-light" : "text-green-light"
+            }
+          />
         </button>
       </div>
-      
+
       <div className="mt-3">
         <EventTag type={type} />
       </div>

@@ -29,7 +29,7 @@ export default function CardHeader({
     >
       {/* image + name */}
       <div className="flex gap-4 justify-center items-center">
-        <div className="w-9 h-auto">
+        <div className="w-10 h-10">
           <Image
             src="/profile.png"
             width={40}

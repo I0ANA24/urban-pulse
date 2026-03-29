@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 export default function MainPageImage() {
   const pathname = usePathname();
-  const isDashboard = pathname === "/dashboard";
+  const isDashboard = pathname === "/dashboard" || pathname === "/admin";
 
   if (!isDashboard) {
     return null;

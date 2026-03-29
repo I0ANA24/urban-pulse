@@ -25,7 +25,7 @@ export default function QuietHoursPage() {
       <div className="w-full flex flex-col justify-center items-center gap-12">
         <section className="w-full">
           <h2 className="text-lg">Certain hours</h2>
-          <div className="w-full h-px bg-[#383838] my-2 mb-4"></div>
+          <div className="w-full h-px bg-third my-2 mb-4"></div>
 
           <div className="w-full flex justify-between items-center mb-6 gap-1">
             {days.map((day, index) => (
@@ -73,7 +73,7 @@ export default function QuietHoursPage() {
 
         <section className="w-full mt-4">
           <h2 className="text-lg">All Day</h2>
-          <div className="w-full h-px bg-[#383838] my-2 mb-4"></div>
+          <div className="w-full h-px bg-third my-2 mb-4"></div>
 
           <div className="w-full flex justify-between items-center mb-6 gap-1">
             {days.map((day, index) => (

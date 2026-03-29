@@ -67,7 +67,7 @@ export default function ProfilePage() {
       </section>
 
       <section className="w-full">
-        <div className="w-full mb-4 border border-[#383838]"></div>
+        <div className="w-full mb-4 border border-third"></div>
         <p className="w-full">
           <span className="font-bold">Bio: </span>
           {profile?.bio ? (

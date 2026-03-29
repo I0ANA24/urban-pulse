@@ -31,7 +31,7 @@ export default function EventFilters({ activeFilter, setActiveFilter }: EventFil
                 onClick={() =>
                   setActiveFilter(activeFilter === filter.title ? "ALL" : filter.title)
                 }
-                className={`shrink-0 w-25 h-11 rounded-[10px] text-xs font-bold snap-start transition-opacity ${
+                className={`shrink-0 w-25 h-11 rounded-[10px] text-xs font-bold snap-start transition-opacity cursor-pointer ${
                   activeFilter === "ALL" || activeFilter === filter.title
                     ? "opacity-100"
                     : "opacity-40"

@@ -6,6 +6,9 @@
   --color-yellow-secondary: #FFF7BA;
 
   --color-red-emergency: #A53A3A;
+  --color-blue: #BEDCF5;
+
+  --color-input: #130A0A;
   
   --color-weather-nice: #475366;
   --color-weather-gloomy: #F6FC82;
@@ -15,6 +18,8 @@
 
   --color-background: #0a0a0a;
   --color-secondary: #252525;
+  --color-third: #383838;
+
   --color-foreground: #ffffff;
 
   --font-montagu: var(--font-montagu);

@@ -7,6 +7,7 @@ import DashboardBanner from "@/components/dashboard/DashboardBanner";
 import { Event, EventType } from "@/types/Event";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
 import { useSignalR } from "@/context/SignalRContext";
+import UrbanTitle from "@/components/ui/UrbanTitle";
 
 export default function DashboardPage() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -63,13 +64,10 @@ export default function DashboardPage() {
     <div className="w-full pb-[8vh]">
       <div className="w-full py-2 flex flex-col items-center gap-4 mb-4">
 
-        <div className="flex items-center gap-1">
-          <h1 className="font-montagu text-white text-[32px]">UrbanPulse</h1>
-          <span className="w-2 h-2 rounded-full bg-green-light" />
-        </div>
+        <UrbanTitle />
 
         {isSevereWeather && (
-          <div className="sticky top-0 z-50 w-full relative animate-fade-up">
+          <div className="sticky top-0 z-50 w-full animate-fade-up">
             <div className="absolute inset-0 bg-red-emergency rounded-2xl animate-ping opacity-30" />
             
             <div className="relative w-full bg-red-emergency rounded-2xl px-4 py-3 flex items-center justify-between gap-3 cursor-pointer hover:opacity-90 transition-opacity">

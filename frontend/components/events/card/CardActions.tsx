@@ -37,7 +37,7 @@ export default function CardActions({ type, isMyPost, onMessage, isCompleted, on
         <div className="mt-4 mb-4 w-50 h-8 mx-auto flex justify-center">
           <button
             onClick={onMessage}
-            className="w-full h-full bg-[#BEDCF5] text-[#003A69] rounded-[10px] font-bold transition-transform active:scale-95 cursor-pointer"
+            className="w-full h-full bg-blue text-[#003A69] rounded-[10px] font-bold transition-transform active:scale-95 cursor-pointer"
           >
             Message
           </button>

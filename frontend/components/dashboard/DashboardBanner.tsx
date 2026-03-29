@@ -65,12 +65,12 @@ export default function DashboardBanner({
         priority
         className="absolute object-cover z-0 top-0 w-full h-full rounded-3xl"
       />
-      <div className="flex-1 z-2 bg-weather-nice rounded-2xl flex flex-col justify-center p-2 px-4 min-h-[80px]">
+      <div className="flex-1 z-2 bg-weather-nice rounded-2xl flex flex-col justify-center p-2 px-4 min-h-20">
         <p className="w-full font-bold text-lg">Event</p>
         <p className="w-full font-light">Game Night</p>
       </div>
       <div
-        className={`flex-1 z-2 rounded-2xl flex justify-between items-center p-2 px-4 min-h-[80px] transition-all ${
+        className={`flex-1 z-2 rounded-2xl flex justify-between items-center p-2 px-4 min-h-20 transition-all ${
           weather?.isSevere ? "bg-red-emergency" : "bg-weather-nice"
         }`}
       >
