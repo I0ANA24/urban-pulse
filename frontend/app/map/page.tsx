@@ -18,7 +18,7 @@ const MapView = dynamic(() => import("@/components/map/MapView"), {
 
 export default function MapPage() {
   return (
-    <div className="relative h-[calc(100vh-4rem)] w-full overflow-hidden">
+    <div className="relative h-screen w-full">
       <MapView />
     </div>
   );

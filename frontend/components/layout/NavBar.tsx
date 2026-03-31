@@ -13,10 +13,10 @@ export default function NavBar() {
     return null;
   }
 
-  const isAdmin = true;
+  const isAdmin = false;
 
   return (
-    <div className="h-[8vh] w-[calc(100vw-32px)] rounded-[18px] fixed bottom-4 flex justify-center items-center overflow-hidden">
+      <div className="h-[8vh] w-[calc(100vw-32px)] rounded-[18px] fixed bottom-4 left-4 flex justify-center items-center overflow-hidden">
       <Image
         src="/navbar.svg"
         alt="navbar"

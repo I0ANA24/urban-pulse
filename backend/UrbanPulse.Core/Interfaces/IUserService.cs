@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UrbanPulse.Core.DTOs.User;
+﻿using UrbanPulse.Core.DTOs.User;
 
 namespace UrbanPulse.Core.Interfaces
 {
@@ -11,7 +6,8 @@ namespace UrbanPulse.Core.Interfaces
     {
         Task<UserProfileDto?> GetProfileAsync(int userId);
         Task<UserProfileDto?> UpdateProfileAsync(int userId, UpdateProfileDto dto);
-        Task DeleteAccountAsync(int userId);
         Task<bool> ChangePasswordAsync(int userId, ChangePasswordDto dto);
+        Task DeleteAccountAsync(int userId);
+        Task<List<UserProfileDto>> GetUsersWithSkillsAsync();
     }
 }

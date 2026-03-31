@@ -29,6 +29,13 @@ public class UserController : ControllerBase
         return Ok(profile);
     }
 
+    [HttpGet("with-skills")]
+    public async Task<IActionResult> GetUsersWithSkills()
+    {
+        var users = await _userService.GetUsersWithSkillsAsync();
+        return Ok(users);
+    }
+
     [HttpGet("my-posts")]
     public async Task<IActionResult> GetMyPosts()
     {

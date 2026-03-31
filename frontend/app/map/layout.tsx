@@ -1,11 +1,10 @@
-import Container from "@/components/layout/Container";
-import TopBar from "@/components/layout/TopBar";
+import NavBar from "@/components/layout/NavBar";
 
 export default function MapLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Container>
-      <TopBar back={false} notifications={true} settings={false} />
+    <>
       {children}
-    </Container>
+      <NavBar />
+    </>
   );
 }

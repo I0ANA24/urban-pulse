@@ -19,6 +19,12 @@ public class UserService : IUserService
         return MapToDto(user);
     }
 
+    public async Task<List<UserProfileDto>> GetUsersWithSkillsAsync()
+    {
+        var users = await _userRepository.GetUsersWithSkillsAsync();
+        return users.Select(MapToDto).ToList();
+    }
+
     public async Task<UserProfileDto?> UpdateProfileAsync(int userId, UpdateProfileDto dto)
     {
         var user = await _userRepository.GetByIdAsync(userId);
