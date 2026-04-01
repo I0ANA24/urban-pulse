@@ -333,6 +333,7 @@ function MarkersLayer({
 export default function MapView() {
   const [mounted, setMounted] = useState(false);
   const [filter, setFilter] = useState<FilterMode>("disponibili");
+  const [searchQuery, setSearchQuery] = useState("");
   const [userMarkers, setUserMarkers] = useState<UserMarker[]>([]);
   const [eventMarkersDisponibili, setEventMarkersDisponibili] = useState<EventMarker[]>([]);
   const [eventMarkersPotAjuta, setEventMarkersPotAjuta] = useState<EventMarker[]>([]);
@@ -409,8 +410,28 @@ export default function MapView() {
   const handleUserClick = useCallback((u: UserProfile) => { setSelectedUser(u); setSelectedEvent(null); }, []);
   const handleEventClick = useCallback((e: EventItem) => { setSelectedEvent(e); setSelectedUser(null); }, []);
 
-  const activeUserMarkers = filter === "disponibili" ? userMarkers : [];
-  const activeEventMarkers = filter === "disponibili" ? eventMarkersDisponibili : eventMarkersPotAjuta;
+  const q = searchQuery.toLowerCase().trim();
+
+  const filteredUserMarkers = q
+    ? userMarkers.filter(({ user }) =>
+        user.skills.some((s) => s.toLowerCase().includes(q)) ||
+        user.tools.some((t) => t.toLowerCase().includes(q)) ||
+        user.fullName?.toLowerCase().includes(q)
+      )
+    : userMarkers;
+
+  const filteredEventMarkers = (filter === "disponibili" ? eventMarkersDisponibili : eventMarkersPotAjuta).filter(({ event }) => {
+    if (!q) return true;
+    const tags = Array.isArray(event.tags) ? event.tags : [];
+    return (
+      event.description?.toLowerCase().includes(q) ||
+      tags.some((t) => t.toLowerCase().includes(q)) ||
+      event.createdByFullName?.toLowerCase().includes(q)
+    );
+  });
+
+  const activeUserMarkers = filter === "disponibili" ? filteredUserMarkers : [];
+  const activeEventMarkers = filteredEventMarkers;
   const isLoading = loadingUsers || loadingEvents;
 
   if (!mounted) return null;
@@ -438,17 +459,32 @@ export default function MapView() {
           />
         </MapContainer>
 
+        <div className="map-search-bar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="map-search-icon">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input
+            className="map-search-input"
+            placeholder={filter === "disponibili" ? "Search skills or tools..." : "Find someone to help with..."}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button className="map-search-clear" onClick={() => setSearchQuery("")}>✕</button>
+          )}
+        </div>
+
         <div className="filter-bar">
           <button
             className={`filter-btn ${filter === "disponibili" ? "filter-btn--active" : ""}`}
-            onClick={() => setFilter("disponibili")}
+            onClick={() => { setFilter("disponibili"); setSearchQuery(""); }}
           >
             <span className="filter-icon">👤</span>
             Available
           </button>
           <button
             className={`filter-btn ${filter === "pot-ajuta" ? "filter-btn--active pot-ajuta-active" : ""}`}
-            onClick={() => setFilter("pot-ajuta")}
+            onClick={() => { setFilter("pot-ajuta"); setSearchQuery(""); }}
           >
             <span className="filter-icon">🤝</span>
             Can Help
