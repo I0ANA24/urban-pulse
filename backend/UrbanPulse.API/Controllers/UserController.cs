@@ -20,6 +20,14 @@ public class UserController : ControllerBase
         _eventService = eventService;
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var profile = await _userService.GetProfileAsync(id);
+        if (profile == null) return NotFound();
+        return Ok(profile);
+    }
+
     [HttpGet("profile")]
     public async Task<IActionResult> GetProfile()
     {

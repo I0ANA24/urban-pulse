@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { MapContainer, TileLayer, ZoomControl, useMap } from "react-leaflet";
 import L from "leaflet";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import "leaflet/dist/leaflet.css";
 import "./map.css";
 
 const DEFAULT_CENTER: [number, number] = [47.1585, 27.6014];
 const DEFAULT_ZOOM = 13;
+const API = "http://localhost:5248";
+
+type FilterMode = "disponibili" | "pot-ajuta";
 
 interface UserProfile {
   id: number;
@@ -21,6 +25,20 @@ interface UserProfile {
   address?: string;
 }
 
+interface EventItem {
+  id: number;
+  description: string;
+  type: number | string;
+  latitude: number;
+  longitude: number;
+  tags: string[] | string;
+  imageUrl?: string;
+  createdByUserId: number;
+  createdByEmail?: string;
+  createdByFullName?: string;
+  createdByUser?: { fullName?: string; email?: string };
+}
+
 interface UserMarker {
   user: UserProfile;
   lat: number;
@@ -29,33 +47,54 @@ interface UserMarker {
   hasTools: boolean;
 }
 
-function createIcon(type: "skills" | "tools" | "both-skills" | "both-tools") {
-  const isSkill = type === "skills" || type === "both-skills";
-  const color = isSkill ? "#FFD700" : "#3B82F6";
-  const shadow = isSkill ? "rgba(255,215,0,0.5)" : "rgba(59,130,246,0.5)";
-  const offsetX = type === "both-skills" ? -10 : type === "both-tools" ? 10 : 0;
+interface EventMarker {
+  event: EventItem;
+  type: "skill" | "lend" | "emergency";
+}
 
+function makeUserIcon(color: string, shadow: string, offset: number, symbol: string) {
   return L.divIcon({
     className: "",
-    html: `
-      <div class="skill-marker" style="transform: translateX(${offsetX}px)">
-        <svg width="28" height="36" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M14 0C6.268 0 0 6.268 0 14c0 9.8 14 22 14 22s14-12.2 14-22C28 6.268 21.732 0 14 0z" fill="${color}" filter="drop-shadow(0 2px 6px ${shadow})"/>
-          <circle cx="14" cy="13" r="5" fill="#1C1C1C"/>
-          ${isSkill
-            ? `<path d="M14 9.5l1.2 2.4 2.7.4-1.95 1.9.46 2.67L14 15.4l-2.41 1.47.46-2.67-1.95-1.9 2.7-.4z" fill="${color}"/>`
-            : `<path d="M11 10h6v2h-2v4h-2v-4h-2v-2z M12 16h4v1.5h-4z" fill="${color}"/>`
-          }
-        </svg>
-      </div>
-    `,
+    html: `<div class="map-marker" style="transform:translateX(${offset}px)">
+      <svg width="28" height="36" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 0C6.268 0 0 6.268 0 14c0 9.8 14 22 14 22s14-12.2 14-22C28 6.268 21.732 0 14 0z" fill="${color}" style="filter:drop-shadow(0 2px 8px ${shadow})"/>
+        <circle cx="14" cy="13" r="5.5" fill="#1C1C1C"/>
+        <text x="14" y="17" text-anchor="middle" font-size="7" fill="${color}">${symbol}</text>
+      </svg>
+    </div>`,
     iconSize: [28, 36],
     iconAnchor: [14, 36],
     popupAnchor: [0, -38],
   });
 }
 
-async function geocodeAddress(address: string): Promise<[number, number] | null> {
+function makeEventIcon(color: string, shadow: string, symbol: string) {
+  return L.divIcon({
+    className: "",
+    html: `<div class="map-marker">
+      <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 0C7.163 0 0 7.163 0 16c0 11.2 16 24 16 24s16-12.8 16-24C32 7.163 24.837 0 16 0z" fill="${color}" style="filter:drop-shadow(0 2px 10px ${shadow})"/>
+        <circle cx="16" cy="15" r="7" fill="#1C1C1C"/>
+        <text x="16" y="19.5" text-anchor="middle" font-size="9" fill="${color}">${symbol}</text>
+      </svg>
+    </div>`,
+    iconSize: [32, 40],
+    iconAnchor: [16, 40],
+    popupAnchor: [0, -42],
+  });
+}
+
+const ICONS = {
+  skillOnly:    () => makeUserIcon("#FFD700", "rgba(255,215,0,0.5)",   0,   "★"),
+  toolOnly:     () => makeUserIcon("#3B82F6", "rgba(59,130,246,0.5)",  0,   "⚙"),
+  bothSkill:    () => makeUserIcon("#FFD700", "rgba(255,215,0,0.5)",  -10,  "★"),
+  bothTool:     () => makeUserIcon("#3B82F6", "rgba(59,130,246,0.5)", +10,  "⚙"),
+  eventSkill:   () => makeEventIcon("#FFD700", "rgba(255,215,0,0.6)", "★"),
+  eventLend:    () => makeEventIcon("#3B82F6", "rgba(59,130,246,0.6)", "⚙"),
+  emergency:    () => makeEventIcon("#EF4444", "rgba(239,68,68,0.6)",  "!"),
+};
+
+async function geocode(address: string): Promise<[number, number] | null> {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`,
@@ -68,63 +107,70 @@ async function geocodeAddress(address: string): Promise<[number, number] | null>
 }
 
 function ProfileCard({ user, onClose }: { user: UserProfile; onClose: () => void }) {
-  const displayName = user.fullName ?? user.email?.split("@")[0] ?? "User";
+  const router = useRouter();
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch("http://localhost:5248/api/user/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((d) => setCurrentUserId(d.id));
+  }, []);
+
+  const handleContact = async () => {
+    const token = localStorage.getItem("token");
+    const res = await fetch("http://localhost:5248/api/chat/conversations", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ otherUserId: user.id }),
+    });
+    const data = await res.json();
+    onClose();
+    router.push(`/chat-conversation/${data.conversationId}`);
+  };
+
+  const isOwn = currentUserId === user.id;
+  const name = user.fullName ?? user.email?.split("@")[0] ?? "User";
   return (
-    <div className="profile-card-overlay" onClick={onClose}>
-      <div className="profile-card" onClick={(e) => e.stopPropagation()}>
-        <div className="profile-card-header">
-          <div className="profile-card-avatar">
-            <Image src="/profile.png" alt={displayName} width={64} height={64} className="object-cover w-full h-full" />
+    <div className="pc-overlay" onClick={onClose}>
+      <div className="pc-card" onClick={(e) => e.stopPropagation()}>
+        <div className="pc-header">
+          <div className="pc-avatar">
+            <Image src="/profile.png" alt={name} width={64} height={64} className="object-cover w-full h-full" />
           </div>
-          <div className="flex flex-col gap-2">
-            <h2 className="profile-card-name">{displayName}</h2>
-            <div className="trust-badge">
-              <span className="trust-label">Trust<br/>score</span>
-              <div className="trust-divider" />
-              <span className="trust-value">{Math.round(user.trustScore)}%</span>
+          <div className="flex flex-col gap-2 flex-1">
+            <h2 className="pc-name">{name}</h2>
+            <div className="flex items-center gap-3">
+              <div className="pc-trust">
+                <span className="pc-trust-label">Trust<br />score</span>
+                <div className="pc-trust-divider" />
+                <span className="pc-trust-value">{Math.round(user.trustScore)}%</span>
+              </div>
+              {isOwn ? (
+                <span className="ec-your-post">Your profile</span>
+              ) : (
+                <button className="ec-contact-btn" onClick={handleContact}>
+                  💬 Contact
+                </button>
+              )}
             </div>
           </div>
-          <button onClick={onClose} className="close-btn">✕</button>
         </div>
-
-        {user.bio && (
-          <div className="profile-card-section">
-            <p className="profile-card-bio">{user.bio}</p>
-          </div>
-        )}
-
+        {user.bio && <div className="pc-section bio-section"><p className="pc-bio">{user.bio}</p></div>}
         {user.skills.length > 0 && (
-          <div className="profile-card-section skills-section">
-            <h3 className="profile-card-section-title">
-              <span className="section-dot skills-dot" />
-              Skills
-            </h3>
-            <div className="skills-grid">
-              {user.skills.map((skill, i) => (
-                <div key={i} className="skill-item">
-                  <span className="skill-dot skills-dot" />
-                  {skill}
-                </div>
-              ))}
+          <div className="pc-section skills-section">
+            <h3 className="pc-section-title skills-title">★ Skills</h3>
+            <div className="pc-grid">
+              {user.skills.map((s, i) => <div key={i} className="pc-item"><span className="pc-dot skill-dot" />{s}</div>)}
             </div>
           </div>
         )}
-
         {user.tools.length > 0 && (
-          <div className="profile-card-section tools-section">
-            <h3 className="profile-card-section-title">
-              <span className="section-dot tools-dot" />
-              Tools & Resources
-            </h3>
-            <div className="flex flex-col gap-1">
-              {user.tools.map((tool, i) => (
-                <div key={i} className="skill-item">
-                  <span className="skill-dot tools-dot" />
-                  {tool}
-                </div>
-              ))}
-            </div>
+          <div className="pc-section tools-section">
+            <h3 className="pc-section-title tools-title">⚙ Tools & Resources</h3>
+            {user.tools.map((t, i) => <div key={i} className="pc-item"><span className="pc-dot tool-dot" />{t}</div>)}
           </div>
         )}
       </div>
@@ -132,102 +178,250 @@ function ProfileCard({ user, onClose }: { user: UserProfile; onClose: () => void
   );
 }
 
-function MarkersLayer({
-  markers,
-  onMarkerClick,
-}: {
-  markers: UserMarker[];
-  onMarkerClick: (user: UserProfile) => void;
-}) {
-  const map = useMap();
+function EventCard({ event, onClose }: { event: EventItem; onClose: () => void }) {
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [authorTrustScore, setAuthorTrustScore] = useState<number>(0);
+  const router = useRouter();
 
   useEffect(() => {
-    const leafletMarkers: L.Marker[] = [];
+    const token = localStorage.getItem("token");
+    const h = { Authorization: `Bearer ${token}` };
 
-    markers.forEach(({ user, lat, lng, hasSkills, hasTools }) => {
+    fetch(`${API}/api/user/profile`, { headers: h })
+      .then((r) => r.json())
+      .then((d) => setCurrentUserId(d.id));
+
+    fetch(`${API}/api/user/${event.createdByUserId}`, { headers: h })
+      .then((r) => { if (r.ok) return r.json(); return null; })
+      .then((d) => { if (d) setAuthorTrustScore(d.trustScore ?? 0); })
+      .catch(() => {});
+  }, [event.createdByUserId]);
+
+  const handleContact = async () => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API}/api/chat/conversations`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ otherUserId: event.createdByUserId, eventId: event.id }),
+    });
+    const data = await res.json();
+    onClose();
+    router.push(`/chat-conversation/${data.conversationId}`);
+  };
+
+  const typeNumMap: Record<number, string> = { 0: "General", 1: "Emergency", 2: "Skill", 3: "Lend" };
+  const typeStr = typeof event.type === "number" ? typeNumMap[event.type] : event.type;
+
+  const typeMap: Record<string, { label: string; color: string; bg: string }> = {
+    Emergency: { label: "🚨 Emergency", color: "#EF4444", bg: "rgba(239,68,68,0.15)" },
+    Skill:     { label: "★ Skill",      color: "#FFD700", bg: "rgba(255,215,0,0.15)" },
+    Lend:      { label: "⚙ Lend",       color: "#3B82F6", bg: "rgba(59,130,246,0.15)" },
+    General:   { label: "📌 General",   color: "#9ca3af", bg: "rgba(156,163,175,0.15)" },
+  };
+  const t = typeMap[typeStr ?? "Skill"] ?? typeMap["Skill"];
+  const name = event.createdByFullName || event.createdByEmail?.split("@")[0] || "Unknown";
+  const isOwn = currentUserId !== null && currentUserId === event.createdByUserId;
+
+  const tagsArray: string[] = Array.isArray(event.tags)
+    ? event.tags
+    : typeof event.tags === "string" && event.tags.trim() !== ""
+    ? event.tags.split(",").map((t) => t.trim())
+    : [];
+
+  return (
+    <div className="pc-overlay" onClick={onClose}>
+      <div className="pc-card" onClick={(e) => e.stopPropagation()}>
+
+        <div className="pc-header">
+          <div className="pc-avatar">
+            <Image src="/profile.png" width={64} height={64} alt="profile" className="object-cover w-full h-full" />
+          </div>
+          <div className="flex flex-col gap-2 flex-1">
+            <h2 className="pc-name">{name}</h2>
+            <div className="flex items-center gap-3">
+              <div className="pc-trust">
+                <span className="pc-trust-label">Trust<br />score</span>
+                <div className="pc-trust-divider" />
+                <span className="pc-trust-value">{Math.round(authorTrustScore)}%</span>
+              </div>
+              {isOwn ? (
+                <span className="ec-your-post">Your post</span>
+              ) : (
+                <button className="ec-contact-btn" onClick={handleContact}>
+                  💬 Contact
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="ec-corner-badge" style={{ color: t.color, background: t.bg, border: `1px solid ${t.color}` }}>
+            {t.label}
+          </div>
+        </div>
+
+        {event.imageUrl && (
+          <div className="ec-image-wrap">
+            <img src={`${API}${event.imageUrl}`} alt="event" className="ec-image" />
+          </div>
+        )}
+
+        <div className="pc-section bio-section">
+          <p className="pc-bio" dangerouslySetInnerHTML={{ __html: event.description }} />
+          {event.type === "Emergency" && (
+            <span className="ec-verified">Verified info</span>
+          )}
+        </div>
+
+        {tagsArray.length > 0 && (
+          <div className="pc-section" style={{ border: `2px solid ${t.color}` }}>
+            <h3 className="pc-section-title" style={{ color: t.color, marginBottom: 10 }}>
+              {typeStr === "Skill" ? "★ Skill required" : typeStr === "Lend" ? "⚙ Tool needed" : "⚠ Details"}
+            </h3>
+            <div className="ec-tags">
+              {tagsArray.map((tag, i) => (
+                <span key={i} className="ec-tag" style={{ color: t.color, borderColor: t.color }}>
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+function MarkersLayer({
+  userMarkers,
+  eventMarkers,
+  onUserClick,
+  onEventClick,
+}: {
+  userMarkers: UserMarker[];
+  eventMarkers: EventMarker[];
+  onUserClick: (u: UserProfile) => void;
+  onEventClick: (e: EventItem) => void;
+}) {
+  const map = useMap();
+  const refs = useRef<L.Marker[]>([]);
+
+  useEffect(() => {
+    refs.current.forEach((m) => map.removeLayer(m));
+    refs.current = [];
+
+    userMarkers.forEach(({ user, lat, lng, hasSkills, hasTools }) => {
+      const add = (icon: L.DivIcon, cb: () => void) => {
+        const m = L.marker([lat, lng], { icon }).addTo(map);
+        m.on("click", cb);
+        refs.current.push(m);
+      };
       if (hasSkills && hasTools) {
-        const mSkill = L.marker([lat, lng], { icon: createIcon("both-skills") }).addTo(map);
-        const mTool = L.marker([lat, lng], { icon: createIcon("both-tools") }).addTo(map);
-        mSkill.on("click", () => onMarkerClick(user));
-        mTool.on("click", () => onMarkerClick(user));
-        leafletMarkers.push(mSkill, mTool);
+        add(ICONS.bothSkill(), () => onUserClick(user));
+        add(ICONS.bothTool(), () => onUserClick(user));
       } else if (hasSkills) {
-        const m = L.marker([lat, lng], { icon: createIcon("skills") }).addTo(map);
-        m.on("click", () => onMarkerClick(user));
-        leafletMarkers.push(m);
-      } else if (hasTools) {
-        const m = L.marker([lat, lng], { icon: createIcon("tools") }).addTo(map);
-        m.on("click", () => onMarkerClick(user));
-        leafletMarkers.push(m);
+        add(ICONS.skillOnly(), () => onUserClick(user));
+      } else {
+        add(ICONS.toolOnly(), () => onUserClick(user));
       }
     });
 
+    eventMarkers.forEach(({ event, type }) => {
+      const icon = type === "emergency" ? ICONS.emergency() : type === "skill" ? ICONS.eventSkill() : ICONS.eventLend();
+      const m = L.marker([event.latitude, event.longitude], { icon }).addTo(map);
+      m.on("click", () => onEventClick(event));
+      refs.current.push(m);
+    });
+
     return () => {
-      leafletMarkers.forEach((m) => map.removeLayer(m));
+      refs.current.forEach((m) => map.removeLayer(m));
     };
-  }, [markers, map, onMarkerClick]);
+  }, [userMarkers, eventMarkers, map, onUserClick, onEventClick]);
 
   return null;
 }
 
 export default function MapView() {
   const [mounted, setMounted] = useState(false);
-  const [markers, setMarkers] = useState<UserMarker[]>([]);
+  const [filter, setFilter] = useState<FilterMode>("disponibili");
+  const [userMarkers, setUserMarkers] = useState<UserMarker[]>([]);
+  const [eventMarkersDisponibili, setEventMarkersDisponibili] = useState<EventMarker[]>([]);
+  const [eventMarkersPotAjuta, setEventMarkersPotAjuta] = useState<EventMarker[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [loadingEvents, setLoadingEvents] = useState(true);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (!mounted) return;
-
-    const fetchAll = async () => {
+    const fetchUsers = async () => {
       try {
         const token = localStorage.getItem("token");
-        const headers = { Authorization: `Bearer ${token}` };
-
-        const [skillsRes, toolsRes] = await Promise.all([
-          fetch("http://localhost:5248/api/User/with-skills", { headers }),
-          fetch("http://localhost:5248/api/User/with-tools", { headers }),
+        const h = { Authorization: `Bearer ${token}` };
+        const [sRes, tRes] = await Promise.all([
+          fetch(`${API}/api/User/with-skills`, { headers: h }),
+          fetch(`${API}/api/User/with-tools`, { headers: h }),
         ]);
+        const skillUsers: UserProfile[] = sRes.ok ? await sRes.json() : [];
+        const toolUsers: UserProfile[] = tRes.ok ? await tRes.json() : [];
 
-        const skillUsers: UserProfile[] = skillsRes.ok ? await skillsRes.json() : [];
-        const toolUsers: UserProfile[] = toolsRes.ok ? await toolsRes.json() : [];
-
-        const userMap = new Map<number, UserMarker & { user: UserProfile; hasSkills: boolean; hasTools: boolean }>();
-
-        for (const u of skillUsers) {
-          userMap.set(u.id, { user: u, lat: 0, lng: 0, hasSkills: true, hasTools: false });
-        }
-        for (const u of toolUsers) {
-          if (userMap.has(u.id)) {
-            userMap.get(u.id)!.hasTools = true;
-          } else {
-            userMap.set(u.id, { user: u, lat: 0, lng: 0, hasSkills: false, hasTools: true });
-          }
-        }
+        const map = new Map<number, { user: UserProfile; hasSkills: boolean; hasTools: boolean }>();
+        skillUsers.forEach((u) => map.set(u.id, { user: u, hasSkills: true, hasTools: false }));
+        toolUsers.forEach((u) => {
+          if (map.has(u.id)) map.get(u.id)!.hasTools = true;
+          else map.set(u.id, { user: u, hasSkills: false, hasTools: true });
+        });
 
         const results: UserMarker[] = [];
-        for (const entry of userMap.values()) {
+        for (const entry of map.values()) {
           if (!entry.user.address) continue;
           await new Promise((r) => setTimeout(r, 1100));
-          const coords = await geocodeAddress(entry.user.address);
-          if (coords) {
-            results.push({ ...entry, lat: coords[0], lng: coords[1] });
-          }
+          const coords = await geocode(entry.user.address);
+          if (coords) results.push({ ...entry, lat: coords[0], lng: coords[1] });
         }
-        setMarkers(results);
+        setUserMarkers(results);
       } finally {
-        setLoading(false);
+        setLoadingUsers(false);
       }
     };
-
-    fetchAll();
+    fetchUsers();
   }, [mounted]);
 
-  const handleMarkerClick = useCallback((user: UserProfile) => {
-    setSelectedUser(user);
-  }, []);
+  useEffect(() => {
+    if (!mounted) return;
+    const fetchEvents = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const h = { Authorization: `Bearer ${token}` };
+        const [emergRes, skillRes, lendRes] = await Promise.all([
+          fetch(`${API}/api/Event/type/Emergency`, { headers: h }),
+          fetch(`${API}/api/Event/type/Skill`, { headers: h }),
+          fetch(`${API}/api/Event/type/Lend`, { headers: h }),
+        ]);
+        const emergEvents: EventItem[] = emergRes.ok ? await emergRes.json() : [];
+        const skillEvents: EventItem[] = skillRes.ok ? await skillRes.json() : [];
+        const lendEvents: EventItem[] = lendRes.ok ? await lendRes.json() : [];
+
+        const emergMarkers: EventMarker[] = emergEvents.filter(e => e.latitude !== 0 && e.longitude !== 0).map((e) => ({ event: e, type: "emergency" as const }));
+        const skillMarkers: EventMarker[] = skillEvents.filter(e => e.latitude !== 0 && e.longitude !== 0).map((e) => ({ event: e, type: "skill" as const }));
+        const lendMarkers: EventMarker[] = lendEvents.filter(e => e.latitude !== 0 && e.longitude !== 0).map((e) => ({ event: e, type: "lend" as const }));
+
+        setEventMarkersDisponibili(emergMarkers);
+        setEventMarkersPotAjuta([...skillMarkers, ...lendMarkers, ...emergMarkers]);
+      } finally {
+        setLoadingEvents(false);
+      }
+    };
+    fetchEvents();
+  }, [mounted]);
+
+  const handleUserClick = useCallback((u: UserProfile) => { setSelectedUser(u); setSelectedEvent(null); }, []);
+  const handleEventClick = useCallback((e: EventItem) => { setSelectedEvent(e); setSelectedUser(null); }, []);
+
+  const activeUserMarkers = filter === "disponibili" ? userMarkers : [];
+  const activeEventMarkers = filter === "disponibili" ? eventMarkersDisponibili : eventMarkersPotAjuta;
+  const isLoading = loadingUsers || loadingEvents;
 
   if (!mounted) return null;
 
@@ -246,31 +440,47 @@ export default function MapView() {
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
           <ZoomControl position="bottomright" />
-          <MarkersLayer markers={markers} onMarkerClick={handleMarkerClick} />
+          <MarkersLayer
+            userMarkers={activeUserMarkers}
+            eventMarkers={activeEventMarkers}
+            onUserClick={handleUserClick}
+            onEventClick={handleEventClick}
+          />
         </MapContainer>
 
-        <div className="map-legend">
-          <div className="legend-item">
-            <span className="legend-dot skills-dot" />
-            <span>Skills</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-dot tools-dot" />
-            <span>Tools</span>
-          </div>
+        <div className="filter-bar">
+          <button
+            className={`filter-btn ${filter === "disponibili" ? "filter-btn--active" : ""}`}
+            onClick={() => setFilter("disponibili")}
+          >
+            <span className="filter-icon">👤</span>
+            Available
+          </button>
+          <button
+            className={`filter-btn ${filter === "pot-ajuta" ? "filter-btn--active pot-ajuta-active" : ""}`}
+            onClick={() => setFilter("pot-ajuta")}
+          >
+            <span className="filter-icon">🤝</span>
+            Can Help
+          </button>
         </div>
 
-        {loading && (
+        <div className="map-legend">
+          <div className="legend-item"><span className="legend-dot skill-dot" />Skills</div>
+          <div className="legend-item"><span className="legend-dot tool-dot" />Tools</div>
+          <div className="legend-item"><span className="legend-dot emerg-dot" />Emergency</div>
+        </div>
+
+        {isLoading && (
           <div className="map-loading">
             <div className="map-loading-dot" />
-            <span>Se incarca utilizatorii...</span>
+            <span>Se incarca harta...</span>
           </div>
         )}
       </div>
 
-      {selectedUser && (
-        <ProfileCard user={selectedUser} onClose={() => setSelectedUser(null)} />
-      )}
+      {selectedUser && <ProfileCard user={selectedUser} onClose={() => setSelectedUser(null)} />}
+      {selectedEvent && <EventCard event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
     </>
   );
 }

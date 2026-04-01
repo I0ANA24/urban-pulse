@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UrbanPulse.Core.Entities;
+﻿using UrbanPulse.Core.Entities;
 
 namespace UrbanPulse.Core.DTOs.Events
 {
@@ -18,6 +13,7 @@ namespace UrbanPulse.Core.DTOs.Events
         public List<string> Tags { get; set; } = new();
         public int CreatedByUserId { get; set; }
         public string CreatedByEmail { get; set; } = string.Empty;
+        public string? CreatedByFullName { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsActive { get; set; }
         public bool IsCompleted { get; set; }

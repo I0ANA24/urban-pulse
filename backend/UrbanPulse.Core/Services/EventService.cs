@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.SignalR;
-using UrbanPulse.Core.DTOs.Events;
+﻿using UrbanPulse.Core.DTOs.Events;
 using UrbanPulse.Core.Entities;
 using UrbanPulse.Core.Interfaces;
 
@@ -34,7 +28,6 @@ namespace UrbanPulse.Core.Services
             };
 
             await _eventRepository.CreateAsync(ev);
-
             var created = await _eventRepository.GetByIdAsync(ev.Id);
             return MapToDto(created!);
         }
@@ -87,6 +80,7 @@ namespace UrbanPulse.Core.Services
             Tags = ev.Tags.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList(),
             CreatedByUserId = ev.CreatedByUserId,
             CreatedByEmail = ev.CreatedByUser?.Email ?? string.Empty,
+            CreatedByFullName = ev.CreatedByUser?.FullName,
             CreatedAt = ev.CreatedAt,
             IsActive = ev.IsActive,
             IsCompleted = ev.IsCompleted
