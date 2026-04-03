@@ -52,7 +52,6 @@ export default function LoginForm() {
         className="absolute w-full h-full object-cover hidden md:block"
       />
 
-      {/* Form container — full width pe mobil, fixat pe tablet/desktop */}
       <div className="w-full max-w-100 md:max-w-110 xl:max-w-120 px-5 md:px-8 py-6 md:py-8 pb-8 animate-fade-up relative z-10">
 
         {/* Logo */}

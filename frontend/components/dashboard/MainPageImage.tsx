@@ -18,7 +18,7 @@ export default function MainPageImage() {
       priority
       width={500}
       height={300}
-      className="absolute top-0 left-0 w-full h-[15vh] object-cover object-top"
+      className="absolute top-0 left-0 w-full h-[15vh] object-cover object-top lg:hidden"
     />
   );
 }

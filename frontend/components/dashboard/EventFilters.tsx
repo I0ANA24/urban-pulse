@@ -7,7 +7,10 @@ interface EventFiltersProps {
   setActiveFilter: (filter: string) => void;
 }
 
-export default function EventFilters({ activeFilter, setActiveFilter }: EventFiltersProps) {
+export default function EventFilters({
+  activeFilter,
+  setActiveFilter,
+}: EventFiltersProps) {
   const [scrolledRight, setScrolledRight] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -16,7 +19,7 @@ export default function EventFilters({ activeFilter, setActiveFilter }: EventFil
       <div className="relative w-full overflow-hidden">
         <div
           ref={scrollRef}
-          className="flex gap-2 overflow-x-auto scrollbar-none snap-x snap-mandatory"
+          className="flex sm:justify-center gap-2 lg:gap-3 overflow-x-auto lg:overflow-x-visible scrollbar-none snap-x snap-mandatory lg:snap-none"
           onScroll={(e) => {
             const el = e.currentTarget;
             setScrolledRight(el.scrollLeft > 50);
@@ -29,9 +32,11 @@ export default function EventFilters({ activeFilter, setActiveFilter }: EventFil
               <button
                 key={filter.title}
                 onClick={() =>
-                  setActiveFilter(activeFilter === filter.title ? "ALL" : filter.title)
+                  setActiveFilter(
+                    activeFilter === filter.title ? "ALL" : filter.title,
+                  )
                 }
-                className={`shrink-0 w-25 h-11 rounded-[10px] text-xs font-bold snap-start transition-opacity cursor-pointer ${
+                className={`shrink-0 lg:shrink lg:flex-1 w-25 h-11 lg:w-auto lg:h-12 rounded-[10px] lg:rounded-[14px] text-xs lg:text-sm font-bold snap-start transition-opacity cursor-pointer ${
                   activeFilter === "ALL" || activeFilter === filter.title
                     ? "opacity-100"
                     : "opacity-40"
@@ -46,14 +51,22 @@ export default function EventFilters({ activeFilter, setActiveFilter }: EventFil
             );
           })}
         </div>
-        {/* right fade */}
-        <div className="absolute -right-10 top-0 bottom-0 w-16 bg-linear-to-l from-background to-transparent pointer-events-none" />
+        {/* right fade — mobile only */}
+        <div className="absolute -right-10 top-0 bottom-0 w-16 bg-linear-to-l from-background to-transparent pointer-events-none lg:hidden" />
       </div>
 
-      {/* dots */}
-      <div className="flex justify-center gap-1.5 -mt-2">
-        <div className={`h-1.5 rounded-full transition-all ${!scrolledRight ? "w-1.5 bg-white/60" : "w-1.5 bg-white/20"}`} />
-        <div className={`h-1.5 rounded-full transition-all ${scrolledRight ? "w-1.5 bg-white/60" : "w-1.5 bg-white/20"}`} />
+      {/* dots — mobile only */}
+      <div className="flex justify-center gap-1.5 -mt-2 sm:hidden">
+        <div
+          className={`h-1.5 rounded-full transition-all ${
+            !scrolledRight ? "w-1.5 bg-white/60" : "w-1.5 bg-white/20"
+          }`}
+        />
+        <div
+          className={`h-1.5 rounded-full transition-all ${
+            scrolledRight ? "w-1.5 bg-white/60" : "w-1.5 bg-white/20"
+          }`}
+        />
       </div>
     </>
   );
