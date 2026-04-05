@@ -2,18 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-<<<<<<< HEAD
-// import Link from "next/link";
-// import { ChevronDown } from "lucide-react";
-=======
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
->>>>>>> 77c00728a24df053ecde9454ed7df059d49735c6
 import GoBackButton from "../ui/GoBackButton";
 import ProfileRoundButton from "../ui/ProfileRoundButton";
 import { Plus } from "lucide-react";
 import { useSignalR } from "@/context/SignalRContext";
-// import HomeIcon from "../icons/navbar/HomeIcon";
+// import HomeIcon from "../icons/navbar/HomeIcon"; // uncomment after merge with main
 
 interface TopBarProps {
   back: boolean;
@@ -24,23 +19,23 @@ interface TopBarProps {
 
 export default function TopBar({ back, notifications, settings, addPost }: TopBarProps) {
   const [unreadCount, setUnreadCount] = useState(0);
-  // const [userName, setUserName] = useState("");
-  // const [avatarUrl, setAvatarUrl] = useState("");
+  const [userName, setUserName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const { notificationConnection } = useSignalR();
 
-  // useEffect(() => {
-  //   const token = localStorage.getItem("token");
-  //   if (!token) return;
-  //   fetch("http://localhost:5248/api/user/profile", {
-  //     headers: { Authorization: `Bearer ${token}` },
-  //   })
-  //     .then((res) => res.json())
-  //     .then((data) => {
-  //       setUserName(data.fullName ?? data.email ?? "");
-  //       setAvatarUrl(data.avatarUrl ?? "");
-  //     })
-  //     .catch(() => {});
-  // }, []);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    fetch("http://localhost:5248/api/user/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setUserName(data.fullName ?? data.email ?? "");
+        setAvatarUrl(data.avatarUrl ?? "");
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!notifications) return;
@@ -66,10 +61,27 @@ export default function TopBar({ back, notifications, settings, addPost }: TopBa
     return () => notificationConnection.off("NewNotification", handler);
   }, [notificationConnection]);
 
+  const NotificationButton = () => (
+    <ProfileRoundButton route="/notifications">
+      <div className="relative">
+        <Image src="/notifications.svg" alt="notifications" width={40} height={25} />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center px-1">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
+      </div>
+    </ProfileRoundButton>
+  );
+
   return (
     <>
       {/* MOBILE TopBar */}
-      <div className={`flex ${back || addPost ? "justify-between" : "justify-end"} ${addPost ? "mb-[calc(15vh-78px)]" : ""} items-center`}>
+      <div
+        className={`flex lg:hidden ${back || addPost ? "justify-between" : "justify-end"} ${
+          addPost ? "mb-[calc(15vh-78px)]" : ""
+        } items-center`}
+      >
         {back && <GoBackButton />}
         {addPost && (
           <ProfileRoundButton route="/addPost">
@@ -77,81 +89,10 @@ export default function TopBar({ back, notifications, settings, addPost }: TopBa
           </ProfileRoundButton>
         )}
         <div className="flex justify-center items-center gap-3">
-          {notifications && (
-            <ProfileRoundButton route="/notifications">
-              <div className="relative">
-                <Image src="/notifications.svg" alt="notifications" width={40} height={25} />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center px-1">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
-                )}
-              </div>
-            </ProfileRoundButton>
-          )}
+          {notifications && <NotificationButton />}
           {settings && (
             <ProfileRoundButton route="./profile/settings">
               <Image src="/settings.svg" alt="settings" width={47} height={30} />
-            </ProfileRoundButton>
-          )}
-        </div>
-      </div>
-
-      {/* DESKTOP TopBar — commented out until HomeIcon and desktop layout are merged from main */}
-      {/* <div className="hidden lg:flex items-center justify-between h-23 -mx-6 px-8 py-3 mb-6 border-b border-white/20">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <HomeIcon className="w-20 h-20" />
-          <h1 className="font-montagu text-white text-3xl">UrbanPulse</h1>
-          <span className="w-3 h-3 rounded-full bg-green-light" />
-        </Link>
-        <div className="flex items-center gap-5">
-          {notifications && (
-            <ProfileRoundButton route="/notifications">
-              <div className="relative">
-                <Image src="/notifications.svg" alt="notifications" width={40} height={25} />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center px-1">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
-                )}
-              </div>
-            </ProfileRoundButton>
-          )}
-          <Link href="/profile" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
-            <div className="w-13.5 h-13.5 rounded-full bg-yellow-primary overflow-hidden flex items-center justify-center shrink-0">
-              {avatarUrl ? (
-                <Image src={avatarUrl} alt={userName} width={60} height={60} className="rounded-full object-cover w-full h-full" />
-              ) : (
-                <span className="text-black text-lg font-bold">
-                  {userName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) || "UP"}
-                </span>
-              )}
-            </div>
-<<<<<<< HEAD
-            <span className="text-white text-2xl font-normal">{userName || "User"}</span>
-=======
-          </ProfileRoundButton>
-        )}
-        {settings && (
-          <ProfileRoundButton route="./profile/settings">
-            <Image src="/settings.svg" alt="settings" width={47} height={30} />
-          </ProfileRoundButton>
-        )}
-
-        <div className="flex justify-center items-center gap-3">
-          {notifications && (
-            <ProfileRoundButton route="">
-              <Image
-                src="/notifications.svg"
-                alt="go_back"
-                width={40}
-                height={25}
-              />
-            </ProfileRoundButton>
-          )}
-          {settings && (
-            <ProfileRoundButton route="./profile/settings">
-              <Image src="/settings.svg" alt="go_back" width={47} height={30} />
             </ProfileRoundButton>
           )}
         </div>
@@ -165,74 +106,35 @@ export default function TopBar({ back, notifications, settings, addPost }: TopBa
           className="flex items-center gap-2"
           onClick={() => {
             const feed = document.getElementById("feed-scroll");
-            if (feed) {
-              feed.scrollTo({ top: 0, behavior: "smooth" });
-            }
+            if (feed) feed.scrollTo({ top: 0, behavior: "smooth" });
           }}
         >
-          <HomeIcon className="w-20 h-20" />
+          {/* <HomeIcon className="w-20 h-20" /> */}
           <h1 className="font-montagu text-white text-3xl">UrbanPulse</h1>
           <span className="w-3 h-3 rounded-full bg-green-light" />
         </Link>
 
         {/* Right — Notifications + User */}
         <div className="flex items-center gap-5">
-          {/* Notification bell */}
-          {notifications && (
-            <ProfileRoundButton route="">
-              <Image
-                src="/notifications.svg"
-                alt="notifications"
-                width={40}
-                height={25}
-              />
-            </ProfileRoundButton>
-          )}
+          {notifications && <NotificationButton />}
 
-          {/* User info */}
-          <Link
-            href="/profile"
-            className="flex items-center gap-4 hover:opacity-80 transition-opacity"
-          >
-            {/* Avatar */}
+          <Link href="/profile" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
             <div className="w-13.5 h-13.5 rounded-full bg-yellow-primary overflow-hidden flex items-center justify-center shrink-0">
               {avatarUrl ? (
-                <Image
-                  src={avatarUrl}
-                  alt={userName}
-                  width={60}
-                  height={60}
-                  className="rounded-full object-cover w-full h-full"
-                />
+                <Image src={avatarUrl} alt={userName} width={60} height={60} className="rounded-full object-cover w-full h-full" />
               ) : (
                 <span className="text-black text-lg font-bold">
-                  {userName
-                    .split(" ")
-                    .map((w) => w[0])
-                    .join("")
-                    .toUpperCase()
-                    .slice(0, 2) || "UP"}
+                  {userName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) || "UP"}
                 </span>
               )}
             </div>
-
-            {/* Name */}
-            <span className="text-white text-2xl font-normal">
-              {userName || "User"}
-            </span>
-
-            {/* Chevron */}
->>>>>>> 77c00728a24df053ecde9454ed7df059d49735c6
+            <span className="text-white text-2xl font-normal">{userName || "User"}</span>
             <div className="w-13 h-13 rounded-full flex items-center justify-center -ml-6">
               <ChevronDown size={32} />
             </div>
           </Link>
         </div>
-<<<<<<< HEAD
-      </div> */}
-=======
       </div>
->>>>>>> 77c00728a24df053ecde9454ed7df059d49735c6
     </>
   );
 }
