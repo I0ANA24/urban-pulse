@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronDown, UserCircle, Settings } from "lucide-react";
 import GoBackButton from "../ui/GoBackButton";
 import ProfileRoundButton from "../ui/ProfileRoundButton";
 import { Plus } from "lucide-react";
 import { useSignalR } from "@/context/SignalRContext";
-// import HomeIcon from "../icons/navbar/HomeIcon"; // uncomment after merge with main
 
 interface TopBarProps {
   back: boolean;
@@ -18,9 +18,13 @@ interface TopBarProps {
 }
 
 export default function TopBar({ back, notifications, settings, addPost }: TopBarProps) {
+  const router = useRouter();
   const [unreadCount, setUnreadCount] = useState(0);
   const [userName, setUserName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const { notificationConnection } = useSignalR();
 
   useEffect(() => {
@@ -33,9 +37,20 @@ export default function TopBar({ back, notifications, settings, addPost }: TopBa
       .then((data) => {
         setUserName(data.fullName ?? data.email ?? "");
         setAvatarUrl(data.avatarUrl ?? "");
+        setIsAdmin(data.isAdmin ?? (data.role === "Admin"));
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [dropdownOpen]);
 
   useEffect(() => {
     if (!notifications) return;
@@ -66,7 +81,7 @@ export default function TopBar({ back, notifications, settings, addPost }: TopBa
       <div className="relative">
         <Image src="/notifications.svg" alt="notifications" width={40} height={25} />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center px-1">
+          <span className="absolute -top-1 -right-1 min-w-4.5 h-4.5 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center px-1">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
@@ -118,21 +133,56 @@ export default function TopBar({ back, notifications, settings, addPost }: TopBa
         <div className="flex items-center gap-5">
           {notifications && <NotificationButton />}
 
-          <Link href="/profile" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
-            <div className="w-13.5 h-13.5 rounded-full bg-yellow-primary overflow-hidden flex items-center justify-center shrink-0">
-              {avatarUrl ? (
-                <Image src={avatarUrl} alt={userName} width={60} height={60} className="rounded-full object-cover w-full h-full" />
-              ) : (
-                <span className="text-black text-lg font-bold">
-                  {userName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) || "UP"}
-                </span>
-              )}
-            </div>
-            <span className="text-white text-2xl font-normal">{userName || "User"}</span>
-            <div className="w-13 h-13 rounded-full flex items-center justify-center -ml-6">
-              <ChevronDown size={32} />
-            </div>
-          </Link>
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setDropdownOpen((prev) => !prev)}
+              className="flex items-center gap-4 hover:opacity-80 transition-opacity cursor-pointer"
+            >
+              <div className="w-13.5 h-13.5 rounded-full bg-yellow-primary overflow-hidden flex items-center justify-center shrink-0">
+                {avatarUrl ? (
+                  <Image src={avatarUrl} alt={userName} width={60} height={60} className="rounded-full object-cover w-full h-full" />
+                ) : (
+                  <span className="text-black text-lg font-bold">
+                    {userName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) || "UP"}
+                  </span>
+                )}
+              </div>
+              <span className="text-white text-2xl font-normal">{userName || "User"}</span>
+              <ChevronDown
+                size={32}
+                className={`-ml-2 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            {dropdownOpen && (
+              <div className="absolute right-0 top-full px-2 mt-3 w-56 bg-[#0F0F0F] border border-secondary rounded-2xl py-2 shadow-xl z-50">
+                <button
+                  onClick={() => { setDropdownOpen(false); router.push("/profile"); }}
+                  className="flex items-center rounded-xl gap-3 w-full px-5 py-3 text-white hover:bg-white/5 transition-colors cursor-pointer"
+                >
+                  <UserCircle size={22} className="text-white" />
+                  <span className="text-base">View profile</span>
+                </button>
+                <button
+                  onClick={() => { setDropdownOpen(false); router.push("/profile/settings"); }}
+                  className="flex items-center rounded-xl gap-3 w-full px-5 py-3 text-white hover:bg-white/5 transition-colors cursor-pointer"
+                >
+                  <Settings size={22} className="text-white" />
+                  <span className="text-base">Settings</span>
+                </button>
+                {isAdmin && (
+                  <div className="px-4 pt-2 pb-2">
+                    <button
+                      onClick={() => { setDropdownOpen(false); router.push("/admin"); }}
+                      className="w-full bg-red-emergency hover:bg-red-emergency/80 text-white font-medium text-base py-2.5 rounded-full transition-colors cursor-pointer duration-100"
+                    >
+                      Admin dashboard
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>
