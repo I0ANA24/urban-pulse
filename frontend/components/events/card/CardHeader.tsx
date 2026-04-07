@@ -1,6 +1,7 @@
 import { MoreVertical, BadgeCheck, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface CardHeaderProps {
   initials: string;
@@ -10,6 +11,7 @@ interface CardHeaderProps {
   isMyPost?: boolean;
   onDelete?: () => void;
   imageUrl: string | null;
+  eventId?: number;
 }
 
 export default function CardHeader({
@@ -20,8 +22,10 @@ export default function CardHeader({
   isMyPost,
   onDelete,
   imageUrl,
+  eventId,
 }: CardHeaderProps) {
   const [showMenu, setShowMenu] = useState(false);
+  const router = useRouter();
 
   return (
     <div
@@ -73,8 +77,8 @@ export default function CardHeader({
               <div className="absolute right-0 top-full bg-background border border-red-emergency/60 rounded-full overflow-hidden">
                 <button
                   onClick={() => {
-                    console.log("Report action triggered");
                     setShowMenu(false);
+                    router.push(`/report?eventId=${eventId}`);
                   }}
                   className="w-full text-center px-6 py-2 text-red-emergency font-bold text-sm hover:bg-white/5 rounded-full transition-colors cursor-pointer"
                 >
