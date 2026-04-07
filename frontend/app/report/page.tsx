@@ -82,13 +82,13 @@ function ReportForm() {
       ) : (
         <>
           {/* Textarea */}
-          <div className="w-full flex flex-col gap-2 px-1">
+          <div className="w-full max-w-130 flex flex-col gap-2 px-1">
             <textarea
               placeholder="Describe the issue..."
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               rows={5}
-              className="w-full rounded-3xl bg-secondary px-5 py-4 text-white placeholder-white/40 outline-none resize-none"
+              className="w-full rounded-3xl bg-secondary px-5 py-4 lg:px-6 lg:py-5 text-white placeholder-white/40 outline-none resize-none"
             />
             <span className="text-white/20 text-xs text-right">
               {details.length}/500
