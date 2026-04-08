@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
-import { BadgeCheck, User, Camera } from "lucide-react";
+import { BadgeCheck, User, Camera, ArrowLeftRight } from "lucide-react";
+import { useUser } from "@/context/UserContext";
 
 const API = "http://localhost:5248";
 
@@ -16,6 +18,7 @@ interface UserProfile {
   tools: string[];
   avatarUrl: string | null;
   isVerified: boolean;
+  role: string;
   trustScore: number;
   createdAt: string;
 }
@@ -28,6 +31,8 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+  const { viewAsUser, setViewAsUser } = useUser();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -60,6 +65,12 @@ export default function ProfilePage() {
     setUploading(false);
   };
 
+  const handleAdminMode = () => {
+    setViewAsUser(false);
+    router.push("/admin");
+  };
+
+  const isRealAdmin = profile?.role === "Admin";
   const displayName = profile?.fullName ?? profile?.email?.split("@")[0] ?? "User";
   const memberSince = profile?.createdAt
     ? new Date(profile.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
@@ -122,7 +133,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 items-center">
           <h1 className="text-2xl font-bold font-montagu text-center leading-tight">
             {displayName.includes(" ") ? (
               <>
@@ -144,6 +155,16 @@ export default function ProfilePage() {
               {profile?.trustScore ?? 0}%
             </p>
           </div>
+
+          {isRealAdmin && viewAsUser && (
+            <button
+              onClick={handleAdminMode}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary border border-white/20 text-white font-medium text-sm hover:bg-secondary/70 transition-colors cursor-pointer"
+            >
+              <ArrowLeftRight size={16} strokeWidth={2.5} />
+              Admin mode
+            </button>
+          )}
         </div>
       </section>
 

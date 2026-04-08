@@ -2,21 +2,24 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeftRight } from "lucide-react";
 import CrownIcon from "@/components/icons/profile/CrownIcon";
+import { useUser } from "@/context/UserContext";
 
-// ── Mock data — înlocuiește cu fetch-uri din API ──
 const mockAdminStats = {
   tasksDone: 79,
   flaggedUsers: 12,
   flaggedContent: 54,
   duplicates: 13,
 };
-// ──────────────────────────────────────────────────────────
 
 export default function AdminProfilePage() {
   const [displayName, setDisplayName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [trustScore, setTrustScore] = useState(0);
+  const { setViewAsUser } = useUser();
+  const router = useRouter();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -26,6 +29,8 @@ export default function AdminProfilePage() {
       .then((res) => res.json())
       .then((data) => {
         setDisplayName(data.fullName ?? data.email?.split("@")[0] ?? "User");
+        setAvatarUrl(data.avatarUrl ?? null);
+        setTrustScore(data.trustScore ?? 0);
       });
   }, []);
 
@@ -33,36 +38,37 @@ export default function AdminProfilePage() {
   const firstName = nameParts[0];
   const lastName = nameParts.slice(1).join(" ");
 
+  function getInitials(name: string) {
+    return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  }
+
+  const handleUserMode = () => {
+    setViewAsUser(true);
+    router.push("/dashboard");
+  };
+
   return (
     <div className="w-full flex flex-col gap-6 animate-fade-up">
-      {/* User info section — reuses layout pattern from /profile */}
       <section className="w-full flex justify-around items-center mt-4">
         {/* Avatar */}
-        <div className="flex flex-col gap-4">
-          <div className="size-35 rounded-full overflow-hidden">
+        <div className="size-35 rounded-full overflow-hidden bg-secondary flex items-center justify-center">
+          {avatarUrl ? (
             <Image
-              src="/profile.png"
+              src={avatarUrl}
               alt={displayName}
               width={140}
               height={140}
               className="object-cover w-full h-full"
             />
-          </div>
-          {/* User mode toggle */}
-          <div className="flex">
-            <Link href="/profile">
-              <button className="flex items-center gap-2 bg-secondary rounded-full px-5 py-2.5 transition-transform active:scale-95 cursor-pointer">
-                <ArrowLeftRight size={20} className="text-white" />
-                <span className="text-white text-sm font-medium">
-                  User mode
-                </span>
-              </button>
-            </Link>
-          </div>
+          ) : (
+            <span className="text-white text-4xl font-bold">
+              {getInitials(displayName)}
+            </span>
+          )}
         </div>
 
-        {/* Name + Admin badge */}
-        <div className="flex flex-col gap-2">
+        {/* Name + Admin badge + Trust score + Switch button */}
+        <div className="flex flex-col gap-3 items-center">
           <h1 className="text-2xl font-bold font-montagu text-center leading-tight">
             {lastName ? (
               <>
@@ -82,6 +88,26 @@ export default function AdminProfilePage() {
               Admin
             </span>
           </div>
+
+          {/* Trust score */}
+          <div className="flex justify-center items-center rounded-full px-4 py-1 bg-linear-to-b from-[#FFFADC]/50 to-[#FFF197]/50 shadow-[0px_11.3915px_22.3363px_rgba(255,227,42,0.19),inset_0px_-2px_1px_rgba(255,241,151,0.4)] backdrop-blur-[2px] border border-yellow-primary">
+            <p className="font-montagu font-medium text-xs text-yellow-primary leading-3">
+              Trust<br />score
+            </p>
+            <div className="h-6 w-1 border-r border-yellow-primary mx-2"></div>
+            <p className="font-montagu text-xl text-yellow-primary font-bold text-center ml-3">
+              {trustScore}%
+            </p>
+          </div>
+
+          {/* User mode toggle */}
+          <button
+            onClick={handleUserMode}
+            className="flex items-center gap-2 bg-secondary rounded-full px-5 py-2.5 border border-white/20 transition-transform active:scale-95 cursor-pointer hover:bg-secondary/70"
+          >
+            <ArrowLeftRight size={20} className="text-white" />
+            <span className="text-white text-sm font-medium">User mode</span>
+          </button>
         </div>
       </section>
 
@@ -89,41 +115,34 @@ export default function AdminProfilePage() {
       <div className="w-full flex flex-col justify-center items-center gap-6">
         <section className="w-full h-25 border-2 border-green-light rounded-2xl flex items-center py-2 shadow-sm bg-[#1C1C1C]">
           <div className="flex-1 flex flex-col items-center justify-center gap-1">
-            <h3 className="text-lg font-bold text-center">
-              Tasks <br /> done
-            </h3>
+            <h3 className="text-lg font-bold text-center">Tasks <br /> done</h3>
           </div>
           <div className="w-0.5 self-stretch my-3 bg-white"></div>
           <div className="flex-1 flex flex-col items-center justify-center gap-1">
-            <p className="text-green-light text-3xl font-bold">79</p>
+            <p className="text-green-light text-3xl font-bold">{mockAdminStats.tasksDone}</p>
           </div>
         </section>
+
         <section className="w-full border-2 border-green-light rounded-2xl flex flex-col justify-center gap-3 p-6 shadow-sm bg-[#1C1C1C]">
           <div className="flex items-center gap-3">
             <span className="w-3 h-3 rounded-full bg-red-emergency" />
             <span className="text-white text-base font-bold">
               Flagged users:{" "}
-              <span className="text-red-emergency font-bold">
-                {mockAdminStats.flaggedUsers}
-              </span>
+              <span className="text-red-emergency font-bold">{mockAdminStats.flaggedUsers}</span>
             </span>
           </div>
           <div className="flex items-center gap-3">
             <span className="w-3 h-3 rounded-full bg-blue" />
             <span className="text-white text-base font-bold">
               Flagged content:{" "}
-              <span className="text-blue font-bold">
-                {mockAdminStats.flaggedContent}
-              </span>
+              <span className="text-blue font-bold">{mockAdminStats.flaggedContent}</span>
             </span>
           </div>
           <div className="flex items-center gap-3">
             <span className="w-3 h-3 rounded-full bg-yellow-primary" />
             <span className="text-white text-base font-bold">
               Duplicates:{" "}
-              <span className="text-yellow-primary font-bold">
-                {mockAdminStats.duplicates}
-              </span>
+              <span className="text-yellow-primary font-bold">{mockAdminStats.duplicates}</span>
             </span>
           </div>
         </section>
