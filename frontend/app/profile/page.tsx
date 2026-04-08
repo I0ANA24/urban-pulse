@@ -208,5 +208,9 @@ export default function ProfilePage() {
     </div>
   );
 
-  return <ThreeColumnLayout>{profileContent}</ThreeColumnLayout>;
+  return (
+    <ThreeColumnLayout>
+      {profileContent}
+    </ThreeColumnLayout>
+  );
 }
