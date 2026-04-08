@@ -4,6 +4,7 @@ import { MoreVertical, BadgeCheck, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface CardHeaderProps {
   initials: string;
@@ -14,6 +15,7 @@ interface CardHeaderProps {
   onDelete?: () => void;
   imageUrl: string | null;
   eventId: number;
+  userId: number;
 }
 
 export default function CardHeader({
@@ -25,6 +27,7 @@ export default function CardHeader({
   onDelete,
   imageUrl,
   eventId,
+  userId,
 }: CardHeaderProps) {
   const [showMenu, setShowMenu] = useState(false);
   const router = useRouter();
@@ -34,26 +37,28 @@ export default function CardHeader({
       className={`w-full h-17.5 lg:h-20 p-5 lg:px-10 z-10 flex justify-between items-center bg-secondary rounded-3xl ${imageUrl ? "rounded-b-3xl" : "rounded-b-none"}`}
     >
       {/* image + name */}
-      <div className="flex gap-4 justify-center items-center">
-        <div className="size-10 lg:size-11">
-          <Image
-            src="/profile.png"
-            width={40}
-            height={40}
-            alt="profile_image"
-            className="rounded-full w-full h-full"
-          />
-        </div>
-        <div className="flex flex-col justify-center items-start">
-          <div className="flex items-center gap-1">
-            <p className="font-bold lg:text-lg">{name}</p>
-            {isVerifiedUser && (
-              <BadgeCheck size={20} className="text-green-light fill-green-light/20" />
-            )}
+      <Link href={`/users/${userId}`}>
+        <div className="flex gap-4 justify-center items-center">
+          <div className="size-10 lg:size-11">
+            <Image
+              src="/profile.png"
+              width={40}
+              height={40}
+              alt="profile_image"
+              className="rounded-full w-full h-full"
+            />
           </div>
-          <span className="text-white/40 text-xs lg:text-sm">{date}</span>
+          <div className="flex flex-col justify-center items-start">
+            <div className="flex items-center gap-1">
+              <p className="font-bold lg:text-lg">{name}</p>
+              {isVerifiedUser && (
+                <BadgeCheck size={20} className="text-green-light fill-green-light/20" />
+              )}
+            </div>
+            <span className="text-white/40 text-xs lg:text-sm">{date}</span>
+          </div>
         </div>
-      </div>
+      </Link>
 
       {/* menu */}
       <div className="relative flex justify-center items-center">
