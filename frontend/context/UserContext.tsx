@@ -26,14 +26,19 @@ const UserContext = createContext<UserContextType>({
   user: null,
   loading: true,
   isAdmin: false,
-  viewAsUser: false,
+  viewAsUser: true,
   setViewAsUser: () => {},
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [viewAsUser, setViewAsUser] = useState(false);
+  const [viewAsUser, setViewAsUserState] = useState<boolean>(true);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("viewAsUser");
+    setViewAsUserState(saved === null ? true : saved === "true");
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -47,6 +52,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
   }, []);
+
+  const setViewAsUser = (value: boolean) => {
+    setViewAsUserState(value);
+    localStorage.setItem("viewAsUser", String(value));
+  };
 
   const isAdmin = user?.role === "Admin" && !viewAsUser;
 
