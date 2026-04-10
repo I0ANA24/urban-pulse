@@ -1,65 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import GoBackButton from "@/components/ui/GoBackButton";
 import { HiUsers } from "react-icons/hi";
 
-// ── Types ──
-type TabType = "Users" | "Posts";
+const API = "http://localhost:5248";
 
-interface DuplicateUser {
-  id: string;
-  name: string;
-  avatar: string;
-  matchesCount: number;
+interface DuplicateSuspect {
+  id: number;
+  user1Id: number;
+  user1Name: string;
+  user1AvatarUrl: string | null;
+  user1IsVerified: boolean;
+  user1TrustScore: number;
+  user2Id: number;
+  user2Name: string;
+  user2AvatarUrl: string | null;
+  user2IsVerified: boolean;
+  user2TrustScore: number;
+  confidence: string;
+  reasons: string[];
+  detectedAt: string;
 }
 
-interface DuplicatePost {
-  id: string;
-  preview: string;
-  matchesCount: number;
+function getInitials(name: string) {
+  return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
 }
 
-const mockDuplicateUsers: DuplicateUser[] = [
-  {
-    id: "1",
-    name: "Johnny Depp",
-    avatar: "/profile.png",
-    matchesCount: 2,
-  },
-  {
-    id: "2",
-    name: "Charles Leclerc",
-    avatar: "/profile.png",
-    matchesCount: 3,
-  },
-];
-
-const mockDuplicatePosts: DuplicatePost[] = [
-  {
-    id: "1",
-    preview: "Hellooo! My TV is suddenly not working anymore and I really...",
-    matchesCount: 2,
-  },
-  {
-    id: "2",
-    preview: "What do you guys think about this pink colour for my door...",
-    matchesCount: 2,
-  },
-];
+function confidenceColor(confidence: string) {
+  if (confidence === "Critical") return "text-red-emergency";
+  if (confidence === "High") return "text-yellow-primary";
+  return "text-blue-400";
+}
 
 export default function MergeDuplicatesPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabType>("Users");
+  const [duplicates, setDuplicates] = useState<DuplicateSuspect[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleReviewUser = (userId: string) => {
-    router.push(`/admin/tasks/merge-duplicates/users/${userId}`);
-  };
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch(`${API}/api/admin/duplicates`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setDuplicates(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
-  const handleReviewPost = (postId: string) => {
-    router.push(`/admin/tasks/merge-duplicates/posts/${postId}`);
+  const handleReview = (suspect: DuplicateSuspect) => {
+    router.push(`/admin/tasks/merge-duplicates/users/${suspect.id}`);
   };
 
   return (
@@ -67,135 +62,112 @@ export default function MergeDuplicatesPage() {
       {/* Header */}
       <div className="flex items-center relative mb-4">
         <GoBackButton />
-
         <div className="absolute inset-0 flex items-center justify-center gap-2">
           <h1 className="text-white font-bold text-xl">Merge duplicates</h1>
           <span className="w-2.5 h-2.5 rounded-full bg-yellow-primary" />
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="w-full flex justify-between items-center gap-3">
-        <button
-          onClick={() => setActiveTab("Users")}
-          className={`w-38 h-11 rounded-[10] font-bold text-xl transition-all cursor-pointer ${
-            activeTab === "Users"
-              ? "bg-yellow-primary text-black"
-              : "bg-yellow-primary/32 text-black/47"
-          }`}
-        >
-          Users
-        </button>
-        <button
-          onClick={() => setActiveTab("Posts")}
-          className={`w-38 h-11 rounded-[10] font-bold text-xl transition-all cursor-pointer ${
-            activeTab === "Posts"
-              ? "bg-yellow-primary text-black"
-              : "bg-yellow-primary/32 text-black/47"
-          }`}
-        >
-          Posts
-        </button>
-      </div>
-
-      {/* Content */}
+      {loading && (
       <div className="flex flex-col gap-5 mt-1">
-        {activeTab === "Users" && (
-          <>
-            {mockDuplicateUsers.length === 0 && (
-              <p className="text-white/40 text-center mt-10">
-                No duplicate users found.
-              </p>
-            )}
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-secondary border border-yellow-primary/20 rounded-[20] p-5 flex flex-col gap-3 animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="w-13 h-13 rounded-full bg-white/10" />
+              <div className="h-5 w-32 bg-white/10 rounded-lg" />
+            </div>
+            <div className="h-px bg-white/10" />
+            <div className="flex items-center gap-3">
+              <div className="w-13 h-13 rounded-full bg-white/10" />
+              <div className="h-5 w-32 bg-white/10 rounded-lg" />
+            </div>
+            <div className="h-4 w-24 bg-white/10 rounded-lg" />
+            <div className="h-8 w-36 bg-white/10 rounded-full" />
+          </div>
+        ))}
+      </div>
+    )}
 
-            {mockDuplicateUsers.map((user) => (
-              <div
-                key={user.id}
-                className="bg-secondary border border-yellow-primary rounded-[20] p-5 flex flex-col gap-3"
-              >
-                {/* Top row: avatar + name + duplicate icon */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {/* Avatar */}
-                    <div className="w-13 h-13 rounded-full overflow-hidden shrink-0">
-                      <Image
-                        src={user.avatar}
-                        alt={user.name}
-                        width={52}
-                        height={52}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+      {!loading && duplicates.length === 0 && (
+        <p className="text-white/40 text-center mt-10">
+          No duplicate users found.
+        </p>
+      )}
 
-                    {/* Name */}
-                    <span className="text-white text-xl">{user.name}</span>
-                  </div>
-
-                  {/* Duplicate users icon */}
-                  <HiUsers
-                    size={46}
-                    fill="#FFF081"
-                    className="text-yellow-primary"
+      {/* Duplicate cards */}
+      <div className="flex flex-col gap-5 mt-1">
+        {duplicates.map((suspect) => (
+          <div
+            key={suspect.id}
+            className="bg-secondary border border-yellow-primary rounded-[20] p-5 flex flex-col gap-3"
+          >
+            {/* User 1 */}
+            <div className="flex items-center gap-3">
+              <div className="w-13 h-13 rounded-full overflow-hidden bg-third flex items-center justify-center shrink-0">
+                {suspect.user1AvatarUrl ? (
+                  <Image
+                    src={suspect.user1AvatarUrl}
+                    alt={suspect.user1Name}
+                    width={52}
+                    height={52}
+                    className="w-full h-full object-cover"
                   />
-                </div>
-
-                {/* Matches count */}
-                <p className="text-green-light text-xl">
-                  {user.matchesCount} matches
-                </p>
-
-                {/* Review button */}
-                <button
-                  onClick={() => handleReviewUser(user.id)}
-                  className="w-36 h-8.5 self-start bg-green-light hover:bg-green-light/80 active:scale-95 transition-all text-black font-bold rounded-full cursor-pointer"
-                >
-                  Review
-                </button>
+                ) : (
+                  <span className="text-white font-bold text-sm">
+                    {getInitials(suspect.user1Name)}
+                  </span>
+                )}
               </div>
-            ))}
-          </>
-        )}
+              <span className="text-white text-lg">{suspect.user1Name}</span>
+            </div>
 
-        {activeTab === "Posts" && (
-          <>
-            {mockDuplicatePosts.length === 0 && (
-              <p className="text-white/40 text-sm text-center mt-10">
-                No duplicate posts found.
-              </p>
-            )}
+            {/* Divider */}
+            <div className="flex items-center justify-between">
+              <div className="h-px flex-1 bg-white/10" />
+              <HiUsers size={28} fill="#FFF081" className="mx-3" />
+              <div className="h-px flex-1 bg-white/10" />
+            </div>
 
-            {mockDuplicatePosts.map((post) => (
-              <div
-                key={post.id}
-                className="bg-secondary border border-yellow-primary rounded-[20] p-5 flex flex-col gap-3"
-              >
-                {/* Post preview text */}
-                <p className="line-clamp-2 pr-16">{post.preview}</p>
-
-                {/* Matches count + duplicate posts icon */}
-                <div className="flex items-center justify-between -my-1">
-                  <p className="text-green-light text-xl">
-                    {post.matchesCount} matches
-                  </p>
-
-                  {/* Overlapping squares icon */}
-                  <div className="relative w-10 h-10">
-                    <div className="absolute top-0 left-0 w-7 h-7 border-2 border-yellow-primary rounded-md bg-transparent" />
-                    <div className="absolute bottom-0 right-0 w-7 h-7 border-2 border-yellow-primary rounded-md bg-yellow-primary/20" />
-                  </div>
-                </div>
-
-                {/* Review button */}
-                <button
-                  onClick={() => handleReviewPost(post.id)}
-                  className="w-36 h-8.5 self-start bg-green-light hover:bg-green-light/80 active:scale-95 transition-all text-black font-bold rounded-full cursor-pointer"
-                >
-                  Review
-                </button>
+            {/* User 2 */}
+            <div className="flex items-center gap-3">
+              <div className="w-13 h-13 rounded-full overflow-hidden bg-third flex items-center justify-center shrink-0">
+                {suspect.user2AvatarUrl ? (
+                  <Image
+                    src={suspect.user2AvatarUrl}
+                    alt={suspect.user2Name}
+                    width={52}
+                    height={52}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-white font-bold text-sm">
+                    {getInitials(suspect.user2Name)}
+                  </span>
+                )}
               </div>
-            ))}
-          </>
-        )}
+              <span className="text-white text-lg">{suspect.user2Name}</span>
+            </div>
+
+            {/* Confidence + Reasons */}
+            <div className="flex items-center gap-2 flex-wrap mt-1">
+              <span className={`font-bold text-sm ${confidenceColor(suspect.confidence)}`}>
+                {suspect.confidence}
+              </span>
+              <span className="text-white/30 text-sm">·</span>
+              <span className="text-white/50 text-sm">
+                {suspect.reasons.join(", ")}
+              </span>
+            </div>
+
+            {/* Review button */}
+            <button
+              onClick={() => handleReview(suspect)}
+              className="w-36 h-8.5 self-start bg-green-light hover:bg-green-light/80 active:scale-95 transition-all text-black font-bold rounded-full cursor-pointer"
+            >
+              Review
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );
