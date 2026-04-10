@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { BadgeCheck, User } from "lucide-react";
+import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 
 const API = "http://localhost:5248";
 
@@ -95,6 +96,7 @@ export default function UserProfilePage() {
     profile.fullName ?? profile.email?.split("@")[0] ?? "User";
 
   return (
+    <ThreeColumnLayout>
     <div className="w-full flex flex-col gap-8 mt-7 pb-10">
       {/* Avatar + Name + Trust score */}
       <section className="w-full flex justify-around items-center">
@@ -256,5 +258,6 @@ export default function UserProfilePage() {
         </section>
       </div>
     </div>
+    </ThreeColumnLayout>
   );
 }
