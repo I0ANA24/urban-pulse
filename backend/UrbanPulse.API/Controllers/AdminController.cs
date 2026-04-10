@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UrbanPulse.Core.Interfaces;
+using UrbanPulse.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace UrbanPulse.API.Controllers;
 
@@ -12,15 +14,18 @@ public class AdminController : ControllerBase
     private readonly IAdminStatsRepository _adminStatsRepository;
     private readonly IDuplicateSuspectRepository _duplicateSuspectRepository;
     private readonly IUserRepository _userRepository;
+    private readonly AppDbContext _context;
 
     public AdminController(
         IAdminStatsRepository adminStatsRepository,
         IDuplicateSuspectRepository duplicateSuspectRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        AppDbContext context)
     {
         _adminStatsRepository = adminStatsRepository;
         _duplicateSuspectRepository = duplicateSuspectRepository;
         _userRepository = userRepository;
+        _context = context;
     }
 
     [HttpGet("stats")]
@@ -67,5 +72,24 @@ public class AdminController : ControllerBase
         await _duplicateSuspectRepository.SaveChangesAsync();
 
         return Ok(new { message = "Duplicate merged successfully." });
+    }
+
+    [HttpGet("flagged-users")]
+    public async Task<IActionResult> GetFlaggedUsers()
+    {
+        var flaggedUsers = await _context.UserReports
+            .GroupBy(r => r.ReportedUserId)
+            .Select(g => new
+            {
+                UserId = g.Key,
+                UserName = g.First().ReportedUser.FullName ?? g.First().ReportedUser.Email,
+                AvatarUrl = g.First().ReportedUser.AvatarUrl,
+                TrustScore = g.First().ReportedUser.TrustScore,
+                ReportsCount = g.Count()
+            })
+            .OrderByDescending(x => x.ReportsCount)
+            .ToListAsync();
+
+        return Ok(flaggedUsers);
     }
 }
