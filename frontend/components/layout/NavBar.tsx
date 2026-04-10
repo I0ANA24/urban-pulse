@@ -5,15 +5,15 @@ import { usePathname } from "next/navigation";
 import { Home, Search, Map, MessageCircle, User } from "lucide-react";
 import Image from "next/image";
 import BannedUsersIcon from "../icons/navbar/BannedUsersIcon";
+import { useUser } from "@/context/UserContext";
 
 export default function NavBar() {
   const pathname = usePathname();
+  const { isAdmin } = useUser();
 
   if (pathname.startsWith("/profile")) {
     return null;
   }
-
-  const isAdmin = false;
 
   return (
         <div className="
@@ -37,7 +37,7 @@ export default function NavBar() {
         className="object-cover opacity-100"
       />
         <nav className="container h-full w-full flex justify-between items-center px-8 relative z-10">      
-        <Link href={`${isAdmin ? "/admin" : "/dashboard"}`}>
+        <Link href={isAdmin ? "/admin" : "/dashboard"}>
           <Home
             size={28}
             className="text-white cursor-pointer hover:text-black focus:text-white transition-all duration-200"
@@ -73,7 +73,7 @@ export default function NavBar() {
             />
           </Link>
         )}
-        <Link href={`${isAdmin ? "/admin/profile" : "/profile"}`}>
+        <Link href={isAdmin ? "/admin/profile" : "/profile"}>
           <User
             size={28}
             className="text-white cursor-pointer hover:text-black focus:text-white transition-all duration-200"

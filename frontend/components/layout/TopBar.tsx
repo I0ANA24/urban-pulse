@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,6 +10,7 @@ import ProfileRoundButton from "../ui/ProfileRoundButton";
 import { Plus } from "lucide-react";
 import { useSignalR } from "@/context/SignalRContext";
 import HomeIcon from "../icons/navbar/HomeIcon";
+import NotificationsPanel from "../notifications/NotificationsPanel";
 
 interface TopBarProps {
   back: boolean;
@@ -25,8 +26,12 @@ export default function TopBar({ back, notifications, settings, addPost }: TopBa
   const [avatarUrl, setAvatarUrl] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { notificationConnection } = useSignalR();
+
+  const handlePanelClose = useCallback(() => setPanelOpen(false), []);
+  const handleUnreadChange = useCallback((count: number) => setUnreadCount(count), []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -133,6 +138,19 @@ export default function TopBar({ back, notifications, settings, addPost }: TopBa
         {/* Right — Notifications + User */}
         <div className="flex items-center gap-5">
 
+          {/* Bell button (desktop only) */}
+            <button
+              onClick={() => setPanelOpen((prev) => !prev)}
+              className="relative flex items-center justify-center w-13.5 h-13.5 rounded-full bg-[#1F1F1F] shadow-[0_4px_4px_rgba(0,0,0,0.25),inset_0_0_5px_rgba(255,255,255,0.4)] border border-white/50 transition-transform duration-200 active:scale-95 cursor-pointer hover:scale-104"
+            >
+              <Image src="/notifications.svg" alt="notifications" width={40} height={25} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-4.5 h-4.5 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center px-1">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </button>
+
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen((prev) => !prev)}
@@ -185,6 +203,13 @@ export default function TopBar({ back, notifications, settings, addPost }: TopBa
           </div>
         </div>
       </div>
+
+      {/* Notifications slide-in panel (desktop only) */}      
+      <NotificationsPanel
+        open={panelOpen}
+        onClose={handlePanelClose}
+        onUnreadChange={handleUnreadChange}
+      />
     </>
   );
 }

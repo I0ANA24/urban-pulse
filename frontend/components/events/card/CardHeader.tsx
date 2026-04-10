@@ -40,7 +40,7 @@ export default function CardHeader({
     <div className={`w-full h-17.5 lg:h-20 p-5 lg:px-10 z-10 flex justify-between items-center bg-secondary rounded-3xl ${imageUrl ? "rounded-b-3xl" : "rounded-b-none"}`}>
       <Link href={`/users/${userId}`}>
         <div className="flex gap-4 justify-center items-center">
-          <div className="size-10 lg:size-11 rounded-full overflow-hidden bg-[#2e2e2e] flex items-center justify-center flex-shrink-0">
+          <div className="size-10 lg:size-11 rounded-full overflow-hidden bg-[#2e2e2e] flex items-center justify-center shrink-0">
             {avatarUrl ? (
               <Image
                 src={avatarUrl}

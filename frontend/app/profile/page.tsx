@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
-import { BadgeCheck, User, Camera } from "lucide-react";
+import { BadgeCheck, User, Camera, ArrowLeftRight } from "lucide-react";
+import { useUser } from "@/context/UserContext";
 
 const API = "http://localhost:5248";
 
@@ -16,6 +18,7 @@ interface UserProfile {
   tools: string[];
   avatarUrl: string | null;
   isVerified: boolean;
+  role: string;
   trustScore: number;
   createdAt: string;
 }
@@ -28,6 +31,8 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+  const { viewAsUser, setViewAsUser } = useUser();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -60,6 +65,12 @@ export default function ProfilePage() {
     setUploading(false);
   };
 
+  const handleAdminMode = () => {
+    setViewAsUser(false);
+    router.push("/admin");
+  };
+
+  const isRealAdmin = profile?.role === "Admin";
   const displayName = profile?.fullName ?? profile?.email?.split("@")[0] ?? "User";
   const memberSince = profile?.createdAt
     ? new Date(profile.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
@@ -108,6 +119,16 @@ export default function ProfilePage() {
             />
           </div>
 
+          {isRealAdmin && viewAsUser && (
+            <button
+              onClick={handleAdminMode}
+              className="flex items-center gap-2 bg-secondary rounded-full px-5 py-2.5 transition-transform active:scale-95 cursor-pointer hover:bg-secondary/90 mt-4"
+            >
+              <ArrowLeftRight size={20} className="text-white" />
+              <span className="text-white text-sm font-medium">Admin mode</span>
+            </button>
+          )}
+
           <div>
             {profile?.isVerified && (
               <div className="flex items-center gap-1.5 mt-5">
@@ -122,7 +143,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 items-center">
           <h1 className="text-2xl font-bold font-montagu text-center leading-tight">
             {displayName.includes(" ") ? (
               <>
@@ -144,6 +165,7 @@ export default function ProfilePage() {
               {profile?.trustScore ?? 0}%
             </p>
           </div>
+
         </div>
       </section>
 
@@ -208,5 +230,9 @@ export default function ProfilePage() {
     </div>
   );
 
-  return <ThreeColumnLayout>{profileContent}</ThreeColumnLayout>;
+  return (
+    <ThreeColumnLayout>
+      {profileContent}
+    </ThreeColumnLayout>
+  );
 }

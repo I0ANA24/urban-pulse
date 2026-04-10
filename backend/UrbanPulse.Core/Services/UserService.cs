@@ -6,10 +6,14 @@ using UrbanPulse.Core.Interfaces;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IDuplicateDetectionService _duplicateDetectionService;
 
-    public UserService(IUserRepository userRepository)
+    public UserService(
+        IUserRepository userRepository,
+        IDuplicateDetectionService duplicateDetectionService)
     {
         _userRepository = userRepository;
+        _duplicateDetectionService = duplicateDetectionService;
     }
 
     public async Task<UserProfileDto?> GetProfileAsync(int userId)
@@ -69,6 +73,9 @@ public class UserService : IUserService
         user.UpdatedAt = DateTime.UtcNow;
 
         await _userRepository.UpdateAsync(user);
+
+        await _duplicateDetectionService.DetectAndSaveAsync(userId);
+
         return MapToDto(user);
     }
 
@@ -99,8 +106,12 @@ public class UserService : IUserService
         Address = user.Address,
         Bio = user.Bio,
         AvatarUrl = user.AvatarUrl,
-        Skills = string.IsNullOrWhiteSpace(user.Skills) ? new() : user.Skills.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList(),
-        Tools = string.IsNullOrWhiteSpace(user.Tools) ? new() : user.Tools.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList(),
+        Skills = string.IsNullOrWhiteSpace(user.Skills)
+            ? new()
+            : user.Skills.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList(),
+        Tools = string.IsNullOrWhiteSpace(user.Tools)
+            ? new()
+            : user.Tools.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList(),
         Role = user.Role,
         IsVerified = user.IsVerified,
         TrustScore = user.TrustScore,

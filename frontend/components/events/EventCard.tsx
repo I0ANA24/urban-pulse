@@ -21,6 +21,7 @@ interface EventCardProps {
   onDelete?: (id: number) => void;
   flagCount?: number;
   onViewInsights?: (eventId: number) => void;
+  isAdminView?: boolean;
 }
 
 function getInitials(name: string) {
@@ -37,7 +38,7 @@ function formatDate(dateStr: string) {
   return `${day}.${month}.${year} \u00A0 ${hours}:${minutes}`;
 }
 
-export default function EventCard({ event, isMyPost, onDelete, flagCount, onViewInsights }: EventCardProps) {
+export default function EventCard({ event, isMyPost, onDelete, flagCount, onViewInsights, isAdminView }: EventCardProps) {
   const router = useRouter();
   const { user } = useUser();
   const [liked, setLiked] = useState(false);
@@ -147,6 +148,7 @@ export default function EventCard({ event, isMyPost, onDelete, flagCount, onView
           flagCount={flagCount}
           onViewInsights={onViewInsights ? () => onViewInsights(event.id) : undefined}
           isMyPost={isOwner}
+          isAdminView={isAdminView}
         />
       </div>
       {showComments && typeof window !== "undefined" && createPortal(

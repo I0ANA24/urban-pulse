@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UrbanPulse.Infrastructure.Data;
@@ -11,9 +12,11 @@ using UrbanPulse.Infrastructure.Data;
 namespace UrbanPulse.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260409205551_AddUserReports")]
+    partial class AddUserReports
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -87,43 +90,6 @@ namespace UrbanPulse.Infrastructure.Migrations
                     b.HasIndex("User2Id");
 
                     b.ToTable("Conversations");
-                });
-
-            modelBuilder.Entity("UrbanPulse.Core.Entities.DuplicateSuspect", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Confidence")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("DetectedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsDismissed")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Reasons")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("User1Id")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("User2Id")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("User1Id");
-
-                    b.HasIndex("User2Id");
-
-                    b.ToTable("DuplicateSuspects");
                 });
 
             modelBuilder.Entity("UrbanPulse.Core.Entities.Event", b =>
@@ -530,25 +496,6 @@ namespace UrbanPulse.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Event");
-
-                    b.Navigation("User1");
-
-                    b.Navigation("User2");
-                });
-
-            modelBuilder.Entity("UrbanPulse.Core.Entities.DuplicateSuspect", b =>
-                {
-                    b.HasOne("UrbanPulse.Core.Entities.User", "User1")
-                        .WithMany()
-                        .HasForeignKey("User1Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("UrbanPulse.Core.Entities.User", "User2")
-                        .WithMany()
-                        .HasForeignKey("User2Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
 
                     b.Navigation("User1");
 

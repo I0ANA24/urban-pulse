@@ -1,45 +1,65 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 
-const tasks = [
-  {
-    id: "flagged-users",
-    title: "Flagged users",
-    subtitle: "10 users",
-    href: "/admin/tasks/flagged-users",
-    bgColor: "bg-red-emergency",
-    textColor: "text-white",
-    subtitleColor: "text-white",
-    chevronColor: "text-white",
-  },
-  {
-    id: "flagged-content",
-    title: "Flagged content",
-    subtitle: "3 posts",
-    href: "/admin/tasks/flagged-content",
-    bgColor: "bg-blue",
-    textColor: "text-black",
-    subtitleColor: "text-black",
-    chevronColor: "text-black",
-  },
-  {
-    id: "merge-duplicates",
-    title: "Merge duplicates",
-    subtitle: "4 tasks",
-    href: "/admin/tasks/merge-duplicates",
-    bgColor: "bg-yellow-primary",
-    textColor: "text-black",
-    subtitleColor: "text-black",
-    chevronColor: "text-black",
-  },
-];
+const API = "http://localhost:5248";
+
+interface TaskStats {
+  flaggedUsersCount: number;
+  flaggedContentCount: number;
+  mergeDuplicatesCount: number;
+}
 
 export default function AdminTasksPage() {
   const router = useRouter();
+  const [stats, setStats] = useState<TaskStats | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch(`${API}/api/admin/stats`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setStats(data))
+      .catch(() => {});
+  }, []);
+
+  const tasks = [
+    {
+      id: "flagged-users",
+      title: "Flagged users",
+      subtitle: `${stats?.flaggedUsersCount ?? "0"} users`,
+      href: "/admin/tasks/flagged-users",
+      bgColor: "bg-red-emergency",
+      textColor: "text-white",
+      subtitleColor: "text-white",
+      chevronColor: "text-white",
+    },
+    {
+      id: "flagged-content",
+      title: "Flagged content",
+      subtitle: `${stats?.flaggedContentCount ?? "0"} posts`,
+      href: "/admin/tasks/flagged-content",
+      bgColor: "bg-blue",
+      textColor: "text-black",
+      subtitleColor: "text-black",
+      chevronColor: "text-black",
+    },
+    {
+      id: "merge-duplicates",
+      title: "Merge duplicates",
+      subtitle: `${stats?.mergeDuplicatesCount ?? "0"} duplicates`,
+      href: "/admin/tasks/merge-duplicates",
+      bgColor: "bg-yellow-primary",
+      textColor: "text-black",
+      subtitleColor: "text-black",
+      chevronColor: "text-black",
+    },
+  ];
 
   return (
     <div className="w-full flex flex-col gap-6 animate-fade-up">

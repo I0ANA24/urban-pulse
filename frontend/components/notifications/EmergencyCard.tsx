@@ -1,44 +1,50 @@
-import { NotificationItem, formatRelativeTime } from "./NotificationTypes";
+import { NotificationItem, formatTime, getInitials } from "./NotificationTypes";
 
 export default function EmergencyCard({ n, onRead }: { n: NotificationItem; onRead: () => void }) {
-  return (
-    <div onClick={onRead} className="cursor-pointer active:scale-95 transition-all duration-200 relative pt-5">
+  const initials = getInitials(n.title);
 
-      <div className="absolute top-0 right-3 z-10 px-4 py-1 rounded-full text-xs font-bold bg-red-500 text-white">
-        🚨 EMERGENCY
+  const colonIndex = n.body.indexOf(":");
+  const alertLabel = colonIndex !== -1 ? n.body.substring(0, colonIndex) : n.body;
+  const alertBody = colonIndex !== -1 ? n.body.substring(colonIndex + 1).trim() : "";
+
+  return (
+    <div onClick={onRead} className="cursor-pointer active:scale-95 transition-all duration-200 relative pt-7">
+
+      {/* EMERGENCY tab badge */}
+      <div className="absolute w-27 h-15 top-0 right-3 -z-10 px-4 py-1 rounded-t-3xl text-xs font-bold bg-red-emergency text-white pt-2 text-center">
+        EMERGENCY
       </div>
 
       <div
         className="rounded-2xl overflow-hidden"
-        style={{ border: `1px solid ${n.isRead ? "rgba(255,255,255,0.06)" : "rgba(239,68,68,0.35)"}` }}
+        style={{ border: `1px solid ${n.isRead ? "rgba(255,255,255,0.06)" : "rgba(165,58,58,0.5)"}` }}
       >
-        <div
-          className="relative px-4 pt-4 pb-3"
-          style={{ background: n.isRead ? "#1C1C1C" : "rgba(239,68,68,0.08)" }}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-full bg-red-500/20 flex items-center justify-center text-lg flex-shrink-0">
-              🚨
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <p className={`text-sm font-bold ${n.isRead ? "text-white/50" : "text-white"}`}>
-                  {n.title}
-                </p>
-                <span className="text-[10px] text-white/30 whitespace-nowrap flex-shrink-0">
-                  {formatRelativeTime(n.createdAt)}
-                </span>
-              </div>
-            </div>
+        <div className="px-4 pt-3 pb-4" style={{ background: "#2C2222" }}>
+
+          {/* Time + unread dot row */}
+          <div className="flex items-center justify-end gap-1.5 mb-2">
+            {!n.isRead && <span className="w-2 h-2 rounded-full bg-green-400 shrink-0" />}
+            <span className="text-xs text-white/40">{formatTime(n.createdAt)}</span>
           </div>
-          <div className="ml-12">
-            <p className={`text-xs ${n.isRead ? "text-white/30" : "text-red-400"}`}>
-              {n.body}
+
+          {/* Avatar + name row */}
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-xs font-bold text-gray-800 shrink-0">
+              {initials}
+            </div>
+            <p className={`text-sm leading-snug mt-1 ${n.isRead ? "text-white/40" : "text-white"}`}>
+              {"Someone posted an emergency."}
             </p>
           </div>
-          {!n.isRead && (
-            <div className="absolute bottom-3 right-3 w-2 h-2 rounded-full bg-red-500" />
-          )}
+
+          {/* Alert text */}
+          <p className="text-sm font-bold ml-13" style={{ color: "#FF7E7E" }}>
+            {alertLabel}:{" "}
+            <span className={`font-normal ${n.isRead ? "text-white/40" : "text-white"}`}>
+              {alertBody}
+            </span>
+          </p>
+
         </div>
       </div>
     </div>

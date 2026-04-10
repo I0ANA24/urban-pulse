@@ -112,6 +112,7 @@ export default function FlaggedContentPage() {
           <EventCard
             key={event.id}
             event={event}
+            isAdminView={true}
             flagCount={event.flagCount}
             onViewInsights={handleViewInsights}
           />

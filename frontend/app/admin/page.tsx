@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Plus } from "lucide-react";
@@ -10,37 +10,50 @@ import OverviewCard from "@/components/admin/OverviewCard";
 import AddEventModal from "@/components/admin/AddEventModal";
 import UrbanTitle from "@/components/ui/UrbanTitle";
 
-const mockStats = {
-  flaggedUsers: 10,
-  flaggedContent: 3,
-  mergeDuplicates: 4,
-  totalTasks: 26,
-  flaggedUsersPercent: 35,
-  flaggedContentPercent: 45,
-  resolvedPercent: 20,
-};
+const API = "http://localhost:5248";
 
-const dailyOverview = {
-  newUsers: 32,
-  posts: 100,
-  flaggedPosts: 3,
-  flaggedUsers: 1,
-};
-
-const generalActivities = {
-  posts: 1009,
-  users: 78,
-  unverifiedUsers: 34,
-  verifiedUsers: 44,
-};
+interface AdminStats {
+  resolvedTasks: number;
+  dailyNewUsers: number;
+  dailyPosts: number;
+  dailyFlaggedPosts: number;
+  dailyFlaggedUsers: number;
+  totalPosts: number;
+  totalUsers: number;
+  verifiedUsers: number;
+  unverifiedUsers: number;
+  flaggedUsersCount: number;
+  flaggedContentCount: number;
+  mergeDuplicatesCount: number;
+}
 
 export default function AdminDashboard() {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch(`${API}/api/admin/stats`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setStats(data))
+      .catch(() => {});
+  }, []);
+
+  const flaggedUsers = stats?.flaggedUsersCount ?? 0;
+  const flaggedContent = stats?.flaggedContentCount ?? 0;
+  const mergeDuplicates = stats?.mergeDuplicatesCount ?? 0;
+  const total = flaggedUsers + flaggedContent + mergeDuplicates;
+
+  const flaggedUsersPercent = total > 0 ? Math.round((flaggedUsers / total) * 100) : 0;
+  const flaggedContentPercent = total > 0 ? Math.round((flaggedContent / total) * 100) : 0;
+  const mergeDuplicatesPercent = total > 0 ? 100 - flaggedUsersPercent - flaggedContentPercent : 0;
 
   const donutSegments = [
-    { value: mockStats.flaggedUsersPercent, color: "#FFF081" },
-    { value: mockStats.flaggedContentPercent, color: "#A53A3A" },
-    { value: mockStats.resolvedPercent, color: "#4ADE80" },
+    { value: flaggedUsersPercent, color: "#A53A3A" },      
+    { value: flaggedContentPercent, color: "#5B8DEF" },    
+    { value: mergeDuplicatesPercent, color: "#FFF081" },    
   ];
 
   const handleSaveEvent = (eventText: string) => {
@@ -54,7 +67,7 @@ export default function AdminDashboard() {
 
         <UrbanTitle />
 
-        {/* Event button — wide, bluish */}
+        {/* Event button */}
         <div className="w-full h-27.5 flex p-4 justify-center items-center relative">
           <Image
             src="/rectangle.svg"
@@ -79,7 +92,7 @@ export default function AdminDashboard() {
         <div className="flex justify-center py-2">
           <DonutChart
             segments={donutSegments}
-            centerText={`${mockStats.totalTasks} Tasks`}
+            centerText={`${total} Tasks`}
             size={220}
             strokeWidth={32}
           />
@@ -89,21 +102,21 @@ export default function AdminDashboard() {
         <div className="w-full flex justify-between px-4">
           <StatBar
             label={"Flagged\nusers"}
-            value={`${mockStats.flaggedUsersPercent}%`}
+            value={`${flaggedUsersPercent}%`}
             color="#A53A3A"
-            progress={mockStats.flaggedUsersPercent}
+            progress={flaggedUsersPercent}
           />
           <StatBar
             label={"Flagged\ncontent"}
-            value={`${mockStats.flaggedContentPercent}%`}
-            color="#FFF081"
-            progress={mockStats.flaggedContentPercent}
+            value={`${flaggedContentPercent}%`}
+            color="#5B8DEF"
+            progress={flaggedContentPercent}
           />
           <StatBar
-            label={"Resolved\ntasks"}
-            value={`${mockStats.resolvedPercent}%`}
-            color="#4ADE80"
-            progress={mockStats.resolvedPercent}
+            label={"Merge\nduplicates"}
+            value={`${mergeDuplicatesPercent}%`}
+            color="#FFF081"
+            progress={mergeDuplicatesPercent}
           />
         </div>
 
@@ -120,10 +133,10 @@ export default function AdminDashboard() {
         <OverviewCard
           title="Daily App Overview"
           stats={[
-            { bold: String(dailyOverview.newUsers), text: "new users" },
-            { bold: String(dailyOverview.posts), text: "posts" },
-            { bold: String(dailyOverview.flaggedPosts), text: "flagged posts" },
-            { bold: String(dailyOverview.flaggedUsers), text: "flagged user" },
+            { bold: String(stats?.dailyNewUsers ?? 0), text: "new users" },
+            { bold: String(stats?.dailyPosts ?? 0), text: "posts" },
+            { bold: String(stats?.dailyFlaggedPosts ?? 0), text: "flagged posts" },
+            { bold: String(stats?.dailyFlaggedUsers ?? 0), text: "flagged users" },
           ]}
         />
 
@@ -131,23 +144,15 @@ export default function AdminDashboard() {
         <OverviewCard
           title="General Activities"
           stats={[
-            { bold: String(generalActivities.posts), text: "posts" },
-            { bold: String(generalActivities.users), text: "users" },
-            {
-              bold: String(generalActivities.unverifiedUsers),
-              text: "unverified users",
-            },
-            {
-              bold: String(generalActivities.verifiedUsers),
-              text: "verified users",
-            },
+            { bold: String(stats?.totalPosts ?? 0), text: "posts" },
+            { bold: String(stats?.totalUsers ?? 0), text: "users" },
+            { bold: String(stats?.unverifiedUsers ?? 0), text: "unverified users" },
+            { bold: String(stats?.verifiedUsers ?? 0), text: "verified users" },
           ]}
         />
 
-        {/* Bottom spacing */}
         <div className="h-4" />
 
-        {/* Add Event Modal */}
         <AddEventModal
           isOpen={isEventModalOpen}
           onClose={() => setIsEventModalOpen(false)}

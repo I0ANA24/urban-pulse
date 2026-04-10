@@ -8,6 +8,7 @@ import { Event, EventType } from "@/types/Event";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
 import SearchBar from "@/components/search/SearchBar";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
+import { useUser } from "@/context/UserContext";
 
 const API = "http://localhost:5248";
 
@@ -40,6 +41,7 @@ function useDebounce(value: string, delay = 350) {
 
 export default function SearchPage() {
   const router = useRouter();
+  const { isAdmin } = useUser();
   const [activeTab, setActiveTab] = useState<TabType>("Posts");
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query);
@@ -48,16 +50,6 @@ export default function SearchPage() {
   const [allUsers, setAllUsers] = useState<UserResult[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [loadingPeople, setLoadingPeople] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    fetch(`${API}/api/User/profile`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((d) => setIsAdmin(d.role === "Admin" || d.isAdmin === true))
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -128,7 +120,10 @@ export default function SearchPage() {
                 </p>
               )}
               {filteredEvents.map((event) => (
-                <EventCard key={event.id} event={event}
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  isAdminView={isAdmin}
                   {...(isAdmin && { onViewInsights: handleViewInsights, flagCount: 0 })}
                 />
               ))}
@@ -145,7 +140,7 @@ export default function SearchPage() {
               </p>
             )}
             {allUsers.map((user) => (
-              <button key={user.id} onClick={() => router.push(`/profile/${user.id}`)}
+              <button key={user.id} onClick={() => router.push(`/users/${user.id}`)}
                 className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer"
               >
                 <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">

@@ -14,6 +14,7 @@ interface CardFooterProps {
   flagCount?: number;
   onViewInsights?: () => void;
   isMyPost?: boolean;
+  isAdminView?: boolean;
 }
 
 export default function CardFooter({
@@ -27,8 +28,9 @@ export default function CardFooter({
   onComment,
   flagCount,
   onViewInsights,
+  isAdminView,
 }: CardFooterProps) {
-  const isAdmin = flagCount !== undefined;
+  const isAdmin = isAdminView === true;
 
   if (isAdmin) {
     return (
