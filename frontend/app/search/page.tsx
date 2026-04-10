@@ -145,7 +145,7 @@ export default function SearchPage() {
               </p>
             )}
             {allUsers.map((user) => (
-              <button key={user.id} onClick={() => router.push(`/profile/${user.id}`)}
+              <button key={user.id} onClick={() => router.push(`/users/${user.id}`)}
                 className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer"
               >
                 <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
