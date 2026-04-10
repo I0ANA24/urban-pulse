@@ -1,240 +1,231 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { BadgeCheck } from "lucide-react";
+import { useRouter, useParams } from "next/navigation";
+import { BadgeCheck, Check } from "lucide-react";
+import GoBackButton from "@/components/ui/GoBackButton";
 
 const API = "http://localhost:5248";
 
-interface UserProfile {
+interface DuplicateSuspect {
   id: number;
-  email: string;
-  fullName: string | null;
-  bio: string | null;
-  skills: string[];
-  tools: string[];
-  trustScore: number;
-  isVerified: boolean;
-  createdAt: string;
-  helpedCount: number;
-  postsCount: number;
-  avatarUrl?: string | null;
+  user1Id: number;
+  user1Name: string;
+  user1AvatarUrl: string | null;
+  user1IsVerified: boolean;
+  user1TrustScore: number;
+  user1CreatedAt: string;
+  user2Id: number;
+  user2Name: string;
+  user2AvatarUrl: string | null;
+  user2IsVerified: boolean;
+  user2TrustScore: number;
+  user2CreatedAt: string;
+  confidence: string;
+  reasons: string[];
 }
 
 function getInitials(name: string) {
   return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
 }
 
-export default function UserProfilePage() {
-  const { id } = useParams<{ id: string }>();
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+export default function ReviewDuplicateUsersPage() {
   const router = useRouter();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const { id } = useParams<{ id: string }>();
+  const [suspect, setSuspect] = useState<DuplicateSuspect | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch(`${API}/api/user/${id}`, {
+    fetch(`${API}/api/admin/duplicates`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then((data) => {
-        setProfile(data);
+      .then((data: DuplicateSuspect[]) => {
+        const found = data.find((d) => d.id === parseInt(id));
+        setSuspect(found ?? null);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, [id]);
 
-  const handleMessage = async () => {
+  const handleKeep = async () => {
+    if (!selectedUserId || !suspect) return;
+    setSubmitting(true);
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API}/api/chat/conversations`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ otherUserId: parseInt(id) }),
+    await fetch(`${API}/api/admin/duplicates/${suspect.id}/merge?keepUserId=${selectedUserId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
     });
-    if (res.ok) {
-      const data = await res.json();
-      router.push(`/chat-conversation/${data.conversationId}`);
-    }
+    setSubmitting(false);
+    router.back();
   };
 
-  const formatMemberSince = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
+  const handleIgnore = async () => {
+    if (!suspect) return;
+    setSubmitting(true);
+    const token = localStorage.getItem("token");
+    await fetch(`${API}/api/admin/duplicates/${suspect.id}/dismiss`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
     });
+    setSubmitting(false);
+    router.back();
   };
 
-  if (loading) {
-    return (
-      <div className="w-full flex justify-center mt-20">
-        <p className="text-white/40">Loading...</p>
-      </div>
-    );
-  }
+  if (loading) return <p className="text-white/40 text-center mt-20">Loading...</p>;
+  if (!suspect) return <p className="text-white/40 text-center mt-20">Not found.</p>;
 
-  if (!profile) {
-    return (
-      <div className="w-full flex justify-center mt-20">
-        <p className="text-white/40">User not found.</p>
-      </div>
-    );
-  }
-
-  const displayName = profile.fullName ?? profile.email?.split("@")[0] ?? "User";
+  const accounts = [
+    {
+      userId: suspect.user1Id,
+      name: suspect.user1Name,
+      avatarUrl: suspect.user1AvatarUrl,
+      isVerified: suspect.user1IsVerified,
+      trustScore: suspect.user1TrustScore,
+      createdAt: suspect.user1CreatedAt,
+    },
+    {
+      userId: suspect.user2Id,
+      name: suspect.user2Name,
+      avatarUrl: suspect.user2AvatarUrl,
+      isVerified: suspect.user2IsVerified,
+      trustScore: suspect.user2TrustScore,
+      createdAt: suspect.user2CreatedAt,
+    },
+  ];
 
   return (
-    <div className="w-full flex flex-col gap-8 mt-7 pb-10">
-      {/* Avatar + Name + Trust score */}
-      <section className="w-full flex justify-around items-center">
-        <div className="size-35 rounded-full overflow-hidden bg-secondary flex items-center justify-center">
-          {profile.avatarUrl ? (
-            <Image
-              src={profile.avatarUrl}
-              alt={displayName}
-              width={140}
-              height={140}
-              className="object-cover w-full h-full"
-            />
-          ) : (
-            <span className="text-white text-4xl font-bold">
-              {getInitials(displayName)}
-            </span>
-          )}
-        </div>
+    <div className="w-full flex flex-col gap-6 animate-fade-up pb-32">
+      {/* Header */}
+      <div className="flex items-center">
+        <GoBackButton />
+      </div>
 
-        <div className="flex flex-col gap-3">
-          <h1 className="text-2xl font-bold font-montagu text-center leading-tight">
-            {displayName.includes(" ") ? (
-              <>
-                {displayName.split(" ")[0]}
-                <br />
-                {displayName.split(" ").slice(1).join(" ")}
-              </>
-            ) : (
-              displayName
-            )}
-          </h1>
-
-          <div className="flex justify-center items-center rounded-full px-4 py-1 bg-linear-to-b from-[#FFFADC]/50 to-[#FFF197]/50 shadow-[0px_11.3915px_22.3363px_rgba(255,227,42,0.19),inset_0px_-2px_1px_rgba(255,241,151,0.4)] backdrop-blur-[2px] border border-yellow-primary">
-            <p className="font-montagu font-medium text-xs text-yellow-primary leading-3 text-shadow-lg text-shadow-neutral-600/50">
-              Trust
-              <br />
-              score
-            </p>
-            <div className="h-6 w-1 border-r border-yellow-primary mx-2"></div>
-            <p className="font-montagu text-xl text-yellow-primary font-bold text-center text-shadow-lg text-shadow-neutral-600/30 ml-3">
-              {profile.trustScore ?? 0}%
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Verified + Member since */}
-      <section className="w-full flex flex-col gap-2 px-1">
-        {profile.isVerified && (
-          <div className="flex items-center gap-2">
-            <BadgeCheck size={22} className="text-green-light fill-green-light/20" />
-            <span className="font-semibold text-sm">Verified Neighbour</span>
-          </div>
-        )}
-        {profile.createdAt && (
-          <div className="flex items-center gap-2">
-            <Image src="/member.svg" alt="member" width={20} height={20} onError={() => {}} />
-            <span className="text-sm">
-              <span className="font-bold">Member since: </span>
-              <span className="text-yellow-primary">{formatMemberSince(profile.createdAt)}</span>
-            </span>
-          </div>
-        )}
-      </section>
-
-      {/* Message + Report buttons */}
-      <section className="w-full flex gap-4">
-        <button
-          onClick={handleMessage}
-          className="flex-1 py-3 rounded-2xl border border-white/30 text-white font-bold text-sm hover:bg-white/10 transition-colors cursor-pointer"
-        >
-          Message
-        </button>
-        <button
-          onClick={() => router.push(`/report-user?userId=${id}`)}
-          className="flex-1 py-3 rounded-2xl bg-red-emergency/80 text-white font-bold text-sm hover:bg-red-emergency transition-colors cursor-pointer"
-        >
-          Report
-        </button>
-      </section>
-
-      {/* Bio */}
-      <section className="w-full">
-        <div className="w-full mb-4 border border-third"></div>
-        <p className="w-full">
-          <span className="font-bold">Bio: </span>
-          {profile.bio ? (
-            profile.bio
-          ) : (
-            <span className="text-white/30 italic">No bio yet.</span>
-          )}
+      {/* Matches info */}
+      <div className="flex flex-col gap-1">
+        <h2 className="text-yellow-primary font-bold text-xl">Matches:</h2>
+        <p className="text-white font-bold text-xl">
+          {suspect.reasons.join(", ")}
         </p>
-        <div className="w-full mt-4 h-px bg-white"></div>
-      </section>
+      </div>
 
-      {/* Stats */}
-      <div className="w-full flex flex-col justify-center items-center gap-6">
-        <section className="w-full h-25 border-2 border-yellow-primary rounded-2xl flex items-center py-2 shadow-sm bg-[#1C1C1C]">
-          <div className="flex-1 flex flex-col items-center justify-center gap-1">
-            <h3 className="text-lg font-bold">Helped</h3>
-            <p className="text-yellow-primary text-3xl font-bold">
-              {profile.helpedCount ?? 0}
-            </p>
-          </div>
-          <div className="w-0.5 self-stretch my-3 bg-white"></div>
-          <div className="flex-1 flex flex-col items-center justify-center gap-1">
-            <h3 className="text-lg font-bold">Posts</h3>
-            <p className="text-yellow-primary text-3xl font-bold">
-              {profile.postsCount ?? 0}
-            </p>
-          </div>
-        </section>
+      <div className="h-0.5 bg-white/60 -mt-3 mb-1" />
 
-        {/* Skills */}
-        <section className="w-full min-h-25 border-2 border-yellow-primary rounded-2xl flex flex-col justify-center gap-2 items-baseline py-4 px-6 shadow-sm bg-[#1C1C1C]">
-          <h2 className="text-yellow-primary text-xl font-bold font-montagu">Skills</h2>
-          {profile.skills && profile.skills.length > 0 ? (
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 w-full overflow-hidden">
-              {profile.skills.map((skill, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary shrink-0"></span>
-                  {skill}
+      <div className="flex flex-col gap-2">
+        <p className="text-white text-base">
+          Select which account is{" "}
+          <span className="text-red-emergency font-bold">permanent</span>:
+        </p>
+        <p className="text-white/40 text-[13px] mt-4 -mb-2">
+          *The other one will be deleted
+        </p>
+      </div>
+
+      {/* User account cards */}
+      <div className="flex flex-col gap-6">
+        {accounts.map((account) => {
+          const isSelected = selectedUserId === account.userId;
+
+          return (
+            <button
+              key={account.userId}
+              onClick={() => setSelectedUserId(account.userId)}
+              className={`w-full bg-secondary border rounded-[20] p-5 flex flex-col gap-4 transition-all cursor-pointer text-left ${
+                isSelected
+                  ? "border-yellow-primary shadow-[0_0_15px_rgba(245,214,61,0.2)]"
+                  : "border-yellow-primary"
+              }`}
+            >
+              {/* Checkbox */}
+              <div className="w-full flex justify-end -mb-8">
+                <div
+                  className={`w-7 h-7 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
+                    isSelected
+                      ? "bg-yellow-primary border-yellow-primary"
+                      : "bg-transparent border-white/60"
+                  }`}
+                >
+                  {isSelected && (
+                    <Check size={18} className="text-[#1a1a1a]" strokeWidth={3} />
+                  )}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-white/30 text-sm italic">No skills listed.</p>
-          )}
-        </section>
+              </div>
 
-        {/* Tools & Resources */}
-        <section className="w-full min-h-25 border-2 border-yellow-primary rounded-2xl flex flex-col justify-center gap-2 items-baseline py-4 px-6 shadow-sm bg-[#1C1C1C]">
-          <h2 className="text-yellow-primary text-xl font-bold font-montagu">Tools & Resources</h2>
-          {profile.tools && profile.tools.length > 0 ? (
-            <div className="w-full flex flex-col gap-y-2 overflow-hidden">
-              {profile.tools.map((tool, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-primary"></span>
-                  {tool}
+              {/* Avatar + Name + Verified */}
+              <div className="flex items-center gap-4">
+                <div className="w-19.5 h-19.5 rounded-full overflow-hidden bg-third flex items-center justify-center shrink-0">
+                  {account.avatarUrl ? (
+                    <Image
+                      src={account.avatarUrl}
+                      alt={account.name}
+                      width={78}
+                      height={78}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-white text-2xl font-bold">
+                      {getInitials(account.name)}
+                    </span>
+                  )}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-white/30 text-sm italic">No tools listed.</p>
-          )}
-        </section>
+
+                <div className="flex flex-col gap-1">
+                  <span className="text-white text-[20px]">{account.name}</span>
+                  {account.isVerified && (
+                    <div className="flex items-center gap-1.5">
+                      <BadgeCheck size={22} className="text-green-light fill-green-light/20" />
+                      <span className="font-bold text-sm">Verified Neighbour</span>
+                    </div>
+                  )}
+                  {/* Member since */}
+                  <span className="text-white/40 text-xs">
+                    Member since{" "}
+                    <span className="text-yellow-primary">{formatDate(account.createdAt)}</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Trust score */}
+              <p className="text-yellow-primary font-bold text-[20px] mt-2">
+                Trust score: {account.trustScore}%
+              </p>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Bottom action buttons */}
+      <div className="fixed bottom-8 left-0 right-0 flex justify-center gap-4 px-6 z-40">
+        <button
+          onClick={handleKeep}
+          disabled={!selectedUserId || submitting}
+          className={`w-36.5 h-11.5 rounded-full font-bold text-[20px] text-black transition-all cursor-pointer ${
+            selectedUserId && !submitting
+              ? "bg-green-light hover:bg-green-light/80 active:scale-95"
+              : "bg-green-light/40 text-black/50 cursor-not-allowed"
+          }`}
+        >
+          {submitting ? "..." : "Keep"}
+        </button>
+        <button
+          onClick={handleIgnore}
+          disabled={submitting}
+          className="w-36.5 h-11.5 rounded-full font-bold text-[20px] bg-red-emergency hover:bg-red-emergency/80 active:scale-95 transition-all cursor-pointer text-white"
+        >
+          Ignore
+        </button>
       </div>
     </div>
   );
