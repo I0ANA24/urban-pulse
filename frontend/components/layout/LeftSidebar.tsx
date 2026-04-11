@@ -36,7 +36,7 @@ function SidebarNavItem({
 
       <span
         className={`text-2xl tracking-tight ${
-          isGreen ? "text-[#4ADE80]" : "text-white"
+          isGreen ? "text-green-light" : "text-white"
         } ${isActive ? "font-bold" : "font-normal"}`}
       >
         {label}

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
-import { Plus, MoreVertical, BadgeCheck } from "lucide-react";
+import { Plus, MoreVertical, BadgeCheck, ThumbsUp, ImageIcon, Video, IdCard, ThumbsDown } from "lucide-react";
 import Image from "next/image";
 import { useSignalR } from "@/context/SignalRContext";
 import TopBar from "@/components/layout/TopBar";
@@ -33,6 +34,9 @@ export default function ChatPage() {
   const [ratedMessages, setRatedMessages] = useState<Set<number>>(new Set());
   const [helpedMessages, setHelpedMessages] = useState<Set<number>>(new Set());
   const [hasRated, setHasRated] = useState(false);
+  const [showPlusMenu, setShowPlusMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const plusButtonRef = useRef<HTMLButtonElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const { connection } = useSignalR();
 
@@ -260,10 +264,55 @@ export default function ChatPage() {
             <div ref={bottomRef} />
           </div>
 
+          {/* Plus menu portal */}
+          {showPlusMenu && createPortal(
+            <>
+              <div className="fixed inset-0 z-50" onClick={() => setShowPlusMenu(false)} />
+              <div
+                className="fixed z-50 bg-secondary p-2 rounded-2xl overflow-hidden w-52 shadow-xl"
+                style={{ top: menuPos.top, left: menuPos.left, transform: "translateY(calc(-100% - 8px))" }}
+              >
+                <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-light text-white font-bold text-base rounded-2xl cursor-pointer">
+                  <ThumbsUp size={18} strokeWidth={2.5} />
+                  <ThumbsDown size={18} strokeWidth={2.5} />
+                  Rate
+                </button>
+                <button className="w-full flex items-center gap-3 px-4 py-3 text-white text-base hover:bg-green-light transition-colors border-t border-white/10 rounded-2xl cursor-pointer">
+                  <span className="w-8 h-8 rounded-lg bg-[#d97706] flex items-center justify-center shrink-0">
+                    <ImageIcon size={16} className="text-white" strokeWidth={2} />
+                  </span>
+                  Photos
+                </button>
+                <button className="w-full flex items-center gap-3 px-4 py-3 text-white text-base hover:bg-green-light transition-colors border-t border-white/10 rounded-2xl cursor-pointer">
+                  <span className="w-8 h-8 rounded-lg bg-[#d97706] flex items-center justify-center shrink-0">
+                    <Video size={16} className="text-white" strokeWidth={2} />
+                  </span>
+                  Videos
+                </button>
+                <button className="w-full flex items-center gap-3 px-4 py-3 text-white text-base hover:bg-green-light transition-colors border-t border-white/10 rounded-2xl cursor-pointer">
+                  <span className="w-8 h-8 rounded-lg bg-[#d97706] flex items-center justify-center shrink-0">
+                    <IdCard size={16} className="text-white" strokeWidth={2} />
+                  </span>
+                  Send info
+                </button>
+              </div>
+            </>,
+            document.body
+          )}
+
           {/* Input */}
           <div className="px-4 py-4 border-t border-white/10 flex gap-3 items-center bg-background shrink-0">
-            <button className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-              <Plus size={28} className="text-white" />
+            <button
+              ref={plusButtonRef}
+              onClick={() => {
+                if (!plusButtonRef.current) return;
+                const rect = plusButtonRef.current.getBoundingClientRect();
+                setMenuPos({ top: rect.top, left: rect.left });
+                setShowPlusMenu((v) => !v);
+              }}
+              className="w-12 h-12 flex items-center justify-center shrink-0 cursor-pointer"
+            >
+              <Plus size={34} className="text-white" />
             </button>
             <input
               value={text}
