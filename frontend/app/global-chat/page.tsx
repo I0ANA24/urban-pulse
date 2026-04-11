@@ -118,7 +118,10 @@ export default function GlobalChatPage() {
               return (
                 <div key={msg.id} className={`flex gap-2 ${isMe ? "justify-end" : "justify-start"}`}>
                   {!isMe && (
-                    <div className="w-8 h-8 rounded-full overflow-hidden bg-secondary flex items-center justify-center shrink-0 self-end">
+                    <button
+                      onClick={() => router.push(`/users/${msg.senderId}`)}
+                      className="w-8 h-8 rounded-full overflow-hidden bg-secondary flex items-center justify-center shrink-0 self-end cursor-pointer"
+                    >
                       {msg.senderAvatarUrl ? (
                         <Image
                           src={msg.senderAvatarUrl}
@@ -132,11 +135,16 @@ export default function GlobalChatPage() {
                           {getInitials(msg.senderFullName)}
                         </span>
                       )}
-                    </div>
+                    </button>
                   )}
                   <div className={`flex flex-col gap-1 max-w-[75%] ${isMe ? "items-end" : "items-start"}`}>
                     {!isMe && (
-                      <span className="text-white/50 text-xs px-1">{msg.senderFullName}</span>
+                      <button
+                        onClick={() => router.push(`/users/${msg.senderId}`)}
+                        className="text-white/50 text-xs px-1 hover:text-white/80 transition-colors cursor-pointer"
+                      >
+                        {msg.senderFullName}
+                      </button>
                     )}
                     <div className={`px-4 py-2.5 rounded-3xl text-sm ${
                       isMe ? "bg-[#B8D4F0] text-[#003A69]" : "bg-[#2A2A2A] text-white"

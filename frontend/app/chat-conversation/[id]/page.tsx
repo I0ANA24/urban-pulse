@@ -26,6 +26,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [otherUserId, setOtherUserId] = useState<number | null>(null);
   const [otherUserName, setOtherUserName] = useState("");
   const [otherUserAvatar, setOtherUserAvatar] = useState<string | null>(null);
   const [isVerified, setIsVerified] = useState(false);
@@ -51,6 +52,7 @@ export default function ChatPage() {
       .then((data) => {
         const conv = data.find((c: any) => c.id === Number(id));
         if (conv) {
+          setOtherUserId(conv.otherUserId);
           setOtherUserName(conv.otherUserFullName ?? conv.otherUserEmail?.split("@")[0]);
           fetch(`http://localhost:5248/api/user/${conv.otherUserId}`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -144,7 +146,10 @@ export default function ChatPage() {
             <button onClick={() => router.back()} className="lg:hidden">
               <Image src="/undo.svg" alt="back" width={40} height={30} />
             </button>
-            <div className="w-10 h-10 rounded-full bg-[#2e2e2e] border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+            <button
+              onClick={() => otherUserId && router.push(`/users/${otherUserId}`)}
+              className="w-10 h-10 rounded-full bg-[#2e2e2e] border border-white/10 flex items-center justify-center overflow-hidden shrink-0 cursor-pointer"
+            >
               {otherUserAvatar ? (
                 <Image src={otherUserAvatar} width={40} height={40} alt={otherUserName} className="object-cover w-full h-full" />
               ) : (
@@ -152,13 +157,16 @@ export default function ChatPage() {
                   {otherUserName?.slice(0, 2).toUpperCase()}
                 </span>
               )}
-            </div>
-            <span className="text-white font-bold flex-1 flex items-center gap-1.5">
+            </button>
+            <button
+              onClick={() => otherUserId && router.push(`/users/${otherUserId}`)}
+              className="text-white font-bold flex-1 flex items-center gap-1.5 text-left cursor-pointer"
+            >
               {otherUserName}
               {isVerified && (
                 <BadgeCheck size={18} className="text-green-light fill-green-light/20 shrink-0" />
               )}
-            </span>
+            </button>
             <button className="p-1">
               <MoreVertical size={20} className="text-white/60" />
             </button>
