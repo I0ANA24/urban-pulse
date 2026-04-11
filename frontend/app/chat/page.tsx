@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
+import { useSevereWeather } from "@/context/SevereWeatherContext";
 
 const API = "http://localhost:5248";
 
@@ -38,6 +39,7 @@ export default function ChatsPage() {
   const [avatarUrls, setAvatarUrls] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { isSevereWeather } = useSevereWeather();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -67,6 +69,33 @@ export default function ChatsPage() {
   return (
     <ThreeColumnLayout>
     <div className="w-full flex flex-col gap-4 pb-[8vh]">
+
+      {/* Severe weather chat card — visible only during severe weather */}
+      {isSevereWeather && (
+        <button
+          onClick={() => router.push("/severe-chat")}
+          className="w-full bg-red-emergency/10 border border-red-emergency animate-pulse rounded-2xl px-4 py-4 flex flex-col gap-2 text-left cursor-pointer transition-transform active:scale-[0.98]"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-red-emergency/20 border border-red-emergency flex items-center justify-center shrink-0">
+              <span className="text-xl leading-none">📌</span>
+            </div>
+            <div className="flex-1 flex items-center justify-between min-w-0">
+              <span className="text-red-emergency font-bold text-base">
+                Safety Check-in
+              </span>
+              <div className="flex items-center gap-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-emergency animate-bounce" style={{ animationDelay: "0ms" }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-red-emergency animate-bounce" style={{ animationDelay: "150ms" }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-red-emergency animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+            </div>
+          </div>
+          <p className="text-white/40 text-sm">
+            Severe weather detected — coordinate with your neighbours
+          </p>
+        </button>
+      )}
 
       {/* Global chat card */}
       <button

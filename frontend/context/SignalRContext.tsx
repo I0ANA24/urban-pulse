@@ -8,12 +8,14 @@ interface SignalRContextType {
   connection: signalR.HubConnection | null;
   notificationConnection: signalR.HubConnection | null;
   globalChatConnection: signalR.HubConnection | null;
+  severeChatConnection: signalR.HubConnection | null;
 }
 
 const SignalRContext = createContext<SignalRContextType>({
   connection: null,
   notificationConnection: null,
   globalChatConnection: null,
+  severeChatConnection: null,
 });
 
 const PUBLIC_ROUTES = ["/", "/login", "/register", "/forgot-password"];
@@ -22,6 +24,7 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [notificationConnection, setNotificationConnection] = useState<signalR.HubConnection | null>(null);
   const [globalChatConnection, setGlobalChatConnection] = useState<signalR.HubConnection | null>(null);
+  const [severeChatConnection, setSevereChatConnection] = useState<signalR.HubConnection | null>(null);
   const pathname = usePathname();
 
   const isPublic = PUBLIC_ROUTES.includes(pathname);
@@ -61,6 +64,17 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
 
       setGlobalChatConnection(globalConn);
       globalConn.start().catch((err) => console.error("Global chat SignalR error:", err));
+
+      // Severe chat hub
+      const severeConn = new signalR.HubConnectionBuilder()
+        .withUrl("http://localhost:5248/hubs/severe-chat", {
+          accessTokenFactory: () => localStorage.getItem("token") ?? "",
+        })
+        .withAutomaticReconnect()
+        .build();
+
+      setSevereChatConnection(severeConn);
+      severeConn.start().catch((err) => console.error("Severe chat SignalR error:", err));
     }
 
     return () => {
@@ -69,7 +83,7 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
   }, [isPublic]);
 
   return (
-    <SignalRContext.Provider value={{ connection, notificationConnection, globalChatConnection }}>
+    <SignalRContext.Provider value={{ connection, notificationConnection, globalChatConnection, severeChatConnection }}>
       {children}
     </SignalRContext.Provider>
   );

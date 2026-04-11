@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useEvent } from "@/context/EventContext";
+import { useSevereWeather } from "@/context/SevereWeatherContext";
 
 function DesktopWeatherCard() {
   const [weather, setWeather] = useState<{
     temp: number;
     description: string;
     icon: string;
-    isSevere: boolean;
   } | null>(null);
+  const { isSevereWeather } = useSevereWeather();
 
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
@@ -24,7 +25,6 @@ function DesktopWeatherCard() {
             temp: Math.round(data.main.temp),
             description: desc.charAt(0).toUpperCase() + desc.slice(1),
             icon: data.weather[0].icon,
-            isSevere: false,
           });
         })
         .catch(console.error);
@@ -37,7 +37,7 @@ function DesktopWeatherCard() {
   return (
     <div
       className={`rounded-2xl p-8 h-30 flex items-center justify-between relative ${
-        weather?.isSevere ? "bg-red-emergency" : "bg-weather-nice"
+        isSevereWeather ? "bg-red-emergency" : "bg-weather-nice"
       }`}
     >
       <div className="flex flex-col gap-1">

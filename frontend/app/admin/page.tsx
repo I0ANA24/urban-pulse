@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Plus } from "lucide-react";
@@ -10,6 +12,7 @@ import OverviewCard from "@/components/admin/OverviewCard";
 import AddEventModal from "@/components/admin/AddEventModal";
 import UrbanTitle from "@/components/ui/UrbanTitle";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
+import { useSevereWeather } from "@/context/SevereWeatherContext";
 
 const API = "http://localhost:5248";
 
@@ -28,9 +31,54 @@ interface AdminStats {
   mergeDuplicatesCount: number;
 }
 
+function MobileSafetyPortal({ onClick }: { onClick: () => void }) {
+  const [mounted, setMounted] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <div
+      className="fixed left-0 right-0 z-200 px-4 pb-2 bg-background transition-[top] duration-300 ease-out lg:hidden"
+      style={{ top: scrolled ? 0 : "12vh" }}
+    >
+      <div className="relative w-full mt-4">
+        <div className="absolute inset-0 bg-red-emergency rounded-2xl opacity-30" />
+        <div
+          onClick={onClick}
+          className="relative w-full bg-red-emergency rounded-2xl px-4 py-3 flex items-center justify-between gap-3 cursor-pointer hover:opacity-90 transition-opacity"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">📌</span>
+            <div>
+              <p className="text-white font-bold text-sm">Safety Check-in</p>
+              <p className="text-white/60 text-xs">Tap to let neighbors know you&apos;re safe</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: "0ms" }} />
+            <div className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: "150ms" }} />
+            <div className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: "300ms" }} />
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 export default function AdminDashboard() {
   const [isMobileEventModalOpen, setIsMobileEventModalOpen] = useState(false);
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const { isSevereWeather } = useSevereWeather();
+  const router = useRouter();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -73,7 +121,40 @@ export default function AdminDashboard() {
 
   return (
     <ThreeColumnLayoutAdmin>
-      <div className="w-full py-2 flex flex-col items-center gap-4 mb-4">
+      {/* Mobile: portal în document.body — fixed cu top dinamic bazat pe scroll */}
+      {isSevereWeather && (
+        <MobileSafetyPortal onClick={() => router.push("/severe-chat")} />
+      )}
+      {/* Spacer care împinge conținutul sub poziția inițială a bannerului */}
+      {isSevereWeather && <div className="lg:hidden h-[calc(5vh)]" />}
+
+      {/* Desktop: sticky în feed-scroll, deasupra conținutului */}
+      {isSevereWeather && (
+        <div className="hidden lg:block sticky top-0 z-50 w-full pt-2 pb-1 bg-background">
+          <div className="relative w-full">
+            <div className="absolute inset-0 bg-red-emergency rounded-2xl opacity-30" />
+            <div
+              onClick={() => router.push("/severe-chat")}
+              className="relative w-full bg-red-emergency rounded-2xl px-4 py-3 flex items-center justify-between gap-3 cursor-pointer hover:opacity-90 transition-opacity"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">📌</span>
+                <div>
+                  <p className="text-white font-bold text-sm">Safety Check-in</p>
+                  <p className="text-white/60 text-xs">Tap to let neighbors know you&apos;re safe</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: "0ms" }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: "150ms" }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="w-full py-2 flex flex-col items-center gap-4 mb-4 mt-4">
 
         {/* Mobile only: spacer + title */}
         <div className="lg:hidden h-[calc(15vh-24px)]" />

@@ -4,6 +4,7 @@ import { SignalRProvider } from "@/context/SignalRContext";
 import { UserProvider } from "@/context/UserContext";
 import { EventProvider } from "@/context/EventContext";
 import { RadiusProvider } from "@/context/RadiusContext";
+import { SevereWeatherProvider } from "@/context/SevereWeatherContext";
 import "./globals.css";
 
 const montagu = Montagu_Slab({
@@ -36,15 +37,17 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="font-inter antialiased">
-        <SignalRProvider>
-          <UserProvider>
-            <EventProvider>
-              <RadiusProvider>
-                {children}
-              </RadiusProvider>
-            </EventProvider>
-          </UserProvider>
-        </SignalRProvider>
+        <SevereWeatherProvider>
+          <SignalRProvider>
+            <UserProvider>
+              <EventProvider>
+                <RadiusProvider>
+                  {children}
+                </RadiusProvider>
+              </EventProvider>
+            </UserProvider>
+          </SignalRProvider>
+        </SevereWeatherProvider>
       </body>
     </html>
   );

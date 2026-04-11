@@ -3,37 +3,13 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useEvent } from "@/context/EventContext";
+import { useSevereWeather } from "@/context/SevereWeatherContext";
 
 interface WeatherData {
   temp: number;
   description: string;
   icon: string;
-  isSevere: boolean;
 }
-
-const severeConditions = [
-  "thunderstorm",
-  "storm",
-  "tornado",
-  "squall",
-  "hurricane",
-  "gale",
-  "blizzard",
-  "hail",
-  "sleet",
-  "freezing rain",
-  "freezing drizzle",
-  "heavy snow",
-  "heavy rain",
-  "heavy intensity rain",
-  "very heavy rain",
-  "extreme rain",
-  "dense fog",
-  "freezing fog",
-  "dust",
-  "sand",
-  "volcanic ash",
-];
 
 export default function DashboardBanner({
   onSevereWeather,
@@ -42,6 +18,11 @@ export default function DashboardBanner({
 }) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const { event } = useEvent();
+  const { isSevereWeather } = useSevereWeather();
+
+  useEffect(() => {
+    onSevereWeather?.(isSevereWeather);
+  }, [isSevereWeather, onSevereWeather]);
 
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
@@ -53,17 +34,12 @@ export default function DashboardBanner({
         .then((res) => res.json())
         .then((data) => {
           const description = data.weather[0].description as string;
-          const isSevere = severeConditions.some((c) =>
-            description.toLowerCase().includes(c),
-          );
           setWeather({
             temp: Math.round(data.main.temp),
             description:
               description.charAt(0).toUpperCase() + description.slice(1),
             icon: data.weather[0].icon,
-            isSevere,
           });
-          onSevereWeather?.(isSevere);
         })
         .catch(console.error);
     };
@@ -90,7 +66,7 @@ export default function DashboardBanner({
       </div>
       <div
         className={`flex-1 z-2 rounded-2xl flex justify-center items-center p-2 px-4 min-h-20 transition-all relative ${
-          weather?.isSevere ? "bg-red-emergency" : "bg-weather-nice"
+          isSevereWeather ? "bg-red-emergency" : "bg-weather-nice"
         }`}
       >
         <div className="flex flex-col mr-18">

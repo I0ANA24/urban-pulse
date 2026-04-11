@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import EventCard from "@/components/events/EventCard";
 import EventFilters from "@/components/dashboard/EventFilters";
@@ -9,6 +11,7 @@ import { Event, EventType } from "@/types/Event";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
 import { useSignalR } from "@/context/SignalRContext";
 import { useRadius } from "@/context/RadiusContext";
+import { useSevereWeather } from "@/context/SevereWeatherContext";
 import UrbanTitle from "@/components/ui/UrbanTitle";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 
@@ -26,15 +29,65 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+function MobileSafetyPortal({ onClick }: { onClick: () => void }) {
+  const [mounted, setMounted] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <div
+      className="fixed left-0 right-0 z-200 px-4 pb-2 bg-background transition-[top] duration-300 ease-out lg:hidden"
+      style={{ top: scrolled ? 0 : "12vh" }}
+    >
+      <SafetyBanner onClick={onClick} />
+    </div>,
+    document.body
+  );
+}
+
+function SafetyBanner({ onClick }: { onClick: () => void }) {
+  return (
+    <div className="relative w-full animate-fade-up mt-4">
+      <div className="absolute inset-0 bg-red-emergency rounded-2xl opacity-30" />
+      <div
+        onClick={onClick}
+        className="relative w-full bg-red-emergency rounded-2xl px-4 py-3 flex items-center justify-between gap-3 cursor-pointer hover:opacity-90 transition-opacity"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">📌</span>
+          <div>
+            <p className="text-white font-bold text-sm">Safety Check-in</p>
+            <p className="text-white/60 text-xs">Tap to let neighbors know you&apos;re safe</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: "0ms" }} />
+          <div className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: "150ms" }} />
+          <div className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: "300ms" }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("ALL");
-  const [isSevereWeather, setIsSevereWeather] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const { connection } = useSignalR();
   const { radiusKm } = useRadius();
+  const { isSevereWeather } = useSevereWeather();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const targetEventId = searchParams.get("eventId");
 
@@ -115,32 +168,28 @@ export default function DashboardPage() {
 
   return (
     <ThreeColumnLayout>
-      <div className="w-full py-2 flex flex-col items-center gap-4 mb-4">
+      {/* Mobile: portal în document.body — fixed cu top dinamic bazat pe scroll */}
+      {isSevereWeather && (
+        <MobileSafetyPortal onClick={() => router.push("/severe-chat")} />
+      )}
+      {/* Spacer care împinge conținutul sub poziția inițială a bannerului */}
+      {isSevereWeather && <div className="lg:hidden h-[calc(5vh)]" />}
+
+      {/* Desktop: sticky în feed-scroll, deasupra filtrelor */}
+      {isSevereWeather && (
+        <div className="hidden lg:block sticky top-0 z-50 w-full pt-2 pb-1 bg-background">
+          <SafetyBanner onClick={() => router.push("/severe-chat")} />
+        </div>
+      )}
+
+      <div className="w-full py-2 flex flex-col items-center gap-4 mb-4 mt-4">
         <div className="lg:hidden">
           <UrbanTitle />
         </div>
-        {isSevereWeather && (
-          <div className="sticky top-0 z-50 w-full animate-fade-up">
-            <div className="absolute inset-0 bg-red-emergency rounded-2xl animate-ping opacity-30" />
-            <div className="relative w-full bg-red-emergency rounded-2xl px-4 py-3 flex items-center justify-between gap-3 cursor-pointer hover:opacity-90 transition-opacity">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">📌</span>
-                <div>
-                  <p className="text-white font-bold text-sm">Safety Check-in</p>
-                  <p className="text-white/60 text-xs">Tap to let neighbors know you&apos;re safe</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: "0ms" }} />
-                <div className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: "150ms" }} />
-                <div className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: "300ms" }} />
-              </div>
-            </div>
-          </div>
-        )}
         <div className="lg:hidden w-full">
-          <DashboardBanner onSevereWeather={setIsSevereWeather} />
+          <DashboardBanner />
         </div>
+
         <EventFilters activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
       </div>
 
