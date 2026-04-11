@@ -35,7 +35,7 @@ export default function AddEventModal({
     <PortalModal
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="bg-weather-nice w-full rounded-4xl overflow-hidden"
+      contentClassName="bg-weather-nice w-full max-w-90 rounded-4xl overflow-hidden"
     >
       {/* Title */}
       <div className="flex items-center justify-center py-5">

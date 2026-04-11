@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useEvent } from "@/context/EventContext";
 
 interface WeatherData {
   temp: number;
@@ -40,6 +41,7 @@ export default function DashboardBanner({
   onSevereWeather?: (isSevere: boolean) => void;
 }) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const { event } = useEvent();
 
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
@@ -84,7 +86,7 @@ export default function DashboardBanner({
       />
       <div className="flex-1 z-2 bg-weather-nice rounded-2xl flex flex-col justify-center p-2 px-4 min-h-20 text-center">
         <p className="w-full font-bold text-lg">Event</p>
-        <p className="w-full font-light">Game Night</p>
+        <p className="w-full font-light">{event ?? "No events"}</p>
       </div>
       <div
         className={`flex-1 z-2 rounded-2xl flex justify-center items-center p-2 px-4 min-h-20 transition-all relative ${
