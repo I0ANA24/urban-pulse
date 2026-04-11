@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
-import { Plus, MoreVertical, BadgeCheck, ThumbsUp, ImageIcon, Video, IdCard, ThumbsDown } from "lucide-react";
+import { Plus, MoreVertical, BadgeCheck, ThumbsUp, ThumbsDown, Copy } from "lucide-react";
 import Image from "next/image";
 import { useSignalR } from "@/context/SignalRContext";
 import TopBar from "@/components/layout/TopBar";
@@ -219,14 +219,32 @@ export default function ChatPage() {
                       <p className="text-white font-bold text-base text-center">{info.name}</p>
                       <div className="w-full h-px bg-white/20" />
                       <div className="flex flex-col gap-2 text-sm">
-                        <p>
-                          <span className="font-bold text-white">Phone: </span>
-                          <span className="text-yellow-primary">{info.phone}</span>
-                        </p>
-                        <p>
-                          <span className="font-bold text-white">Address: </span>
-                          <span className="text-yellow-primary">{info.address}</span>
-                        </p>
+                        <div className="flex items-center justify-between gap-2">
+                          <p>
+                            <span className="font-bold text-white">Phone: </span>
+                            <span className="text-yellow-primary">{info.phone}</span>
+                          </p>
+                          <button
+                            onClick={() => navigator.clipboard.writeText(info.phone)}
+                            className="shrink-0 text-white/40 hover:text-white transition-colors cursor-pointer"
+                            title="Copy phone"
+                          >
+                            <Copy size={14} />
+                          </button>
+                        </div>
+                        <div className="flex items-start justify-between gap-2">
+                          <p>
+                            <span className="font-bold text-white">Address: </span>
+                            <span className="text-yellow-primary">{info.address}</span>
+                          </p>
+                          <button
+                            onClick={() => navigator.clipboard.writeText(info.address)}
+                            className="shrink-0 text-white/40 hover:text-white transition-colors cursor-pointer mt-0.5"
+                            title="Copy address"
+                          >
+                            <Copy size={14} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -314,30 +332,25 @@ export default function ChatPage() {
             <>
               <div className="fixed inset-0 z-50" onClick={() => setShowPlusMenu(false)} />
               <div
-                className="fixed z-50 bg-secondary p-2 rounded-2xl overflow-hidden w-52 shadow-xl"
+                className="fixed z-50 bg-secondary border border-white/40 p-2 rounded-2xl overflow-hidden w-52 shadow-xl"
                 style={{ top: menuPos.top, left: menuPos.left, transform: "translateY(calc(-100% - 8px))" }}
               >
-                <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-light text-white font-bold text-base rounded-2xl cursor-pointer">
-                  <ThumbsUp size={18} strokeWidth={2.5} />
-                  <ThumbsDown size={18} strokeWidth={2.5} />
-                  Rate
+                <button className="w-full flex items-center gap-0 px-4 py-3 hover:bg-green-light hover:text-black text-white text-base rounded-2xl cursor-pointer">
+                  <ThumbsUp size={14} strokeWidth={2.5} />
+                  <ThumbsDown size={14} strokeWidth={2.5} />
+                  <p className="pl-4">Rate</p>
                 </button>
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-white text-base hover:bg-green-light transition-colors border-t border-white/10 rounded-2xl cursor-pointer">
-                  <span className="w-8 h-8 rounded-lg bg-[#d97706] flex items-center justify-center shrink-0">
-                    <ImageIcon size={16} className="text-white" strokeWidth={2} />
-                  </span>
-                  Photos
-                </button>
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-white text-base hover:bg-green-light transition-colors border-t border-white/10 rounded-2xl cursor-pointer">
-                  <span className="w-8 h-8 rounded-lg bg-[#d97706] flex items-center justify-center shrink-0">
-                    <Video size={16} className="text-white" strokeWidth={2} />
-                  </span>
-                  Videos
-                </button>
-                <button onClick={handleSendInfo} className="w-full flex items-center gap-3 px-4 py-3 text-white text-base hover:bg-green-light transition-colors border-t border-white/10 rounded-2xl cursor-pointer">
-                  <span className="w-8 h-8 rounded-lg bg-[#d97706] flex items-center justify-center shrink-0">
-                    <IdCard size={16} className="text-white" strokeWidth={2} />
-                  </span>
+                <div className="w-[95%] h-px bg-white/20 mx-auto my-2" />
+                <button onClick={handleSendInfo} className="group w-full flex items-center gap-3 px-4 py-3 text-white text-base hover:bg-green-light hover:text-black transition-colors rounded-2xl cursor-pointer">
+                  <svg width="22" height="19" viewBox="0 0 37 32" fill="none" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" className="filter-[brightness(0)_invert(1)] group-hover:filter-[brightness(0)]">
+                    <rect width="37" height="31.7346" fill="url(#sendinfo-pattern)"/>
+                    <defs>
+                      <pattern id="sendinfo-pattern" patternContentUnits="objectBoundingBox" width="1" height="1">
+                        <use xlinkHref="#sendinfo-img" transform="matrix(0.00952991 0 0 0.0111111 0.0711541 0)"/>
+                      </pattern>
+                      <image id="sendinfo-img" width="90" height="90" preserveAspectRatio="none" xlinkHref="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAYAAAA4qEECAAAACXBIWXMAAAsTAAALEwEAmpwYAAADsklEQVR4nO2cP08UQRjGzyBisEKo0MREbSxMjI0SE7XQwsSP4DcQtBMbnHnRQNBEQkJDZbRRiYnGwga1VIwFWFDYmhCNkJt3D9AQ/zxm9yD4746d5W5ndvf9JW9ojn1mfjvMLTO7WyoJgiAIgiAIgiBkFUDtRFlfhqE3YL0MJiQqQz/A+gOMvo+Aelz3yyuwqPaC6V1iufWkGxp03T9/RnIzJPPvpS+Wik40XTRVMoUj+ytY7S8Vmeqc3GTRHI3qp6UiA6aldEQTEKjzpaKSmmTOaullGD2NgC4BY20imlORPhteoYloTkl2kpHtvuGUwdJ9IppTKEOvRTSnUksimtMpEc0iGnkqEc0iGnkqEc1FEW30MwSDF8JlUXy8tSuqsjoJ1i9dy8mL6AABnauZA2yDoXuuBWVbtKFvqNCJTbOgtqMyeAis77oWlU3RTLetc41+6FpWtkSHG7Dl6/vsc68fgNE/XQvLjmjWs9aha4BpxrWwLIm+Yx26Bgw9cC0sS6JHrEPXAOtR18IyJJpubkH0iGthGRKtHyUWbSyuPAytwtAVLKjupHn/5C+obrDuj47tvWijF4GJVutcTLTC6M8WJ7TfunNx2xLK9l80zYW3lSW6Fc3QXOycBo7k/49s/0WPJ+6goXERHb+mEneQacqPqYOu+i/a6O9gdSZB7tnq78b+y1mN5tLCfhmuyw6GOuNnqt1Wkj0sN6Kr1WuR2etaVHZFG/0JFdW1aV5FdUWf9UBWNkVHpZ9jXrXXzJpX7WB64VpSDkQTYNTpmlllOuVakIjmbJV70YE6XjMroGPJT2DR1zr+kKGnw03Y+hu0ejrZ8Yu+1lEVHG5JPQ6vjzfNC4Y6o8/abmMV+l/wdcFGHbXONeooWD+JLbywog29b8QjyAioJzqW06nD17UOQ2/Bwx2N6+hwR/WYdTOLttahK+GtAo3q7DpgdTDVZx63WKUURI9ah8QERo+5FuiPaKOOWIfEBOXBw64F+iNaCiKaRTTyViKaRTTyVCKaRTTyVCKaRTTyVCKaRTTyVCKa/RWdZGlyBawHoieroHZEP5mugfUX1wLSabOupPGCwZVaO90Id0v8lN3YNid61U/4Pje7szlQ93islQdim93m2PcZboRgrC16xVjskPq7K6julHggt2ltngmnHmvRG681jikbky31T9xki3uxTWvzDBZv7Ekk+a+R3RfOP/W+IGMdiz2Q27g2L8HoV9GtxklHsiAIgiAIgiAIgiAIgiAIQqkw/ALko1jNDoh+KQAAAABJRU5ErkJggg=="/>
+                    </defs>
+                  </svg>
                   Send info
                 </button>
               </div>
