@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useEvent } from "@/context/EventContext";
 
 function DesktopWeatherCard() {
   const [weather, setWeather] = useState<{
@@ -65,6 +66,8 @@ function DesktopWeatherCard() {
 }
 
 export default function RightSidebar() {
+  const { event } = useEvent();
+
   return (
     <aside className="hidden lg:flex lg:flex-1 lg:flex-col lg:gap-4">
       <DesktopWeatherCard />
@@ -74,7 +77,7 @@ export default function RightSidebar() {
           Event
         </p>
         <p className="text-white font-normal text-xl leading-tight tracking-tight">
-          Game Night
+          {event ?? "No events"}
         </p>
       </div>
     </aside>

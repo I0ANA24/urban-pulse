@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
+import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
+import GoBackButton from "@/components/ui/GoBackButton";
 
 const API = "http://localhost:5248";
 
@@ -62,28 +64,17 @@ export default function AdminTasksPage() {
   ];
 
   return (
+    <ThreeColumnLayoutAdmin>
     <div className="w-full flex flex-col gap-6 animate-fade-up">
-      {/* Header */}
-      <div className="flex items-center relative">
-        <button
-          onClick={() => router.back()}
-          className="cursor-pointer hover:scale-105 active:scale-95 z-10"
-        >
-          <Image
-            src="/undo.svg"
-            alt="go_back"
-            width={69}
-            height={49}
-            className="-ml-2"
-          />
-        </button>
-
+      {/* Mobile Header */}
+      <div className="flex items-center relative lg:hidden">
+        <GoBackButton />
         <div className="absolute inset-0 flex items-center justify-center gap-2">
           <h1 className="text-white font-bold text-xl">Tasks</h1>
           <span className="w-2.5 h-2.5 rounded-full bg-red-emergency" />
         </div>
       </div>
-
+      
       {/* Task cards */}
       <div className="flex flex-col gap-6 mt-2">
         {tasks.map((task) => (
@@ -106,5 +97,6 @@ export default function AdminTasksPage() {
         ))}
       </div>
     </div>
+    </ThreeColumnLayoutAdmin>
   );
 }

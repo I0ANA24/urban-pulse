@@ -9,6 +9,7 @@ import StatBar from "@/components/admin/StatBar";
 import OverviewCard from "@/components/admin/OverviewCard";
 import AddEventModal from "@/components/admin/AddEventModal";
 import UrbanTitle from "@/components/ui/UrbanTitle";
+import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 
 const API = "http://localhost:5248";
 
@@ -28,7 +29,7 @@ interface AdminStats {
 }
 
 export default function AdminDashboard() {
-  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [isMobileEventModalOpen, setIsMobileEventModalOpen] = useState(false);
   const [stats, setStats] = useState<AdminStats | null>(null);
 
   useEffect(() => {
@@ -51,24 +52,37 @@ export default function AdminDashboard() {
   const mergeDuplicatesPercent = total > 0 ? 100 - flaggedUsersPercent - flaggedContentPercent : 0;
 
   const donutSegments = [
-    { value: flaggedUsersPercent, color: "#A53A3A" },      
-    { value: flaggedContentPercent, color: "#5B8DEF" },    
-    { value: mergeDuplicatesPercent, color: "#FFF081" },    
+    { value: flaggedUsersPercent, color: "#A53A3A" },
+    { value: flaggedContentPercent, color: "#5B8DEF" },
+    { value: mergeDuplicatesPercent, color: "#FFF081" },
   ];
 
-  const handleSaveEvent = (eventText: string) => {
-    console.log("Event saved:", eventText);
-  };
+  const dailyOverviewStats = [
+    { bold: String(stats?.dailyNewUsers ?? 0), text: "new users" },
+    { bold: String(stats?.dailyPosts ?? 0), text: "posts" },
+    { bold: String(stats?.dailyFlaggedPosts ?? 0), text: "flagged posts" },
+    { bold: String(stats?.dailyFlaggedUsers ?? 0), text: "flagged users" },
+  ];
+
+  const generalActivityStats = [
+    { bold: String(stats?.totalPosts ?? 0), text: "posts" },
+    { bold: String(stats?.totalUsers ?? 0), text: "users" },
+    { bold: String(stats?.unverifiedUsers ?? 0), text: "unverified users" },
+    { bold: String(stats?.verifiedUsers ?? 0), text: "verified users" },
+  ];
 
   return (
-    <div className="w-full pb-[8vh]">
+    <ThreeColumnLayoutAdmin>
       <div className="w-full py-2 flex flex-col items-center gap-4 mb-4">
-        <div className="h-[calc(15vh-24px)]" />
 
-        <UrbanTitle />
+        {/* Mobile only: spacer + title */}
+        <div className="lg:hidden h-[calc(15vh-24px)]" />
+        <div className="lg:hidden">
+          <UrbanTitle />
+        </div>
 
-        {/* Event button */}
-        <div className="w-full h-27.5 flex p-4 justify-center items-center relative">
+        {/* Mobile only: Event button */}
+        <div className="lg:hidden w-full h-27.5 flex p-4 justify-center items-center relative">
           <Image
             src="/rectangle.svg"
             width={360}
@@ -79,7 +93,7 @@ export default function AdminDashboard() {
           />
           <div className="w-full h-18 flex justify-center relative z-10">
             <button
-              onClick={() => setIsEventModalOpen(true)}
+              onClick={() => setIsMobileEventModalOpen(true)}
               className="w-full bg-weather-nice rounded-2xl px-6 py-3.5 flex items-center justify-between transition-transform active:scale-[0.97] cursor-pointer"
             >
               <span className="text-white font-bold text-xl">Event</span>
@@ -129,36 +143,21 @@ export default function AdminDashboard() {
           </Link>
         </div>
 
-        {/* Daily App Overview */}
-        <OverviewCard
-          title="Daily App Overview"
-          stats={[
-            { bold: String(stats?.dailyNewUsers ?? 0), text: "new users" },
-            { bold: String(stats?.dailyPosts ?? 0), text: "posts" },
-            { bold: String(stats?.dailyFlaggedPosts ?? 0), text: "flagged posts" },
-            { bold: String(stats?.dailyFlaggedUsers ?? 0), text: "flagged users" },
-          ]}
-        />
-
-        {/* General Activities */}
-        <OverviewCard
-          title="General Activities"
-          stats={[
-            { bold: String(stats?.totalPosts ?? 0), text: "posts" },
-            { bold: String(stats?.totalUsers ?? 0), text: "users" },
-            { bold: String(stats?.unverifiedUsers ?? 0), text: "unverified users" },
-            { bold: String(stats?.verifiedUsers ?? 0), text: "verified users" },
-          ]}
-        />
+        {/* OverviewCards — mobile only (desktop shows them in AdminRightSidebar) */}
+        <div className="lg:hidden w-full flex flex-col gap-4">
+          <OverviewCard title="Daily App Overview" stats={dailyOverviewStats} />
+          <OverviewCard title="General Activities" stats={generalActivityStats} />
+        </div>
 
         <div className="h-4" />
-
-        <AddEventModal
-          isOpen={isEventModalOpen}
-          onClose={() => setIsEventModalOpen(false)}
-          onSave={handleSaveEvent}
-        />
       </div>
-    </div>
+
+      {/* Mobile event modal */}
+      <AddEventModal
+        isOpen={isMobileEventModalOpen}
+        onClose={() => setIsMobileEventModalOpen(false)}
+        onSave={(text) => console.log("Event saved:", text)}
+      />
+    </ThreeColumnLayoutAdmin>
   );
 }

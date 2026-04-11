@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeftRight } from "lucide-react";
 import CrownIcon from "@/components/icons/profile/CrownIcon";
 import { useUser } from "@/context/UserContext";
+import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 
 const mockAdminStats = {
   tasksDone: 79,
@@ -53,6 +54,7 @@ export default function AdminProfilePage() {
   };
 
   return (
+    <ThreeColumnLayoutAdmin>
     <div className="w-full flex flex-col gap-6 animate-fade-up">
       <section className="w-full flex justify-around items-center mt-4">
         {/* Avatar */}
@@ -176,5 +178,6 @@ export default function AdminProfilePage() {
         />
       </div>
     </div>
+    </ThreeColumnLayoutAdmin>
   );
 }

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import GoBackButton from "@/components/ui/GoBackButton";
+import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 
 const API = "http://localhost:5248";
 
@@ -39,14 +40,22 @@ export default function FlaggedUsersPage() {
   }, []);
 
   return (
+    <ThreeColumnLayoutAdmin>
     <div className="w-full flex flex-col gap-6 animate-fade-up pb-20">
-      {/* Header */}
-      <div className="flex items-center relative">
+      {/* Mobile Header */}
+      <div className="flex items-center relative lg:hidden">
         <GoBackButton />
         <div className="absolute inset-0 flex items-center justify-center gap-2">
           <h1 className="text-white font-bold text-xl">Flagged users</h1>
           <span className="w-2.5 h-2.5 rounded-full bg-red-emergency" />
         </div>
+      </div>
+      {/* Desktop Header */}
+      <div className="hidden lg:flex items-center gap-3">
+        <div className="flex-1 h-px bg-white/60" />
+        <h1 className="text-white font-bold text-xl">Flagged users</h1>
+        <span className="w-2.5 h-2.5 rounded-full bg-red-emergency" />
+        <div className="flex-1 h-px bg-white/60" />
       </div>
 
       {/* Loading skeleton */}
@@ -108,5 +117,6 @@ export default function FlaggedUsersPage() {
         </div>
       )}
     </div>
+    </ThreeColumnLayoutAdmin>
   );
 }

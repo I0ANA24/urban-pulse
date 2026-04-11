@@ -13,6 +13,7 @@ import { Trash2 } from "lucide-react";
 import ResolveTaskModal from "@/components/ui/ResolveTaskModal";
 import NumberOfReports from "@/components/admin/NumberOfReports";
 import CheckButton from "@/components/admin/CheckButton";
+import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 
 interface Report {
   id: string;
@@ -70,13 +71,13 @@ export default function FlaggedContentDetailPage() {
   };
 
   return (
-    <>
+    <ThreeColumnLayoutAdmin>
       <div className="w-full flex flex-col gap-6 animate-fade-up pb-20">
         {/* Header — undo + Check button */}
         <div className="flex items-center justify-between relative">
           <button
             onClick={() => router.back()}
-            className="cursor-pointer hover:scale-105 active:scale-95 z-10"
+            className="cursor-pointer hover:scale-105 active:scale-95 z-10 lg:hidden"
           >
             <Image
               src="/undo.svg"
@@ -86,7 +87,8 @@ export default function FlaggedContentDetailPage() {
               className="-ml-2"
             />
           </button>
-          
+          <div className="hidden lg:block" />
+
           <CheckButton onClick={() => setShowResolveModal(true)} />
         </div>
 
@@ -192,6 +194,6 @@ export default function FlaggedContentDetailPage() {
           />
         </div>
       </ConfirmModal>
-    </>
+    </ThreeColumnLayoutAdmin>
   );
 }

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 import { BadgeCheck, Check } from "lucide-react";
 import GoBackButton from "@/components/ui/GoBackButton";
+import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 
 const API = "http://localhost:5248";
 
@@ -92,8 +93,8 @@ export default function ReviewDuplicateUsersPage() {
     router.back();
   };
 
-  if (loading) return <p className="text-white/40 text-center mt-20">Loading...</p>;
-  if (!suspect) return <p className="text-white/40 text-center mt-20">Not found.</p>;
+  if (loading) return <ThreeColumnLayoutAdmin><p className="text-white/40 text-center mt-20">Loading...</p></ThreeColumnLayoutAdmin>;
+  if (!suspect) return <ThreeColumnLayoutAdmin><p className="text-white/40 text-center mt-20">Not found.</p></ThreeColumnLayoutAdmin>;
 
   const accounts = [
     {
@@ -115,9 +116,10 @@ export default function ReviewDuplicateUsersPage() {
   ];
 
   return (
+    <ThreeColumnLayoutAdmin>
     <div className="w-full flex flex-col gap-6 animate-fade-up pb-32">
       {/* Header */}
-      <div className="flex items-center">
+      <div className="flex items-center lg:hidden">
         <GoBackButton />
       </div>
 
@@ -237,5 +239,6 @@ export default function ReviewDuplicateUsersPage() {
         </button>
       </div>
     </div>
+    </ThreeColumnLayoutAdmin>
   );
 }
