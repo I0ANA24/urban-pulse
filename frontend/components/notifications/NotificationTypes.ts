@@ -8,6 +8,7 @@ export interface NotificationItem {
   isRead: boolean;
   actionUrl?: string;
   createdAt: string;
+  avatarUrl?: string;
 }
 
 export const typeNumMap: Record<number, NotificationType> = {

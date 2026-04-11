@@ -12,6 +12,7 @@ namespace UrbanPulse.Core.DTOs.Notifications
         public string? ActionUrl { get; set; }
         public int? RelatedEventId { get; set; }
         public DateTime CreatedAt { get; set; }
+        public string? AvatarUrl { get; set; }
     }
 
     public class CreateNotificationDto
@@ -22,5 +23,6 @@ namespace UrbanPulse.Core.DTOs.Notifications
         public NotificationType Type { get; set; }
         public string? ActionUrl { get; set; }
         public int? RelatedEventId { get; set; }
+        public string? SenderAvatarUrl { get; set; }
     }
 }

@@ -102,6 +102,7 @@ namespace UrbanPulse.API.Controllers
                             Type = NotificationType.HeroAlert,
                             ActionUrl = $"/dashboard?eventId={result.Id}",
                             RelatedEventId = result.Id,
+                            SenderAvatarUrl = poster?.AvatarUrl,
                         });
 
                         await _notificationHub.Clients.User(user.Id.ToString())
@@ -126,6 +127,7 @@ namespace UrbanPulse.API.Controllers
                         Type = NotificationType.Emergency,
                         ActionUrl = $"/dashboard?eventId={result.Id}",
                         RelatedEventId = result.Id,
+                        SenderAvatarUrl = poster?.AvatarUrl,
                     });
 
                     await _notificationHub.Clients.User(user.Id.ToString())

@@ -9,4 +9,5 @@ public class CommentResponseDto
     public int CreatedByUserId { get; set; }
     public DateTime CreatedAt { get; set; }
     public int EventId { get; set; }
+    public string? AvatarUrl { get; set; }
 }

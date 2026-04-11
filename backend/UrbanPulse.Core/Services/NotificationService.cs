@@ -32,6 +32,7 @@ namespace UrbanPulse.Core.Services
                 Type = dto.Type,
                 ActionUrl = dto.ActionUrl,
                 RelatedEventId = dto.RelatedEventId,
+                SenderAvatarUrl = dto.SenderAvatarUrl,
             };
             await _repo.AddAsync(notification);
             return MapToDto(notification);
@@ -53,6 +54,7 @@ namespace UrbanPulse.Core.Services
             ActionUrl = n.ActionUrl,
             RelatedEventId = n.RelatedEventId,
             CreatedAt = n.CreatedAt,
+            AvatarUrl = n.SenderAvatarUrl,
         };
     }
 }

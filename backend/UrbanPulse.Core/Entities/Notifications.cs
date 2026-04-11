@@ -18,5 +18,6 @@ namespace UrbanPulse.Core.Entities
         public bool IsRead { get; set; } = false;
         public string? ActionUrl { get; set; }
         public int? RelatedEventId { get; set; }
+        public string? SenderAvatarUrl { get; set; }
     }
 }
