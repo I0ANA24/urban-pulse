@@ -124,7 +124,7 @@ export default function EventCard({ event, isMyPost, onDelete, flagCount, onView
   const displayName = event.createdByFullName ?? event.createdByEmail?.split("@")[0] ?? "Unknown";
 
   return (
-    <div className="w-full relative mb-4">
+    <div id={`event-${event.id}`} className="w-full relative mb-4">
       <CardHeader
         initials={getInitials(displayName)}
         name={displayName}
