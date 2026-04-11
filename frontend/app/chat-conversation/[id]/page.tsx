@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Plus, MoreVertical, BadgeCheck } from "lucide-react";
 import Image from "next/image";
 import { useSignalR } from "@/context/SignalRContext";
+import ThreeColumnLayoutChat from "@/components/layout/ThreeColumnLayoutChat";
 
 interface Message {
   id: number;
@@ -127,10 +128,11 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="fixed inset-0 bg-background flex flex-col z-50">
+    <ThreeColumnLayoutChat>
+    <div className="fixed inset-0 bg-background flex flex-col z-50 lg:static lg:inset-auto lg:z-auto lg:h-full">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-4 border-b border-white/10 bg-background">
-        <button onClick={() => router.back()}>
+        <button onClick={() => router.back()} className="lg:hidden">
           <Image src="/undo.svg" alt="back" width={40} height={30} />
         </button>
         <div className="w-10 h-10 rounded-full bg-[#2e2e2e] border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
@@ -272,5 +274,6 @@ export default function ChatPage() {
         </button>
       </div>
     </div>
+    </ThreeColumnLayoutChat>
   );
 }

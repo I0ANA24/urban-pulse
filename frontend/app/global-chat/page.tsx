@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useSignalR } from "@/context/SignalRContext";
+import ThreeColumnLayoutChat from "@/components/layout/ThreeColumnLayoutChat";
 
 const API = "http://localhost:5248";
 
@@ -77,10 +78,11 @@ export default function GlobalChatPage() {
   };
 
   return (
-    <div className="fixed inset-0 bg-background flex flex-col z-50">
+    <ThreeColumnLayoutChat>
+    <div className="fixed inset-0 bg-background flex flex-col z-50 lg:static lg:inset-auto lg:z-auto lg:h-full">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-4 border-b border-white/10 bg-background">
-        <button onClick={() => router.back()}>
+        <button onClick={() => router.back()} className="lg:hidden">
           <Image src="/undo.svg" alt="back" width={40} height={30} />
         </button>
         <div className="w-10 h-10 rounded-full bg-green-light/20 border border-green-light flex items-center justify-center shrink-0">
@@ -159,5 +161,6 @@ export default function GlobalChatPage() {
         </button>
       </div>
     </div>
+    </ThreeColumnLayoutChat>
   );
 }
