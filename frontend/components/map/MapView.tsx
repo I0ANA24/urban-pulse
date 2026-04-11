@@ -528,7 +528,7 @@ export default function MapView() {
 
   return (
     <>
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}>
+      <div className="map-fixed-container" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}>
         <MapContainer
           center={DEFAULT_CENTER}
           zoom={DEFAULT_ZOOM}
@@ -550,18 +550,21 @@ export default function MapView() {
         </MapContainer>
 
         <div className="map-search-bar">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="map-search-icon">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          </svg>
-          <input
-            className="map-search-input"
-            placeholder={filter === "disponibili" ? "Search skills or tools..." : "Find someone to help with..."}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button className="map-search-clear" onClick={() => setSearchQuery("")}>✕</button>
-          )}
+          <Image src="/navbar.svg" alt="" fill className="object-cover opacity-100" />
+          <div className="map-search-bar-content">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="map-search-icon">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input
+              className="map-search-input"
+              placeholder={filter === "disponibili" ? "Type what you need..." : "Find someone to help with..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button className="map-search-clear" onClick={() => setSearchQuery("")}>✕</button>
+            )}
+          </div>
         </div>
 
         <div className="filter-bar">
@@ -591,20 +594,22 @@ export default function MapView() {
           onClick={() => { if (!userLocation) setShowLocationModal(true); }}
           style={{ cursor: !userLocation ? "pointer" : "default" }}
         >
-          <input
-            type="number"
-            min={1}
-            max={300}
-            value={radiusKm}
-            onChange={(e) => {
-              if (!userLocation) return;
-              setRadiusKm(Math.max(1, Math.min(300, Number(e.target.value))));
-            }}
-            readOnly={!userLocation}
-            className="map-radius-input"
-            style={{ cursor: !userLocation ? "pointer" : "text" }}
-          />
-          <span className="map-radius-label">KM</span>
+          <div className="map-radius-control-content">
+            <input
+              type="number"
+              min={1}
+              max={300}
+              value={radiusKm}
+              onChange={(e) => {
+                if (!userLocation) return;
+                setRadiusKm(Math.max(1, Math.min(300, Number(e.target.value))));
+              }}
+              readOnly={!userLocation}
+              className="map-radius-input"
+              style={{ cursor: !userLocation ? "pointer" : "text" }}
+            />
+            <span className="map-radius-label">KM</span>
+          </div>
         </div>
 
         {isLoading && (

@@ -17,7 +17,7 @@ export default function NavBar() {
 
   return (
     <div
-      className="fixed bottom-4 left-4 h-15 w-[calc(100vw-32px)] rounded-3xl flex justify-center items-center overflow-hidden lg:hidden bg-zinc-950/20 backdrop-blur border border-white/20 z-50"
+      className="container fixed bottom-4 left-1/2 -translate-x-1/2 h-15 w-[calc(100vw-32px)] rounded-3xl flex justify-center items-center overflow-hidden lg:hidden bg-zinc-950/20 backdrop-blur border border-white/20 z-50"
     >
       <Image
         src="/navbar.svg"
