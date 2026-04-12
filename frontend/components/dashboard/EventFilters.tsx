@@ -26,7 +26,10 @@ export default function EventFilters({
           }}
           style={{ scrollbarWidth: "none" }}
         >
-          {(Object.keys(EVENT_TAG_STYLES) as EventType[]).map((typeKey) => {
+          {(Object.keys(EVENT_TAG_STYLES) as EventType[])
+          .filter((typeKey) => typeKey !== "LostPet" && typeKey !== "FoundPet")
+          .map((typeKey) => {
+
             const filter = EVENT_TAG_STYLES[typeKey];
             return (
               <button

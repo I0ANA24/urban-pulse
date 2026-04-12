@@ -29,18 +29,18 @@ namespace UrbanPulse.Infrastructure.Repositories
         public async Task<List<Event>> GetAllActiveAsync()
             => await _db.Events
                 .Include(e => e.CreatedByUser)
-                .Where(e => e.IsActive)
+                .Where(e => e.IsActive && e.Type != EventType.LostPet && e.Type != EventType.FoundPet)
                 .OrderByDescending(e => e.CreatedAt)
                 .ToListAsync();
 
         public async Task<List<Event>> GetByRadiusAsync(double latitude, double longitude, double radiusKm)
         {
-            const double EarthRadiusKm = 6371;
             var events = await _db.Events
                 .Include(e => e.CreatedByUser)
-                .Where(e => e.IsActive)
+                .Where(e => e.IsActive && e.Type != EventType.LostPet && e.Type != EventType.FoundPet)
                 .ToListAsync();
 
+            const double EarthRadiusKm = 6371;
             return events.Where(e =>
             {
                 var dLat = ToRad(e.Latitude - latitude);
@@ -70,12 +70,15 @@ namespace UrbanPulse.Infrastructure.Repositories
         public async Task<List<Event>> SearchAsync(string query)
             => await _db.Events
                 .Include(e => e.CreatedByUser)
-                .Where(e => e.IsActive && (
-                    e.Description.ToLower().Contains(query.ToLower()) ||
-                    e.Tags.ToLower().Contains(query.ToLower()) ||
-                    (e.CreatedByUser != null && e.CreatedByUser.FullName != null &&
-                     e.CreatedByUser.FullName.ToLower().Contains(query.ToLower()))
-                ))
+                .Where(e => e.IsActive &&
+                    e.Type != EventType.LostPet &&
+                    e.Type != EventType.FoundPet &&
+                    (
+                        e.Description.ToLower().Contains(query.ToLower()) ||
+                        e.Tags.ToLower().Contains(query.ToLower()) ||
+                        (e.CreatedByUser != null && e.CreatedByUser.FullName != null &&
+                         e.CreatedByUser.FullName.ToLower().Contains(query.ToLower()))
+                    ))
                 .OrderByDescending(e => e.CreatedAt)
                 .ToListAsync();
 
