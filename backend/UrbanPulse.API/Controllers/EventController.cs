@@ -12,6 +12,7 @@ using UrbanPulse.Core.Interfaces;
 using UrbanPulse.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using UrbanPulse.Core.DTOs;
+using UrbanPulse.Core.Services;
 
 namespace UrbanPulse.API.Controllers
 {
@@ -28,6 +29,8 @@ namespace UrbanPulse.API.Controllers
         private readonly IUserRepository _userRepository;
         private readonly Cloudinary _cloudinary;
         private readonly AppDbContext _context;
+        private readonly ClaudeVisionService _claudeVisionService;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         public EventController(
             IEventService eventService,
@@ -36,7 +39,9 @@ namespace UrbanPulse.API.Controllers
             IConversationRepository conversationRepository,
             INotificationService notificationService,
             IUserRepository userRepository,
-            AppDbContext context) 
+            AppDbContext context,
+            ClaudeVisionService claudeVisionService,
+            IServiceScopeFactory scopeFactory)
         {
             _eventService = eventService;
             _hubContext = hubContext;
@@ -45,6 +50,8 @@ namespace UrbanPulse.API.Controllers
             _notificationService = notificationService;
             _userRepository = userRepository;
             _context = context;
+            _claudeVisionService = claudeVisionService;
+            _scopeFactory = scopeFactory;
 
             var cloudName = Environment.GetEnvironmentVariable("CLOUDINARY_CLOUD_NAME");
             var apiKey = Environment.GetEnvironmentVariable("CLOUDINARY_API_KEY");
@@ -82,6 +89,36 @@ namespace UrbanPulse.API.Controllers
 
             var result = await _eventService.CreateEventAsync(dto, userId, imageUrl);
             await _hubContext.Clients.All.SendAsync("NewEvent", result);
+
+            if ((dto.Type == EventType.LostPet || dto.Type == EventType.FoundPet) && imageUrl != null)
+            {
+                var eventId = result.Id;
+                var capturedImageUrl = imageUrl;
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var aiTags = await _claudeVisionService.AnalyzePetImageAsync(capturedImageUrl);
+                        Console.WriteLine($"[AI] Tags result for event {eventId}: {aiTags}");
+                        if (aiTags != null)
+                        {
+                            using var scope = _scopeFactory.CreateScope();
+                            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                            var createdEvent = await db.Events.FindAsync(eventId);
+                            if (createdEvent != null)
+                            {
+                                createdEvent.AiTags = aiTags;
+                                await db.SaveChangesAsync();
+                                Console.WriteLine($"[AI] Saved AiTags for event {eventId}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[AI] Error: {ex.Message}");
+                    }
+                });
+            }
 
             var poster = await _userRepository.GetByIdAsync(userId);
             var posterName = poster?.FullName ?? poster?.Email?.Split('@')[0] ?? "Someone";
@@ -203,61 +240,128 @@ namespace UrbanPulse.API.Controllers
             return Ok(events);
         }
 
+        [HttpGet("{id}/matches")]
+        public async Task<IActionResult> GetPetMatches(int id)
+        {
+            var sourceEvent = await _context.Events
+                .Include(e => e.CreatedByUser)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (sourceEvent == null) return NotFound();
+
+            var oppositeType = sourceEvent.Type == EventType.LostPet
+                ? EventType.FoundPet
+                : EventType.LostPet;
+
+            var candidates = await _context.Events
+                .Include(e => e.CreatedByUser)
+                .Where(e => e.Type == oppositeType && e.IsActive)
+                .ToListAsync();
+
+            var matches = new List<object>();
+
+            foreach (var candidate in candidates)
+            {
+                double score = 0;
+
+                if (sourceEvent.AiTags != null && candidate.AiTags != null)
+                {
+                    score = await _claudeVisionService.CalculateMatchScoreAsync(
+                        sourceEvent.AiTags,
+                        candidate.AiTags,
+                        sourceEvent.Description,
+                        candidate.Description
+                    );
+                }
+
+                if (score >= 30)
+                {
+                    matches.Add(new
+                    {
+                        score = Math.Round(score),
+                        @event = new
+                        {
+                            id = candidate.Id,
+                            description = candidate.Description,
+                            type = candidate.Type,
+                            imageUrl = candidate.ImageUrl,
+                            latitude = candidate.Latitude,
+                            longitude = candidate.Longitude,
+                            tags = candidate.Tags.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList(),
+                            createdByUserId = candidate.CreatedByUserId,
+                            createdByEmail = candidate.CreatedByUser?.Email,
+                            createdByFullName = candidate.CreatedByUser?.FullName,
+                            createdByAvatarUrl = candidate.CreatedByUser?.AvatarUrl,
+                            isVerifiedUser = candidate.CreatedByUser?.IsVerified ?? false,
+                            createdAt = candidate.CreatedAt,
+                            isActive = candidate.IsActive,
+                        }
+                    });
+                }
+            }
+
+            var sorted = matches
+                .OrderByDescending(m => ((dynamic)m).score)
+                .ToList();
+
+            return Ok(sorted);
+        }
+
         [HttpPost("{id}/verify")]
         [Authorize]
-    public async Task<IActionResult> VerifyEvent(int id, [FromBody] VerifyEventDto dto)
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!int.TryParse(userIdClaim, out int userId))
-            return Unauthorized();
-
-        var ev = await _context.Events.FindAsync(id);
-        if (ev == null) return NotFound();
-
-        var existing = await _context.EventVerifications
-            .FirstOrDefaultAsync(v => v.EventId == id && v.UserId == userId);
-
-        if (existing != null)
+        public async Task<IActionResult> VerifyEvent(int id, [FromBody] VerifyEventDto dto)
         {
-            if (existing.Vote == dto.Vote)
-                return Ok(new { yesCount = ev.YesCount, noCount = ev.NoCount, userVote = (bool?)existing.Vote });
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+                return Unauthorized();
 
-            if (existing.Vote) { ev.YesCount--; ev.NoCount++; }
-            else { ev.NoCount--; ev.YesCount++; }
+            var ev = await _context.Events.FindAsync(id);
+            if (ev == null) return NotFound();
 
-            existing.Vote = dto.Vote;
-        }
-        else
-        {
-            _context.EventVerifications.Add(new EventVerification
+            var existing = await _context.EventVerifications
+                .FirstOrDefaultAsync(v => v.EventId == id && v.UserId == userId);
+
+            if (existing != null)
             {
-                EventId = id,
-                UserId = userId,
-                Vote = dto.Vote
-            });
-            if (dto.Vote) ev.YesCount++;
-            else ev.NoCount++;
+                if (existing.Vote == dto.Vote)
+                    return Ok(new { yesCount = ev.YesCount, noCount = ev.NoCount, userVote = (bool?)existing.Vote });
+
+                if (existing.Vote) { ev.YesCount--; ev.NoCount++; }
+                else { ev.NoCount--; ev.YesCount++; }
+
+                existing.Vote = dto.Vote;
+            }
+            else
+            {
+                _context.EventVerifications.Add(new EventVerification
+                {
+                    EventId = id,
+                    UserId = userId,
+                    Vote = dto.Vote
+                });
+                if (dto.Vote) ev.YesCount++;
+                else ev.NoCount++;
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { yesCount = ev.YesCount, noCount = ev.NoCount, userVote = (bool?)dto.Vote });
         }
 
-        await _context.SaveChangesAsync();
-        return Ok(new { yesCount = ev.YesCount, noCount = ev.NoCount, userVote = (bool?)dto.Vote });
-    }
+        [HttpGet("{id}/verify")]
+        [Authorize]
+        public async Task<IActionResult> GetVerifyStatus(int id)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+                return Unauthorized();
 
-    [HttpGet("{id}/verify")]
-    [Authorize]
-    public async Task<IActionResult> GetVerifyStatus(int id)
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!int.TryParse(userIdClaim, out int userId))
-            return Unauthorized();
+            var ev = await _context.Events.FindAsync(id);
+            if (ev == null) return NotFound();
 
-        var ev = await _context.Events.FindAsync(id);
-        if (ev == null) return NotFound();
+            var existing = await _context.EventVerifications
+                .FirstOrDefaultAsync(v => v.EventId == id && v.UserId == userId);
 
-        var existing = await _context.EventVerifications
-            .FirstOrDefaultAsync(v => v.EventId == id && v.UserId == userId);
-
-        return Ok(new { yesCount = ev.YesCount, noCount = ev.NoCount, userVote = existing != null ? (bool?)existing.Vote : null });
-    }
+            return Ok(new { yesCount = ev.YesCount, noCount = ev.NoCount, userVote = existing != null ? (bool?)existing.Vote : null });
+        }
     }
 }

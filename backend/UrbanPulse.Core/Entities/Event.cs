@@ -26,6 +26,7 @@ public class Event : BaseEntity
     public int NoCount { get; set; } = 0;
     public ICollection<EventVerification> Verifications { get; set; } = new List<EventVerification>();
     public bool IsCompleted { get; set; } = false;
+    public string? AiTags { get; set; }
     public int CreatedByUserId { get; set; }
     public User CreatedByUser { get; set; } = null!;
 }

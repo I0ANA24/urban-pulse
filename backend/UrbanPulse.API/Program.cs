@@ -65,6 +65,7 @@ namespace UrbanPulse_Backend
             builder.Services.AddScoped<IAdminStatsRepository, AdminStatsRepository>();
             builder.Services.AddScoped<IDuplicateSuspectRepository, DuplicateSuspectRepository>();
             builder.Services.AddScoped<IDuplicateDetectionService, DuplicateDetectionService>();
+            builder.Services.AddSingleton<ClaudeVisionService>();
 
 
             // SignalR
