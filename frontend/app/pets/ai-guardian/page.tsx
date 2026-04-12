@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sparkles, Trash2 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 import CardHeader from "@/components/events/card/CardHeader";
 import CardMedia from "@/components/events/card/CardMedia";
@@ -20,10 +21,10 @@ const MOCK_POSTS: Event[] = [
     latitude: 0,
     longitude: 0,
     tags: [],
-    imageUrl: null,
+    imageUrl: "https://picsum.photos/seed/bam-dog/600/400",
     createdByEmail: "greta.bennett@example.com",
     createdByFullName: "Greta Bennett",
-    createdByAvatarUrl: undefined,
+    createdByAvatarUrl: "https://picsum.photos/seed/greta/100/100",
     createdByUserId: 1,
     isVerifiedUser: true,
     createdAt: "2026-03-02T08:33:00",
@@ -36,10 +37,10 @@ const MOCK_POSTS: Event[] = [
     latitude: 0,
     longitude: 0,
     tags: [],
-    imageUrl: null,
+    imageUrl: "https://picsum.photos/seed/doggie-pet/600/400",
     createdByEmail: "greta.bennett@example.com",
     createdByFullName: "Greta Bennett",
-    createdByAvatarUrl: undefined,
+    createdByAvatarUrl: "https://picsum.photos/seed/greta/100/100",
     createdByUserId: 1,
     isVerifiedUser: true,
     createdAt: "2026-03-01T14:12:00",
@@ -88,10 +89,13 @@ function AiGuardianCard({
       <div className={`bg-secondary -mt-4 z-10 rounded-b-4xl ${post.imageUrl ? "rounded-t-4xl" : "rounded-t-none"} p-5 lg:px-10`}>
         <CardContent description={post.description} />
         <div className="flex items-center justify-between pt-3 border-t-2 border-white/10 mt-3">
-          <button className="flex items-center gap-2 bg-[#2D2A4A] hover:bg-[#3A3660] transition-colors px-4 py-2 rounded-full cursor-pointer">
+          <Link
+            href={`/pets/matches/${post.id}`}
+            className="flex items-center gap-2 bg-[#2D2A4A] hover:bg-[#3A3660] transition-colors px-4 py-2 rounded-full cursor-pointer"
+          >
             <Sparkles size={14} className="text-white" />
             <span className="text-white text-xs font-bold">See matches</span>
-          </button>
+          </Link>
           <EventTag type="LostPet" />
         </div>
       </div>
