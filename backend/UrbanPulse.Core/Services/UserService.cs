@@ -138,6 +138,7 @@ public class UserService : IUserService
             : 0,
         IsBanned = user.IsBanned,
         TasksBanned = user.TasksBanned,
+        HelpfulCount = user.HelpfulCount,
         TasksPostsDeleted = user.TasksPostsDeleted,
         TasksDuplicatesMerged = user.TasksDuplicatesMerged,
         TasksDismissed = user.TasksDismissed,

@@ -18,6 +18,7 @@
         public int TasksDuplicatesMerged { get; set; }
         public int TasksDismissed { get; set; }
         public double TrustScore { get; set; }
+        public int HelpfulCount { get; set; }
         public string? AvatarUrl { get; set; }
         public DateTime CreatedAt { get; set; }
         public double? Latitude { get; set; }

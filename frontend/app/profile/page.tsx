@@ -20,6 +20,7 @@ interface UserProfile {
   isVerified: boolean;
   role: string;
   trustScore: number;
+  helpfulCount: number;
   createdAt: string;
 }
 
@@ -29,6 +30,7 @@ function getInitials(name: string) {
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [postsCount, setPostsCount] = useState(0);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -41,6 +43,12 @@ export default function ProfilePage() {
     })
       .then((res) => res.json())
       .then((data) => setProfile(data));
+
+    fetch(`${API}/api/user/my-posts`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setPostsCount(data.length));
   }, []);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -165,7 +173,6 @@ export default function ProfilePage() {
               {profile?.trustScore ?? 0}%
             </p>
           </div>
-
         </div>
       </section>
 
@@ -186,12 +193,12 @@ export default function ProfilePage() {
         <section className="w-full h-25 border-2 border-yellow-primary rounded-2xl flex items-center py-2 shadow-sm bg-[#1C1C1C]">
           <div className="flex-1 flex flex-col items-center justify-center gap-1">
             <h3 className="text-lg font-bold">Helped</h3>
-            <p className="text-yellow-primary text-3xl font-bold">0</p>
+            <p className="text-yellow-primary text-3xl font-bold">{profile?.helpfulCount ?? 0}</p>
           </div>
           <div className="w-0.5 self-stretch my-3 bg-white"></div>
           <div className="flex-1 flex flex-col items-center justify-center gap-1">
             <h3 className="text-lg font-bold">Posts</h3>
-            <p className="text-yellow-primary text-3xl font-bold">0</p>
+            <p className="text-yellow-primary text-3xl font-bold">{postsCount}</p>
           </div>
         </section>
 
