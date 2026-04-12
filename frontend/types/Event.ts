@@ -1,4 +1,4 @@
-export type EventType = "General" | "Emergency" | "Skill" | "Lend";
+export type EventType = "General" | "Emergency" | "Skill" | "Lend" | "LostPet" | "FoundPet";
 
 export interface Event {
   id: number;
