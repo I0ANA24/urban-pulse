@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
-import { Plus, MoreVertical, BadgeCheck, ThumbsUp, ThumbsDown, Copy } from "lucide-react";
+import { Plus, BadgeCheck, ThumbsUp, ThumbsDown, Copy } from "lucide-react";
 import Image from "next/image";
 import { useSignalR } from "@/context/SignalRContext";
 import TopBar from "@/components/layout/TopBar";
@@ -196,9 +196,6 @@ export default function ChatPage() {
               {isVerified && (
                 <BadgeCheck size={18} className="text-green-light fill-green-light/20 shrink-0" />
               )}
-            </button>
-            <button className="p-1">
-              <MoreVertical size={20} className="text-white/60" />
             </button>
           </div>
 
