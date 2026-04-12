@@ -35,17 +35,23 @@ export default function TopBar({ back, notifications, settings, addPost }: TopBa
   const handleUnreadChange = useCallback((count: number) => setUnreadCount(count), []);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    fetch("http://localhost:5248/api/user/profile", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
+    const loadTopBarProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const res = await fetch("http://localhost:5248/api/user/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
         setUserName(data.fullName ?? data.email ?? "");
         setAvatarUrl(data.avatarUrl ?? "");
-      })
-      .catch(() => {});
+      } catch (error) {
+        console.error("Failed to load top bar profile:", error);
+      }
+    };
+
+    loadTopBarProfile();
   }, []);
 
   useEffect(() => {
@@ -60,13 +66,21 @@ export default function TopBar({ back, notifications, settings, addPost }: TopBa
 
   useEffect(() => {
     if (!notifications) return;
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:5248/api/notification/unread-count", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setUnreadCount(data.count))
-      .catch(() => {});
+    const loadUnreadCount = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:5248/api/notification/unread-count", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        setUnreadCount(Number(data.count ?? 0));
+      } catch (error) {
+        console.error("Failed to load unread notifications count:", error);
+      }
+    };
+
+    loadUnreadCount();
   }, [notifications]);
 
   useEffect(() => {

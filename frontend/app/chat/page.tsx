@@ -42,28 +42,56 @@ export default function ChatsPage() {
   const { isSevereWeather } = useSevereWeather();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch(`${API}/api/chat/conversations`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => res.json())
-      .then((data) => setConversations(data))
-      .finally(() => setLoading(false));
+    const loadConversations = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API}/api/chat/conversations`, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) {
+          setConversations([]);
+          return;
+        }
+        const data = await res.json();
+        setConversations(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Failed to load chat conversations:", error);
+        setConversations([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadConversations();
   }, []);
 
   useEffect(() => {
     if (conversations.length === 0) return;
-    const token = localStorage.getItem("token");
-    const uniqueIds = [...new Set(conversations.map((c) => c.otherUserId))];
-    Promise.all(
-      uniqueIds.map((uid) =>
-        fetch(`${API}/api/user/${uid}`, { headers: { Authorization: `Bearer ${token}` } })
-          .then((res) => res.json())
-          .then((data) => ({ uid, avatarUrl: data.avatarUrl ?? null }))
-      )
-    ).then((results) => {
-      const map: Record<number, string> = {};
-      results.forEach(({ uid, avatarUrl }) => { if (avatarUrl) map[uid] = avatarUrl; });
-      setAvatarUrls(map);
-    });
+    const loadAvatars = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const uniqueIds = [...new Set(conversations.map((c) => c.otherUserId))];
+        const results = await Promise.all(
+          uniqueIds.map(async (uid) => {
+            try {
+              const res = await fetch(`${API}/api/user/${uid}`, { headers: { Authorization: `Bearer ${token}` } });
+              if (!res.ok) return { uid, avatarUrl: null };
+              const data = await res.json();
+              return { uid, avatarUrl: data.avatarUrl ?? null };
+            } catch {
+              return { uid, avatarUrl: null };
+            }
+          })
+        );
+
+        const map: Record<number, string> = {};
+        results.forEach(({ uid, avatarUrl }) => { if (avatarUrl) map[uid] = avatarUrl; });
+        setAvatarUrls(map);
+      } catch (error) {
+        console.error("Failed to load chat avatars:", error);
+        setAvatarUrls({});
+      }
+    };
+
+    loadAvatars();
   }, [conversations]);
 
   return (

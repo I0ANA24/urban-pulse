@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -23,6 +25,7 @@ namespace UrbanPulse_Backend
 
             // Controllers
             builder.Services.AddControllers();
+            builder.Services.AddProblemDetails();
 
             // Swagger
             builder.Services.AddEndpointsApiExplorer();
@@ -97,6 +100,10 @@ namespace UrbanPulse_Backend
 
             // JWT
             var jwtSecret = Environment.GetEnvironmentVariable("JWT_KEY");
+            if (string.IsNullOrWhiteSpace(jwtSecret))
+            {
+                throw new InvalidOperationException("JWT_KEY environment variable is missing.");
+            }
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -132,6 +139,46 @@ namespace UrbanPulse_Backend
 
             var app = builder.Build();
 
+            app.UseExceptionHandler(errorApp =>
+            {
+                errorApp.Run(async context =>
+                {
+                    var feature = context.Features.Get<IExceptionHandlerFeature>();
+                    var exception = feature?.Error;
+
+                    var (statusCode, title) = MapException(exception);
+
+                    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+                    if (exception is not null)
+                    {
+                        if (statusCode >= StatusCodes.Status500InternalServerError)
+                        {
+                            logger.LogError(exception, "Unhandled exception for {Method} {Path}", context.Request.Method, context.Request.Path);
+                        }
+                        else
+                        {
+                            logger.LogWarning(exception, "Handled exception for {Method} {Path}", context.Request.Method, context.Request.Path);
+                        }
+                    }
+
+                    context.Response.StatusCode = statusCode;
+                    context.Response.ContentType = "application/problem+json";
+
+                    var problem = new ProblemDetails
+                    {
+                        Status = statusCode,
+                        Title = title,
+                        Detail = app.Environment.IsDevelopment()
+                            ? exception?.Message
+                            : "Please try again later.",
+                        Instance = context.Request.Path
+                    };
+                    problem.Extensions["traceId"] = context.TraceIdentifier;
+
+                    await context.Response.WriteAsJsonAsync(problem);
+                });
+            });
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -150,6 +197,19 @@ namespace UrbanPulse_Backend
             app.MapHub<SevereChatHub>("/hubs/severe-chat");
 
             app.Run();
+        }
+
+        private static (int statusCode, string title) MapException(Exception? exception)
+        {
+            return exception switch
+            {
+                ArgumentException => (StatusCodes.Status400BadRequest, "Invalid request."),
+                FormatException => (StatusCodes.Status400BadRequest, "Invalid request format."),
+                UnauthorizedAccessException => (StatusCodes.Status403Forbidden, "Access denied."),
+                KeyNotFoundException => (StatusCodes.Status404NotFound, "Resource not found."),
+                InvalidOperationException => (StatusCodes.Status409Conflict, "Operation cannot be completed."),
+                _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred."),
+            };
         }
     }
 }

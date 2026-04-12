@@ -112,24 +112,41 @@ export default function DashboardPage() {
   const targetEventId = searchParams.get("eventId");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const loadDashboardData = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-    fetch(`${API}/api/user/profile`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.latitude && data.longitude) {
-          setUserLocation({ lat: data.latitude, lng: data.longitude });
+        const [profileRes, eventsRes] = await Promise.all([
+          fetch(`${API}/api/user/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API}/api/event`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          if (profileData.latitude && profileData.longitude) {
+            setUserLocation({ lat: profileData.latitude, lng: profileData.longitude });
+          }
         }
-      });
 
-    fetch(`${API}/api/event`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setEvents(data))
-      .finally(() => setLoading(false));
+        if (eventsRes.ok) {
+          const eventsData = await eventsRes.json();
+          setEvents(Array.isArray(eventsData) ? eventsData : []);
+        } else {
+          setEvents([]);
+        }
+      } catch (error) {
+        console.error("Failed to load dashboard data:", error);
+        setEvents([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
   }, []);
 
   useEffect(() => {

@@ -53,19 +53,30 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem("token");
     if (!token) { setLoading(false); return; }
 
-    fetch("http://localhost:5248/api/user/profile", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
+    const loadUser = async () => {
+      try {
+        const res = await fetch("http://localhost:5248/api/user/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          setUser(null);
+          return;
+        }
+        const data = await res.json();
         if (data.isBanned) {
           logoutAndRedirect();
           return;
         }
         setUser(data);
-      })
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+      } catch (error) {
+        console.error("Failed to load user context:", error);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUser();
   }, []);
 
   useEffect(() => {

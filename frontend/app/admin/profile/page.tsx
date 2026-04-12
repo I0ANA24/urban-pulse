@@ -26,12 +26,14 @@ export default function AdminProfilePage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch(`${API}/api/user/profile`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
+    const loadAdminProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API}/api/user/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
         setProfile({
           displayName: data.fullName ?? data.email?.split("@")[0] ?? "User",
           avatarUrl: data.avatarUrl ?? null,
@@ -41,7 +43,12 @@ export default function AdminProfilePage() {
           tasksDuplicatesMerged: data.tasksDuplicatesMerged ?? 0,
           tasksDismissed: data.tasksDismissed ?? 0,
         });
-      });
+      } catch (error) {
+        console.error("Failed to load admin profile:", error);
+      }
+    };
+
+    loadAdminProfile();
   }, []);
 
   const handleUserMode = () => {

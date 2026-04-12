@@ -37,18 +37,35 @@ export default function ProfilePage() {
   const { viewAsUser, setViewAsUser } = useUser();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch(`${API}/api/user/profile`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setProfile(data));
+    const loadProfilePage = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const [profileRes, postsRes] = await Promise.all([
+          fetch(`${API}/api/user/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API}/api/user/my-posts`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
 
-    fetch(`${API}/api/user/my-posts`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setPostsCount(data.length));
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          setProfile(profileData);
+        }
+
+        if (postsRes.ok) {
+          const postsData = await postsRes.json();
+          setPostsCount(Array.isArray(postsData) ? postsData.length : 0);
+        } else {
+          setPostsCount(0);
+        }
+      } catch (error) {
+        console.error("Failed to load profile page:", error);
+      }
+    };
+
+    loadProfilePage();
   }, []);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,18 +76,23 @@ export default function ProfilePage() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${API}/api/user/avatar`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/api/user/avatar`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
 
-    if (res.ok) {
-      const data = await res.json();
-      setProfile((prev) => prev ? { ...prev, avatarUrl: data.avatarUrl } : prev);
+      if (res.ok) {
+        const data = await res.json();
+        setProfile((prev) => prev ? { ...prev, avatarUrl: data.avatarUrl } : prev);
+      }
+    } catch (error) {
+      console.error("Failed to upload avatar:", error);
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   };
 
   const handleAdminMode = () => {

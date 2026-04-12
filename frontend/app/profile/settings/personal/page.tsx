@@ -23,17 +23,24 @@ export default function PersonalInfoPage() {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:5248/api/user/profile", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
+    const loadPersonalInfo = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:5248/api/user/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
         setPhoneNumber(data.phoneNumber ?? "");
         setAddress(data.address ?? "");
         setLat(data.latitude ?? null);
         setLng(data.longitude ?? null);
-      });
+      } catch (error) {
+        console.error("Failed to load personal info:", error);
+      }
+    };
+
+    loadPersonalInfo();
   }, []);
 
   const autoSave = (
@@ -44,22 +51,27 @@ export default function PersonalInfoPage() {
   ) => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
-      const token = localStorage.getItem("token");
-      await fetch("http://localhost:5248/api/user/profile", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phoneNumber: updatedPhone,
-          address: updatedAddress,
-          latitude: updatedLat,
-          longitude: updatedLng,
-        }),
-      });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:5248/api/user/profile", {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phoneNumber: updatedPhone,
+            address: updatedAddress,
+            latitude: updatedLat,
+            longitude: updatedLng,
+          }),
+        });
+        if (!res.ok) return;
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      } catch (error) {
+        console.error("Failed to autosave personal info:", error);
+      }
     }, 1000);
   };
 

@@ -22,27 +22,31 @@ function ReportForm() {
     if (!details.trim() || !eventId) return;
     setLoading(true);
     setError("");
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/api/report`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ eventId: parseInt(eventId), details }),
+      });
 
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${API}/api/report`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ eventId: parseInt(eventId), details }),
-    });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.message ?? "Something went wrong.");
+        return;
+      }
 
-    if (!res.ok) {
-      const data = await res.json();
-      setError(data.message ?? "Something went wrong.");
+      setSubmitted(true);
+      setTimeout(() => router.back(), 1500);
+    } catch (error) {
+      console.error("Failed to submit report:", error);
+      setError("Something went wrong.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setSubmitted(true);
-    setLoading(false);
-    setTimeout(() => router.back(), 1500);
   };
 
   return (

@@ -38,39 +38,62 @@ export default function ChatPage() {
   const { connection } = useSignalR();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const loadConversationData = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-    fetch("http://localhost:5248/api/user/profile", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setCurrentUserId(data.id));
-
-    fetch("http://localhost:5248/api/chat/conversations", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        const conv = data.find((c: any) => c.id === Number(id));
-        if (conv) {
-          setOtherUserId(conv.otherUserId);
-          setOtherUserName(conv.otherUserFullName ?? conv.otherUserEmail?.split("@")[0]);
-          fetch(`http://localhost:5248/api/user/${conv.otherUserId}`, {
+        const [profileRes, conversationsRes, messagesRes] = await Promise.all([
+          fetch("http://localhost:5248/api/user/profile", {
             headers: { Authorization: `Bearer ${token}` },
-          })
-            .then((res) => res.json())
-            .then((profile) => {
-              setOtherUserAvatar(profile.avatarUrl ?? null);
-              setIsVerified(profile.isVerified ?? false);
-            });
-        }
-      });
+          }),
+          fetch("http://localhost:5248/api/chat/conversations", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`http://localhost:5248/api/chat/conversations/${id}/messages`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
 
-    fetch(`http://localhost:5248/api/chat/conversations/${id}/messages`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setMessages(data));
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          setCurrentUserId(profileData.id ?? null);
+        }
+
+        if (conversationsRes.ok) {
+          const conversationsData = await conversationsRes.json();
+          const conv = Array.isArray(conversationsData)
+            ? conversationsData.find((c: any) => c.id === Number(id))
+            : null;
+
+          if (conv) {
+            setOtherUserId(conv.otherUserId);
+            setOtherUserName(conv.otherUserFullName ?? conv.otherUserEmail?.split("@")[0]);
+
+            try {
+              const otherProfileRes = await fetch(`http://localhost:5248/api/user/${conv.otherUserId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              if (otherProfileRes.ok) {
+                const profile = await otherProfileRes.json();
+                setOtherUserAvatar(profile.avatarUrl ?? null);
+                setIsVerified(profile.isVerified ?? false);
+              }
+            } catch (error) {
+              console.error("Failed to load other user profile:", error);
+            }
+          }
+        }
+
+        if (messagesRes.ok) {
+          const messagesData = await messagesRes.json();
+          setMessages(Array.isArray(messagesData) ? messagesData : []);
+        }
+      } catch (error) {
+        console.error("Failed to load chat conversation page:", error);
+      }
+    };
+
+    loadConversationData();
   }, [id]);
 
   useEffect(() => {
@@ -88,39 +111,51 @@ export default function ChatPage() {
 
   const handleSend = async () => {
     if (!text.trim()) return;
-    const token = localStorage.getItem("token");
-    await fetch(`http://localhost:5248/api/chat/conversations/${id}/messages`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ text }),
-    });
-    setText("");
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:5248/api/chat/conversations/${id}/messages`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) return;
+      setText("");
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    }
   };
 
   const handleSendInfo = async () => {
     setShowPlusMenu(false);
-    const token = localStorage.getItem("token");
-    const profile = await fetch("http://localhost:5248/api/user/profile", {
-      headers: { Authorization: `Bearer ${token}` },
-    }).then((res) => res.json());
+    try {
+      const token = localStorage.getItem("token");
+      const profileRes = await fetch("http://localhost:5248/api/user/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!profileRes.ok) return;
+      const profile = await profileRes.json();
 
-    const payload = JSON.stringify({
-      name: profile.fullName ?? profile.email?.split("@")[0] ?? "—",
-      phone: profile.phoneNumber ?? "—",
-      address: profile.address ?? "—",
-    });
+      const payload = JSON.stringify({
+        name: profile.fullName ?? profile.email?.split("@")[0] ?? "-",
+        phone: profile.phoneNumber ?? "-",
+        address: profile.address ?? "-",
+      });
 
-    await fetch(`http://localhost:5248/api/chat/conversations/${id}/messages`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ text: `__INFO_CARD__${payload}` }),
-    });
+      const sendRes = await fetch(`http://localhost:5248/api/chat/conversations/${id}/messages`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: `__INFO_CARD__${payload}` }),
+      });
+      if (!sendRes.ok) return;
+    } catch (error) {
+      console.error("Failed to send personal info card:", error);
+    }
   };
 
   return (

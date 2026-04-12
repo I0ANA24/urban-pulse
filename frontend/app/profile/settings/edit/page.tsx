@@ -16,18 +16,25 @@ export default function EditProfile() {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:5248/api/user/profile", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
+    const loadProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:5248/api/user/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
         setFullName(data.fullName ?? "");
         setBio(data.bio ?? "");
         setSkills(data.skills ?? []);
         setTools(data.tools ?? []);
         setAvatarUrl(data.avatarUrl ?? null);
-      });
+      } catch (error) {
+        console.error("Failed to load edit profile data:", error);
+      }
+    };
+
+    loadProfile();
   }, []);
 
   const autoSave = (
@@ -38,22 +45,27 @@ export default function EditProfile() {
   ) => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
-      const token = localStorage.getItem("token");
-      await fetch("http://localhost:5248/api/user/profile", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fullName: updatedFullName,
-          bio: updatedBio,
-          skills: updatedSkills,
-          tools: updatedTools,
-        }),
-      });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:5248/api/user/profile", {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fullName: updatedFullName,
+            bio: updatedBio,
+            skills: updatedSkills,
+            tools: updatedTools,
+          }),
+        });
+        if (!res.ok) return;
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      } catch (error) {
+        console.error("Failed to autosave profile:", error);
+      }
     }, 1000);
   };
 

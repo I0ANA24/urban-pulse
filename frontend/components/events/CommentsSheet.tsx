@@ -68,13 +68,27 @@ export default function CommentsSheet({ eventId, onClose }: CommentsSheetProps) 
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch(`http://localhost:5248/api/event/${eventId}/comment`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setComments(data))
-      .finally(() => setLoading(false));
+    const loadComments = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`http://localhost:5248/api/event/${eventId}/comment`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          setComments([]);
+          return;
+        }
+        const data = await res.json();
+        setComments(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Failed to load comments:", error);
+        setComments([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadComments();
   }, [eventId]);
 
   useEffect(() => {
@@ -101,16 +115,21 @@ export default function CommentsSheet({ eventId, onClose }: CommentsSheetProps) 
 
   const handleSend = async () => {
     if (!text.trim()) return;
-    const token = localStorage.getItem("token");
-    await fetch(`http://localhost:5248/api/event/${eventId}/comment`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ text }),
-    });
-    setText("");
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:5248/api/event/${eventId}/comment`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) return;
+      setText("");
+    } catch (error) {
+      console.error("Failed to send comment:", error);
+    }
   };
 
   return (

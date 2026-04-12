@@ -64,29 +64,46 @@ export default function EventCard({ event, isMyPost, onDelete, flagCount, onView
 
   useEffect(() => {
     if (event.id === -1) return;
-    const token = localStorage.getItem("token");
+    const loadCardState = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const [likeRes, commentRes, saveRes] = await Promise.all([
+          fetch(`${API}/api/event/${event.id}/like`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API}/api/event/${event.id}/comment`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API}/api/event/${event.id}/save`, { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
 
-    fetch(`${API}/api/event/${event.id}/like`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((d) => { setLikes(d.count); setLiked(d.liked); });
+        if (likeRes.ok) {
+          const likeData = await likeRes.json();
+          setLikes(Number(likeData.count ?? 0));
+          setLiked(Boolean(likeData.liked));
+        }
 
-    fetch(`${API}/api/event/${event.id}/comment`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((d) => setCommentCount(d.length));
+        if (commentRes.ok) {
+          const commentData = await commentRes.json();
+          setCommentCount(Array.isArray(commentData) ? commentData.length : 0);
+        }
 
-    fetch(`${API}/api/event/${event.id}/save`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((d) => setSaved(d.saved));
+        if (saveRes.ok) {
+          const saveData = await saveRes.json();
+          setSaved(Boolean(saveData.saved));
+        }
 
-    if (mappedType === "Emergency") {
-      fetch(`${API}/api/event/${event.id}/verify`, { headers: { Authorization: `Bearer ${token}` } })
-        .then((r) => r.json())
-        .then((d) => {
-          setYesCount(d.yesCount);
-          setNoCount(d.noCount);
-          setUserVote(d.userVote ?? null);
-        });
-    }
+        if (mappedType === "Emergency") {
+          const verifyRes = await fetch(`${API}/api/event/${event.id}/verify`, { headers: { Authorization: `Bearer ${token}` } });
+          if (verifyRes.ok) {
+            const verifyData = await verifyRes.json();
+            setYesCount(Number(verifyData.yesCount ?? 0));
+            setNoCount(Number(verifyData.noCount ?? 0));
+            setUserVote(verifyData.userVote ?? null);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load event card state:", error);
+      }
+    };
+
+    loadCardState();
   }, [event.id, mappedType]);
 
   useEffect(() => {
@@ -105,48 +122,79 @@ export default function EventCard({ event, isMyPost, onDelete, flagCount, onView
   }, [connection, event.id]);
 
   const handleLike = async () => {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${API}/api/event/${event.id}/like`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
-    const d = await res.json();
-    setLikes(d.count); setLiked(d.liked);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/api/event/${event.id}/like`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) return;
+      const d = await res.json();
+      setLikes(Number(d.count ?? 0));
+      setLiked(Boolean(d.liked));
+    } catch (error) {
+      console.error("Failed to like event:", error);
+    }
   };
 
   const handleSave = async () => {
     setSaved((p) => !p);
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${API}/api/event/${event.id}/save`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
-    const d = await res.json();
-    setSaved(d.saved);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/api/event/${event.id}/save`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) {
+        setSaved((p) => !p);
+        return;
+      }
+      const d = await res.json();
+      setSaved(Boolean(d.saved));
+    } catch (error) {
+      console.error("Failed to save event:", error);
+      setSaved((p) => !p);
+    }
   };
 
   const handleMessage = async () => {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${API}/api/chat/conversations`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ otherUserId: event.createdByUserId, eventId: event.id }),
-    });
-    const d = await res.json();
-    router.push(`/chat-conversation/${d.conversationId}`);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/api/chat/conversations`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ otherUserId: event.createdByUserId, eventId: event.id }),
+      });
+      if (!res.ok) return;
+      const d = await res.json();
+      if (!d?.conversationId) return;
+      router.push(`/chat-conversation/${d.conversationId}`);
+    } catch (error) {
+      console.error("Failed to create conversation from event:", error);
+    }
   };
 
   const handleComplete = async () => {
-    const token = localStorage.getItem("token");
-    await fetch(`${API}/api/event/${event.id}/complete`, { method: "PUT", headers: { Authorization: `Bearer ${token}` } });
-    setIsCompleted(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/api/event/${event.id}/complete`, { method: "PUT", headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) return;
+      setIsCompleted(true);
+    } catch (error) {
+      console.error("Failed to complete event:", error);
+    }
   };
 
   const handleVote = async (vote: boolean) => {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${API}/api/event/${event.id}/verify`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ vote }),
-    });
-    const d = await res.json();
-    setYesCount(d.yesCount);
-    setNoCount(d.noCount);
-    setUserVote(d.userVote ?? null);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/api/event/${event.id}/verify`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ vote }),
+      });
+      if (!res.ok) return;
+      const d = await res.json();
+      setYesCount(Number(d.yesCount ?? 0));
+      setNoCount(Number(d.noCount ?? 0));
+      setUserVote(d.userVote ?? null);
+    } catch (error) {
+      console.error("Failed to verify event:", error);
+    }
   };
 
   return (
