@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { BadgeCheck, User } from "lucide-react";
+import { BadgeCheck, Ban, ShieldCheck, User } from "lucide-react";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
+import ConfirmModal from "@/components/ui/ConfirmModal";
+import { useUser } from "@/context/UserContext";
 
 const API = "http://localhost:5248";
 
@@ -17,6 +19,8 @@ interface UserProfile {
   tools: string[];
   trustScore: number;
   isVerified: boolean;
+  isBanned: boolean;
+  role: string;
   createdAt: string;
   helpedCount: number;
   postsCount: number;
@@ -35,8 +39,17 @@ function getInitials(name: string) {
 export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { isAdmin } = useUser();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showBanModal, setShowBanModal] = useState(false);
+  const [banLoading, setBanLoading] = useState(false);
+  const [showUnbanModal, setShowUnbanModal] = useState(false);
+  const [unbanLoading, setUnbanLoading] = useState(false);
+  const [showMakeAdminModal, setShowMakeAdminModal] = useState(false);
+  const [makeAdminLoading, setMakeAdminLoading] = useState(false);
+  const [showMakeUserModal, setShowMakeUserModal] = useState(false);
+  const [makeUserLoading, setMakeUserLoading] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -50,6 +63,54 @@ export default function UserProfilePage() {
       })
       .catch(() => setLoading(false));
   }, [id]);
+
+  const handleBanUser = async () => {
+    setBanLoading(true);
+    const token = localStorage.getItem("token");
+    await fetch(`${API}/api/admin/flagged-users/${id}/ban`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setBanLoading(false);
+    setShowBanModal(false);
+    setProfile((prev) => prev ? { ...prev, isBanned: true } : prev);
+  };
+
+  const handleMakeAdmin = async () => {
+    setMakeAdminLoading(true);
+    const token = localStorage.getItem("token");
+    await fetch(`${API}/api/admin/users/${id}/make-admin`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setMakeAdminLoading(false);
+    setShowMakeAdminModal(false);
+    setProfile((prev) => prev ? { ...prev, role: "Admin" } : prev);
+  };
+
+  const handleMakeUser = async () => {
+    setMakeUserLoading(true);
+    const token = localStorage.getItem("token");
+    await fetch(`${API}/api/admin/users/${id}/make-user`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setMakeUserLoading(false);
+    setShowMakeUserModal(false);
+    setProfile((prev) => prev ? { ...prev, role: "User" } : prev);
+  };
+
+  const handleUnbanUser = async () => {
+    setUnbanLoading(true);
+    const token = localStorage.getItem("token");
+    await fetch(`${API}/api/admin/banned-users/${id}/unban`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setUnbanLoading(false);
+    setShowUnbanModal(false);
+    setProfile((prev) => prev ? { ...prev, isBanned: false } : prev);
+  };
 
   const handleMessage = async () => {
     const token = localStorage.getItem("token");
@@ -170,20 +231,57 @@ export default function UserProfilePage() {
           <div className="w-36 h-5"></div>
         </div>
 
-        {/* Message + Report buttons */}
+        {/* Message + Report / Admin buttons */}
         <section className="w-full flex justify-center items-center gap-4">
-          <button
-            onClick={handleMessage}
-            className="w-50 py-3 rounded-2xl bg-blue text-[#0A0A0A] hover:bg-blue/90 font-bold text-base transition-colors cursor-pointer"
-          >
-            Message
-          </button>
-          <button
-            onClick={() => router.push(`/report-user?userId=${id}`)}
-            className="w-50 py-3 rounded-2xl bg-red-emergency text-white font-bold text-base hover:bg-red-emergency/90 transition-colors cursor-pointer"
-          >
-            Report
-          </button>
+          {isAdmin ? (
+            <>
+              {profile.isBanned ? (
+                <button
+                  onClick={() => setShowUnbanModal(true)}
+                  className="w-50 py-3 rounded-2xl bg-green-light text-[#0A0A0A] font-bold text-base hover:bg-green-light/90 transition-colors cursor-pointer"
+                >
+                  Unban User
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowBanModal(true)}
+                  className="w-50 py-3 rounded-2xl bg-red-emergency text-white font-bold text-base hover:bg-red-emergency/90 transition-colors cursor-pointer"
+                >
+                  Ban User
+                </button>
+              )}
+              {profile.role === "Admin" ? (
+                <button
+                  onClick={() => setShowMakeUserModal(true)}
+                  className="w-50 py-3 rounded-2xl bg-blue text-[#0A0A0A] hover:bg-blue/90 font-bold text-base transition-colors cursor-pointer"
+                >
+                  Make User
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowMakeAdminModal(true)}
+                  className="w-50 py-3 rounded-2xl bg-green-light text-[#0A0A0A] hover:bg-green-light/90 font-bold text-base transition-colors cursor-pointer"
+                >
+                  Make Admin
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <button
+                onClick={handleMessage}
+                className="w-50 py-3 rounded-2xl bg-blue text-[#0A0A0A] hover:bg-blue/90 font-bold text-base transition-colors cursor-pointer"
+              >
+                Message
+              </button>
+              <button
+                onClick={() => router.push(`/report-user?userId=${id}`)}
+                className="w-50 py-3 rounded-2xl bg-red-emergency text-white font-bold text-base hover:bg-red-emergency/90 transition-colors cursor-pointer"
+              >
+                Report
+              </button>
+            </>
+          )}
         </section>
 
         {/* Bio */}
@@ -257,6 +355,42 @@ export default function UserProfilePage() {
           </section>
         </div>
       </div>
+      <ConfirmModal
+        isOpen={showBanModal}
+        onClose={() => setShowBanModal(false)}
+        onConfirm={handleBanUser}
+        icon={<Ban />}
+        title="Ban user"
+        boldText="ban this user"
+        loading={banLoading}
+      />
+      <ConfirmModal
+        isOpen={showUnbanModal}
+        onClose={() => setShowUnbanModal(false)}
+        onConfirm={handleUnbanUser}
+        icon={<Ban />}
+        title="Unban user"
+        boldText="unban this user"
+        loading={unbanLoading}
+      />
+      <ConfirmModal
+        isOpen={showMakeAdminModal}
+        onClose={() => setShowMakeAdminModal(false)}
+        onConfirm={handleMakeAdmin}
+        icon={<ShieldCheck />}
+        title="Make Admin"
+        boldText="make this user an admin"
+        loading={makeAdminLoading}
+      />
+      <ConfirmModal
+        isOpen={showMakeUserModal}
+        onClose={() => setShowMakeUserModal(false)}
+        onConfirm={handleMakeUser}
+        icon={<ShieldCheck />}
+        title="Remove Admin"
+        boldText="remove admin rights from this user"
+        loading={makeUserLoading}
+      />
     </ThreeColumnLayout>
   );
 }
