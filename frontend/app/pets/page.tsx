@@ -6,7 +6,7 @@ import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 export default function PetsPage() {
   return (
     <ThreeColumnLayout>
-      <div className="flex flex-col gap-6 py-2">
+      <div className="flex flex-col py-2">
 
         {/* See posts button */}
         <Link
@@ -22,14 +22,14 @@ export default function PetsPage() {
           <Image
             src="/pets.svg"
             alt="Pets illustration"
-            width={320}
-            height={320}
+            width={200}
+            height={200}
             className="object-contain"
           />
         </div>
 
         {/* Bottom card */}
-        <div className="w-[90%] mx-auto bg-secondary rounded-3xl px-6 py-6 flex flex-col items-center gap-5">
+        <div className="w-[90%] mx-auto bg-secondary rounded-3xl px-6 py-6 flex flex-col items-center gap-5 -mt-6">
           <span className="text-white/40 text-xs font-medium tracking-widest uppercase">
             Urban Pulse
           </span>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ProfilePageTemplate from "@/components/profile/ProfilePageTemplate";
 import EventCard from "@/components/events/EventCard";
 import EventFilters from "@/components/dashboard/EventFilters";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { Event, EventType } from "@/types/Event";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
 import { Trash2 } from "lucide-react";
@@ -104,45 +105,14 @@ export default function MyPostsPage() {
         ))}
       </div>
 
-      {/* Delete confirm popup */}
-      {showDeleteConfirm && (
-        <div
-          className="fixed inset-0 bg-black/70 flex justify-center items-center px-6 z-50"
-          onClick={() => setShowDeleteConfirm(false)}
-        >
-          <div
-            className="bg-[#1e1e1e] w-full rounded-2xl overflow-hidden border border-white/10"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-center gap-2 py-4 border-b border-white/10">
-              <Trash2 className="size-5 text-red-500" strokeWidth={2} />
-              <h2 className="text-base font-bold text-red-500">Delete post</h2>
-            </div>
-
-            <div className="px-6 py-5 text-center">
-              <p className="text-white text-sm leading-relaxed">
-                Are you sure you want to{" "}
-                <span className="font-bold underline">delete this post?</span>
-              </p>
-            </div>
-
-            <div className="flex border-t border-white/10">
-              <button
-                onClick={handleDeleteConfirm}
-                className="flex-1 py-4 font-bold text-sm text-white bg-transparent border-r border-white/10"
-              >
-                YES
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-4 font-bold text-sm text-white bg-red-600"
-              >
-                NO
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteConfirm}
+        icon={<Trash2 />}
+        title="Delete post"
+        boldText="delete this post"
+      />
     </ProfilePageTemplate>
   );
 }

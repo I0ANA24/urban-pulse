@@ -219,6 +219,30 @@ public class AdminController : ControllerBase
         return Ok();
     }
 
+    [HttpPost("users/{userId}/make-admin")]
+    public async Task<IActionResult> MakeAdmin(int userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
+        user.Role = "Admin";
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
+
+    [HttpPost("users/{userId}/make-user")]
+    public async Task<IActionResult> MakeUser(int userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
+        user.Role = "User";
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
+
     [HttpGet("flagged-content")]
     public async Task<IActionResult> GetFlaggedContent()
     {

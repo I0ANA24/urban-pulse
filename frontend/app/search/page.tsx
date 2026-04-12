@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import EventCard from "@/components/events/EventCard";
 import EventFilters from "@/components/dashboard/EventFilters";
 import { Event, EventType } from "@/types/Event";
@@ -20,6 +21,7 @@ interface UserResult {
   fullName?: string;
   isVerified?: boolean;
   trustScore?: number;
+  avatarUrl?: string;
 }
 
 function getInitials(name: string) {
@@ -143,10 +145,14 @@ export default function SearchPage() {
               <button key={user.id} onClick={() => router.push(`/users/${user.id}`)}
                 className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer"
               >
-                <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-                  <span className="text-white/60 text-sm font-bold">
-                    {getInitials(user.fullName ?? user.email)}
-                  </span>
+                <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {user.avatarUrl ? (
+                    <Image src={user.avatarUrl} alt={user.fullName ?? user.email} width={56} height={56} className="object-cover w-full h-full" />
+                  ) : (
+                    <span className="text-white/60 text-sm font-bold">
+                      {getInitials(user.fullName ?? user.email)}
+                    </span>
+                  )}
                 </div>
                 <div className="flex flex-col items-start">
                   <span className="text-white font-semibold text-base">

@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronDown, UserCircle, Settings } from "lucide-react";
+import { ChevronDown, UserCircle, Settings, LogOut } from "lucide-react";
 import GoBackButton from "../ui/GoBackButton";
 import ProfileRoundButton from "../ui/ProfileRoundButton";
 import { Plus } from "lucide-react";
@@ -12,6 +12,7 @@ import { useSignalR } from "@/context/SignalRContext";
 import { useUser } from "@/context/UserContext";
 import HomeIcon from "../icons/navbar/HomeIcon";
 import NotificationsPanel from "../notifications/NotificationsPanel";
+import ConfirmModal from "../ui/ConfirmModal";
 
 interface TopBarProps {
   back: boolean;
@@ -28,11 +29,19 @@ export default function TopBar({ back, notifications, settings, addPost }: TopBa
   const [avatarUrl, setAvatarUrl] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { notificationConnection } = useSignalR();
 
   const handlePanelClose = useCallback(() => setPanelOpen(false), []);
   const handleUnreadChange = useCallback((count: number) => setUnreadCount(count), []);
+
+  const handleLogOut = () => {
+    localStorage.removeItem("token");
+    document.cookie = "token=; path=/; max-age=0";
+    router.push("/");
+  };
+
 
   useEffect(() => {
     const loadTopBarProfile = async () => {
@@ -206,18 +215,28 @@ export default function TopBar({ back, notifications, settings, addPost }: TopBa
                     </button>
                   </div>
                 )}
+                <div className="w-full h-px bg-white/10 my-1" />
+                <button
+                  onClick={() => { setDropdownOpen(false); setShowLogoutConfirm(true); }}
+                  className="flex items-center rounded-xl gap-3 w-full px-5 py-3 text-red-emergency hover:bg-white/5 transition-colors cursor-pointer"
+                >
+                  <LogOut size={22} />
+                  <span className="text-base font-semibold">Log Out</span>
+                </button>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Notifications slide-in panel (desktop only) */}      
+      {/* Notifications slide-in panel (desktop only) */}
       <NotificationsPanel
         open={panelOpen}
         onClose={handlePanelClose}
         onUnreadChange={handleUnreadChange}
       />
+
+      <ConfirmModal isOpen={showLogoutConfirm} onClose={() => setShowLogoutConfirm(false)} onConfirm={handleLogOut} icon={<LogOut />} title="Log out" boldText="log out" />
     </>
   );
 }

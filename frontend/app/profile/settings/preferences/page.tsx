@@ -14,13 +14,6 @@ export default function PreferencesPage() {
             <ProfileSettingsLink text="distance" />
           </div>
         </section>
-        <section className="w-full">
-          <h2 className="text-lg">App Interface</h2>
-          <div className="w-full h-px bg-third my-2 mb-4"></div>
-          <div className="flex flex-col justify-center items-center gap-3 mt-5">
-            <ThemeSelector />
-          </div>
-        </section>
       </div>
     </ProfilePageTemplate>
   );
