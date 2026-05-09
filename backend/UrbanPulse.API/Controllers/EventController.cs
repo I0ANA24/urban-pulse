@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using UrbanPulse.API.Hubs;
 using UrbanPulse.Core.DTOs.Events;
+using UrbanPulse.Core.DTOs.Clusters;
 using UrbanPulse.Core.DTOs.Notifications;
 using UrbanPulse.Core.Entities;
 using UrbanPulse.Core.Interfaces;
@@ -13,6 +14,7 @@ using UrbanPulse.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using UrbanPulse.Core.DTOs;
 using UrbanPulse.Core.Services;
+using UrbanPulse.Infrastructure.Repositories;
 
 namespace UrbanPulse.API.Controllers
 {
@@ -31,6 +33,7 @@ namespace UrbanPulse.API.Controllers
         private readonly AppDbContext _context;
         private readonly ClaudeVisionService _claudeVisionService;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ClusterService _clusterService;
 
         public EventController(
             IEventService eventService,
@@ -41,7 +44,8 @@ namespace UrbanPulse.API.Controllers
             IUserRepository userRepository,
             AppDbContext context,
             ClaudeVisionService claudeVisionService,
-            IServiceScopeFactory scopeFactory)
+            IServiceScopeFactory scopeFactory,
+            ClusterService clusterService)
         {
             _eventService = eventService;
             _hubContext = hubContext;
@@ -52,6 +56,7 @@ namespace UrbanPulse.API.Controllers
             _context = context;
             _claudeVisionService = claudeVisionService;
             _scopeFactory = scopeFactory;
+            _clusterService = clusterService;
 
             var cloudName = Environment.GetEnvironmentVariable("CLOUDINARY_CLOUD_NAME");
             var apiKey = Environment.GetEnvironmentVariable("CLOUDINARY_API_KEY");
@@ -88,7 +93,35 @@ namespace UrbanPulse.API.Controllers
             }
 
             var result = await _eventService.CreateEventAsync(dto, userId, imageUrl);
-            await _hubContext.Clients.All.SendAsync("NewEvent", result);
+
+            // Cluster detection for emergency posts
+            var createdEventEntity = await _context.Events.Include(e => e.CreatedByUser)
+                .FirstOrDefaultAsync(e => e.Id == result.Id);
+            var (cluster, clusterAction) = await _clusterService.TryClusterAsync(createdEventEntity!);
+
+            if (clusterAction == "created" || clusterAction == "updated")
+            {
+                var clusterWithEvents = await _context.Clusters
+                    .Include(c => c.Events).ThenInclude(e => e.CreatedByUser)
+                    .FirstOrDefaultAsync(c => c.Id == cluster!.Id);
+                var clusterDto = MapClusterToDto(clusterWithEvents!);
+
+                if (clusterAction == "created")
+                {
+                    await _hubContext.Clients.All.SendAsync("ClusterCreated", clusterDto);
+                    // Remove individual EventCards for posts that are now in the cluster
+                    foreach (var ev in clusterWithEvents!.Events.Where(e => e.IsActive))
+                        await _hubContext.Clients.All.SendAsync("EventDeactivated", ev.Id);
+                }
+                else
+                {
+                    await _hubContext.Clients.All.SendAsync("ClusterUpdated", clusterDto);
+                }
+            }
+            else
+            {
+                await _hubContext.Clients.All.SendAsync("NewEvent", result);
+            }
 
             if ((dto.Type == EventType.LostPet || dto.Type == EventType.FoundPet) && imageUrl != null)
             {
@@ -228,8 +261,29 @@ namespace UrbanPulse.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Deactivate(int id)
         {
+            var ev = await _context.Events.FindAsync(id);
+            var clusterId = ev?.ClusterId;
+
             await _eventService.DeactivateAsync(id);
             await _hubContext.Clients.All.SendAsync("EventDeactivated", id);
+
+            if (ev != null && clusterId != null)
+            {
+                var (_, dissolveAction) = await _clusterService.HandleEventDeletedAsync(ev);
+                if (dissolveAction == "dissolved")
+                {
+                    await _hubContext.Clients.All.SendAsync("ClusterResolved", clusterId);
+                }
+                else if (dissolveAction == "updated")
+                {
+                    var updatedCluster = await _context.Clusters
+                        .Include(c => c.Events).ThenInclude(e => e.CreatedByUser)
+                        .FirstOrDefaultAsync(c => c.Id == clusterId);
+                    if (updatedCluster != null)
+                        await _hubContext.Clients.All.SendAsync("ClusterUpdated", MapClusterToDto(updatedCluster));
+                }
+            }
+
             return Ok();
         }
 
@@ -363,5 +417,49 @@ namespace UrbanPulse.API.Controllers
 
             return Ok(new { yesCount = ev.YesCount, noCount = ev.NoCount, userVote = existing != null ? (bool?)existing.Vote : null });
         }
+
+        private static ClusterResponseDto MapClusterToDto(Cluster cluster)
+        {
+            var activeEvents = cluster.Events
+                .Where(e => e.IsActive)
+                .OrderByDescending(e => e.CreatedAt)
+                .ToList();
+
+            return new ClusterResponseDto
+            {
+                Id = cluster.Id,
+                SubType = cluster.SubType,
+                CenterLatitude = cluster.CenterLatitude,
+                CenterLongitude = cluster.CenterLongitude,
+                IsResolved = cluster.IsResolved,
+                EventCount = activeEvents.Count,
+                CreatedAt = cluster.CreatedAt,
+                Neighborhood = cluster.Neighborhood,
+                LatestEvent = activeEvents.Count > 0 ? MapEventToDto(activeEvents[0]) : null,
+                Events = activeEvents.Select(MapEventToDto).ToList(),
+            };
+        }
+
+        private static EventResponseDto MapEventToDto(Event ev) => new()
+        {
+            Id = ev.Id,
+            Description = ev.Description,
+            Type = ev.Type,
+            ImageUrl = ev.ImageUrl,
+            Latitude = ev.Latitude,
+            Longitude = ev.Longitude,
+            Tags = ev.Tags.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList(),
+            CreatedByUserId = ev.CreatedByUserId,
+            CreatedByEmail = ev.CreatedByUser?.Email ?? string.Empty,
+            CreatedByFullName = ev.CreatedByUser?.FullName,
+            CreatedByAvatarUrl = ev.CreatedByUser?.AvatarUrl,
+            IsVerifiedUser = ev.CreatedByUser?.IsVerified ?? false,
+            CreatedAt = ev.CreatedAt,
+            IsActive = ev.IsActive,
+            IsCompleted = ev.IsCompleted,
+            EmergencySubType = ev.EmergencySubType,
+            Neighborhood = ev.Neighborhood,
+            ClusterId = ev.ClusterId,
+        };
     }
 }

@@ -10,6 +10,7 @@ using UrbanPulse.Core.Interfaces;
 using UrbanPulse.Core.Services;
 using UrbanPulse.Infrastructure.Data;
 using UrbanPulse.Infrastructure.Repositories;
+using ClusterService = UrbanPulse.Infrastructure.Repositories.ClusterService;
 
 namespace UrbanPulse_Backend
 {
@@ -67,6 +68,7 @@ namespace UrbanPulse_Backend
             builder.Services.AddScoped<IDuplicateSuspectRepository, DuplicateSuspectRepository>();
             builder.Services.AddScoped<IDuplicateDetectionService, DuplicateDetectionService>();
             builder.Services.AddSingleton<ClaudeVisionService>();
+            builder.Services.AddScoped<ClusterService>();
 
 
             // SignalR
@@ -140,6 +142,12 @@ namespace UrbanPulse_Backend
             builder.Services.AddAuthorization();
 
             var app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                db.Database.Migrate();
+            }
 
             app.UseExceptionHandler(errorApp =>
             {
