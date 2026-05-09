@@ -24,7 +24,8 @@ namespace UrbanPulse.Core.Services
                 Tags = string.Join(",", dto.Tags),
                 CreatedByUserId = userId,
                 IsActive = true,
-                ImageUrl = imageUrl
+                ImageUrl = imageUrl,
+                EmergencySubType = dto.EmergencySubType
             };
 
             await _eventRepository.CreateAsync(ev);
@@ -90,7 +91,8 @@ namespace UrbanPulse.Core.Services
             IsVerifiedUser = ev.CreatedByUser?.IsVerified ?? false,
             CreatedAt = ev.CreatedAt,
             IsActive = ev.IsActive,
-            IsCompleted = ev.IsCompleted
+            IsCompleted = ev.IsCompleted,
+            EmergencySubType = ev.EmergencySubType
         };
     }
 }

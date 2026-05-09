@@ -14,5 +14,6 @@ namespace UrbanPulse.Core.DTOs.Events
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public List<string> Tags { get; set; } = new();
+        public string? EmergencySubType { get; set; }
     }
 }

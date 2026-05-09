@@ -17,6 +17,7 @@ public class Event : BaseEntity
 {
     public string Description { get; set; } = string.Empty;
     public EventType Type { get; set; }
+    public string? EmergencySubType { get; set; }
     public string? ImageUrl { get; set; }
     public double Latitude { get; set; }
     public double Longitude { get; set; }

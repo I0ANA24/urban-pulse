@@ -19,5 +19,6 @@ namespace UrbanPulse.Core.DTOs.Events
         public DateTime CreatedAt { get; set; }
         public bool IsActive { get; set; }
         public bool IsCompleted { get; set; }
+        public string? EmergencySubType { get; set; } 
     }
 }
