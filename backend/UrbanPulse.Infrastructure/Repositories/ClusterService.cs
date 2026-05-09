@@ -15,10 +15,10 @@ public class ClusterService
         _db = db;
     }
 
-    public async Task<(Cluster? cluster, string action)> TryClusterAsync(Event newEvent)
+    public async Task<(Cluster? cluster, string action, GlobalCrisis? newGlobalCrisis)> TryClusterAsync(Event newEvent)
     {
         if (newEvent.Type != EventType.Emergency || string.IsNullOrWhiteSpace(newEvent.EmergencySubType))
-            return (null, "none");
+            return (null, "none", null);
 
         // 1. Look for an existing active cluster with same SubType nearby
         var activeClusters = await _db.Clusters
@@ -37,7 +37,7 @@ public class ClusterService
             newEvent.YesCount = 3;
             RecalculateCenter(nearbyCluster);
             await _db.SaveChangesAsync();
-            return (nearbyCluster, "updated");
+            return (nearbyCluster, "updated", null);
         }
 
         // 2. No existing cluster — look for a matching standalone event within 24h
@@ -60,7 +60,7 @@ public class ClusterService
                 : HaversineKm(e.Latitude, e.Longitude, newEvent.Latitude, newEvent.Longitude) <= ClusterRadiusKm);
 
         if (matchingEvent == null)
-            return (null, "none");
+            return (null, "none", null);
 
         // 3. Create a new cluster with both events
         var cluster = new Cluster
@@ -84,7 +84,40 @@ public class ClusterService
         cluster = await _db.Clusters.Include(c => c.Events).ThenInclude(e => e.CreatedByUser)
             .FirstAsync(c => c.Id == cluster.Id);
 
-        return (cluster, "created");
+        // Check if this triggers a global crisis
+        var globalCrisis = await CheckGlobalCrisisAsync(newEvent.EmergencySubType);
+
+        return (cluster, "created", globalCrisis);
+    }
+
+    public async Task<GlobalCrisis?> CheckGlobalCrisisAsync(string subType)
+    {
+        var existing = await _db.GlobalCrises
+            .FirstOrDefaultAsync(g => g.SubType == subType && g.IsActive);
+        if (existing != null) return null;
+
+        var clusters = await _db.Clusters
+            .Where(c => !c.IsResolved && c.SubType == subType)
+            .ToListAsync();
+
+        var distinctNeighborhoods = clusters
+            .Select(c => c.Neighborhood ?? $"{c.CenterLatitude:F2},{c.CenterLongitude:F2}")
+            .Distinct()
+            .Count();
+
+        if (distinctNeighborhoods >= 3)
+        {
+            var globalCrisis = new GlobalCrisis
+            {
+                SubType = subType,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+            };
+            _db.GlobalCrises.Add(globalCrisis);
+            await _db.SaveChangesAsync();
+            return globalCrisis;
+        }
+        return null;
     }
 
     public async Task<(int? clusterId, string action)> HandleEventDeletedAsync(Event deletedEvent)

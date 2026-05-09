@@ -97,7 +97,7 @@ namespace UrbanPulse.API.Controllers
             // Cluster detection for emergency posts
             var createdEventEntity = await _context.Events.Include(e => e.CreatedByUser)
                 .FirstOrDefaultAsync(e => e.Id == result.Id);
-            var (cluster, clusterAction) = await _clusterService.TryClusterAsync(createdEventEntity!);
+            var (cluster, clusterAction, newGlobalCrisis) = await _clusterService.TryClusterAsync(createdEventEntity!);
 
             if (clusterAction == "created" || clusterAction == "updated")
             {
@@ -112,6 +112,9 @@ namespace UrbanPulse.API.Controllers
                     // Remove individual EventCards for posts that are now in the cluster
                     foreach (var ev in clusterWithEvents!.Events.Where(e => e.IsActive))
                         await _hubContext.Clients.All.SendAsync("EventDeactivated", ev.Id);
+
+                    if (newGlobalCrisis != null)
+                        await _hubContext.Clients.All.SendAsync("GlobalCrisisActivated", MapGlobalCrisisToDto(newGlobalCrisis));
                 }
                 else
                 {
@@ -189,26 +192,54 @@ namespace UrbanPulse.API.Controllers
 
             if (dto.Type == EventType.Emergency)
             {
-                var allUsers = await _userRepository.GetAllUsersAsync();
-
-                foreach (var user in allUsers)
+                if (clusterAction == "none")
                 {
-                    if (user.Id == userId) continue;
-
-                    var notification = await _notificationService.SendAsync(new CreateNotificationDto
+                    // Individual emergency post — notify all users
+                    var allUsers = await _userRepository.GetAllUsersAsync();
+                    foreach (var user in allUsers)
                     {
-                        UserId = user.Id,
-                        Title = "Emergency Alert 🚨",
-                        Body = $"{posterName} reported an emergency nearby. Stay safe!",
-                        Type = NotificationType.Emergency,
-                        ActionUrl = $"/dashboard?eventId={result.Id}",
-                        RelatedEventId = result.Id,
-                        SenderAvatarUrl = poster?.AvatarUrl,
-                    });
-
-                    await _notificationHub.Clients.User(user.Id.ToString())
-                        .SendAsync("NewNotification", notification);
+                        if (user.Id == userId) continue;
+                        var notification = await _notificationService.SendAsync(new CreateNotificationDto
+                        {
+                            UserId = user.Id,
+                            Title = "Emergency Alert 🚨",
+                            Body = $"{posterName} reported an emergency nearby. Stay safe!",
+                            Type = NotificationType.Emergency,
+                            ActionUrl = $"/dashboard?eventId={result.Id}",
+                            RelatedEventId = result.Id,
+                            SenderAvatarUrl = poster?.AvatarUrl,
+                        });
+                        await _notificationHub.Clients.User(user.Id.ToString())
+                            .SendAsync("NewNotification", notification);
+                    }
                 }
+                else if (clusterAction == "created" && cluster != null)
+                {
+                    // Cluster just formed — notify only nearby users
+                    const double NotifyRadiusKm = 2.0;
+                    var allUsers = await _userRepository.GetAllUsersAsync();
+                    var nearbyUsers = allUsers.Where(u =>
+                        u.Latitude.HasValue && u.Longitude.HasValue &&
+                        HaversineKm(u.Latitude.Value, u.Longitude.Value, cluster.CenterLatitude, cluster.CenterLongitude) <= NotifyRadiusKm
+                    ).ToList();
+
+                    foreach (var user in nearbyUsers)
+                    {
+                        if (user.Id == userId) continue;
+                        var notification = await _notificationService.SendAsync(new CreateNotificationDto
+                        {
+                            UserId = user.Id,
+                            Title = $"🚨 CRISIS MODE: {cluster.SubType}",
+                            Body = $"A crisis has formed in your area. Stay safe!",
+                            Type = NotificationType.CrisisAlert,
+                            ActionUrl = $"/cluster/{cluster.Id}",
+                            SenderAvatarUrl = poster?.AvatarUrl,
+                        });
+                        await _notificationHub.Clients.User(user.Id.ToString())
+                            .SendAsync("NewNotification", notification);
+                    }
+                }
+                // clusterAction == "updated" → no notification
             }
 
             return Ok(result);
@@ -438,6 +469,26 @@ namespace UrbanPulse.API.Controllers
                 LatestEvent = activeEvents.Count > 0 ? MapEventToDto(activeEvents[0]) : null,
                 Events = activeEvents.Select(MapEventToDto).ToList(),
             };
+        }
+
+        private static GlobalCrisisDto MapGlobalCrisisToDto(GlobalCrisis g) => new()
+        {
+            Id = g.Id,
+            SubType = g.SubType,
+            IsActive = g.IsActive,
+            IsManuallyActivated = g.IsManuallyActivated,
+            CreatedAt = g.CreatedAt,
+        };
+
+        private static double HaversineKm(double lat1, double lng1, double lat2, double lng2)
+        {
+            const double R = 6371;
+            var dLat = (lat2 - lat1) * Math.PI / 180;
+            var dLng = (lng2 - lng1) * Math.PI / 180;
+            var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                    Math.Cos(lat1 * Math.PI / 180) * Math.Cos(lat2 * Math.PI / 180) *
+                    Math.Sin(dLng / 2) * Math.Sin(dLng / 2);
+            return R * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         }
 
         private static EventResponseDto MapEventToDto(Event ev) => new()

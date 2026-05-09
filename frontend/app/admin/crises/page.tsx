@@ -7,6 +7,7 @@ import EventCard from "@/components/events/EventCard";
 import ClusterCard from "@/components/events/ClusterCard";
 import { Event } from "@/types/Event";
 import { Cluster } from "@/types/Cluster";
+import { GlobalCrisis } from "@/types/GlobalCrisis";
 import GoBackButton from "@/components/ui/GoBackButton";
 
 const API = "http://localhost:5248";
@@ -27,6 +28,9 @@ export default function CrisesHandlingPage() {
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [emergencyPosts, setEmergencyPosts] = useState<Event[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
+
+  const [globalCrises, setGlobalCrises] = useState<GlobalCrisis[]>([]);
+  const [crisisLoading, setCrisisLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -50,13 +54,21 @@ export default function CrisesHandlingPage() {
       fetch(`${API}/api/cluster`, {
         headers: { Authorization: `Bearer ${token}` },
       }).then((r) => r.json()),
+      fetch(`${API}/api/crisis`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then((r) => r.json()),
     ])
-      .then(([postsData, clustersData]) => {
+      .then(([postsData, clustersData, crisisData]) => {
         setEmergencyPosts(Array.isArray(postsData) ? postsData : []);
         setClusters(Array.isArray(clustersData) ? clustersData : []);
+        setGlobalCrises(Array.isArray(crisisData) ? crisisData : []);
         setPostsLoading(false);
+        setCrisisLoading(false);
       })
-      .catch(() => setPostsLoading(false));
+      .catch(() => {
+        setPostsLoading(false);
+        setCrisisLoading(false);
+      });
   }, []);
 
   const handleAddSubtype = async () => {
@@ -103,6 +115,30 @@ export default function CrisesHandlingPage() {
 
   const handleDeletePost = (id: number) => {
     setEmergencyPosts((prev) => prev.filter((e) => e.id !== id));
+  };
+
+  const handleActivateGlobal = async (subType: string) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API}/api/crisis/activate`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ subType }),
+    });
+    if (res.ok) {
+      const created = await res.json();
+      setGlobalCrises((prev) => [created, ...prev.filter((g) => g.subType !== subType)]);
+    }
+  };
+
+  const handleDeactivateGlobal = async (id: number) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API}/api/crisis/${id}/deactivate`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      setGlobalCrises((prev) => prev.filter((g) => g.id !== id));
+    }
   };
 
   const standalonePosts = emergencyPosts.filter((e) => e.clusterId == null);
@@ -187,6 +223,54 @@ export default function CrisesHandlingPage() {
           </div>
           {addError && (
             <p className="text-red-400 text-xs px-1">{addError}</p>
+          )}
+        </section>
+
+        {/* Global Crisis section */}
+        <section className="flex flex-col gap-4 mt-2">
+          <h2 className="text-white/70 font-bold text-sm uppercase tracking-widest border-b border-white/10 pb-2">
+            Global Crisis
+          </h2>
+
+          {crisisLoading ? (
+            <div className="h-8 w-48 bg-secondary rounded-xl animate-pulse" />
+          ) : (
+            <div className="flex flex-col gap-3">
+              {globalCrises.length === 0 && (
+                <p className="text-white/30 text-sm">No active global crisis.</p>
+              )}
+              {globalCrises.map((g) => (
+                <div key={g.id} className="flex items-center justify-between bg-red-emergency/10 border border-red-emergency/30 rounded-xl px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-white font-bold text-sm">{g.subType}</span>
+                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-red-emergency text-white">
+                      {g.isManuallyActivated ? "Manual" : "Auto"}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleDeactivateGlobal(g.id)}
+                    className="text-white/50 hover:text-white text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    Deactivate
+                  </button>
+                </div>
+              ))}
+
+              {/* Activate buttons for subtypes not already in global crisis */}
+              <div className="flex flex-wrap gap-2 mt-1">
+                {subtypes
+                  .filter((s) => !globalCrises.some((g) => g.subType === s.name))
+                  .map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => handleActivateGlobal(s.name)}
+                      className="px-3 py-1.5 rounded-[10px] text-[10px] font-bold uppercase text-white border border-red-emergency/50 hover:bg-red-emergency/20 transition-colors cursor-pointer"
+                    >
+                      + {s.name}
+                    </button>
+                  ))}
+              </div>
+            </div>
           )}
         </section>
 

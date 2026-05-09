@@ -24,6 +24,7 @@ public class AppDbContext : DbContext
     public DbSet<SevereMessage> SevereMessages { get; set; }
     public DbSet<EmergencySubtype> EmergencySubtypes { get; set; }
     public DbSet<Cluster> Clusters { get; set; }
+    public DbSet<GlobalCrisis> GlobalCrises { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

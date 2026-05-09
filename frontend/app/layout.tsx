@@ -4,6 +4,7 @@ import { SignalRProvider } from "@/context/SignalRContext";
 import { UserProvider } from "@/context/UserContext";
 import { RadiusProvider } from "@/context/RadiusContext";
 import { SevereWeatherProvider } from "@/context/SevereWeatherContext";
+import { CrisisProvider } from "@/context/CrisisContext";
 import "./globals.css";
 
 const montagu = Montagu_Slab({
@@ -39,9 +40,11 @@ export default function RootLayout({
         <SevereWeatherProvider>
           <SignalRProvider>
             <UserProvider>
-              <RadiusProvider>
-                {children}
-              </RadiusProvider>
+              <CrisisProvider>
+                <RadiusProvider>
+                  {children}
+                </RadiusProvider>
+              </CrisisProvider>
             </UserProvider>
           </SignalRProvider>
         </SevereWeatherProvider>

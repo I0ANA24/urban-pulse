@@ -8,13 +8,13 @@ import Link from "next/link";
 import { PawPrint } from "lucide-react";
 import EventCard from "@/components/events/EventCard";
 import ClusterCard from "@/components/events/ClusterCard";
+import CrisisBanner from "@/components/layout/CrisisBanner";
 import EventFilters from "@/components/dashboard/EventFilters";
 import DashboardBanner from "@/components/dashboard/DashboardBanner";
 import { Event, EventType } from "@/types/Event";
 import { Cluster } from "@/types/Cluster";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
 import { useSignalR } from "@/context/SignalRContext";
-import { useRadius } from "@/context/RadiusContext";
 import { useSevereWeather } from "@/context/SevereWeatherContext";
 import { useUser } from "@/context/UserContext";
 import UrbanTitle from "@/components/ui/UrbanTitle";
@@ -22,17 +22,6 @@ import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 
 const API = "http://localhost:5248";
 
-function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-    Math.cos((lat2 * Math.PI) / 180) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 
 function MobileSafetyPortal({ onClick }: { onClick: () => void }) {
   const [mounted, setMounted] = useState(false);
@@ -106,10 +95,7 @@ export default function DashboardPage() {
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("ALL");
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-
   const { connection } = useSignalR();
-  const { radiusKm } = useRadius();
   const { isSevereWeather } = useSevereWeather();
   const { isAdmin } = useUser();
   const router = useRouter();
@@ -121,10 +107,7 @@ export default function DashboardPage() {
       try {
         const token = localStorage.getItem("token");
 
-        const [profileRes, eventsRes, clustersRes] = await Promise.all([
-          fetch(`${API}/api/user/profile`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+        const [eventsRes, clustersRes] = await Promise.all([
           fetch(`${API}/api/event`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
@@ -132,13 +115,6 @@ export default function DashboardPage() {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
-
-        if (profileRes.ok) {
-          const profileData = await profileRes.json();
-          if (profileData.latitude && profileData.longitude) {
-            setUserLocation({ lat: profileData.latitude, lng: profileData.longitude });
-          }
-        }
 
         if (eventsRes.ok) {
           const eventsData = await eventsRes.json();
@@ -223,10 +199,9 @@ export default function DashboardPage() {
     return true;
   });
 
-  const filteredClusters = clusters.filter((c) => {
-    if (activeFilter !== "ALL" && activeFilter !== "EMERGENCY") return false;
-    return true;
-  });
+  const filteredClusters = activeFilter === "ALL" || activeFilter === "EMERGENCY"
+    ? clusters
+    : [];
 
   const feedItems: FeedItem[] = [
     ...filteredEvents.map((e): FeedItem => ({ kind: "event", data: e })),
@@ -250,6 +225,11 @@ export default function DashboardPage() {
           <SafetyBanner onClick={() => router.push("/severe-chat")} />
         </div>
       )}
+
+      {/* Crisis Mode banner — desktop */}
+      <div className="hidden lg:block sticky top-0 z-40 w-full pt-2 pb-1 bg-background">
+        <CrisisBanner />
+      </div>
 
       <div className="w-full py-2 flex flex-col items-center gap-4 mb-4 mt-4">
         <div className="lg:hidden">
