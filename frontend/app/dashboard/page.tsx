@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PawPrint } from "lucide-react";
 import EventCard from "@/components/events/EventCard";
+import ClusterCard, { ClusterData } from "@/components/events/ClusterCard";
 import EventFilters from "@/components/dashboard/EventFilters";
 import DashboardBanner from "@/components/dashboard/DashboardBanner";
 import { Event, EventType } from "@/types/Event";
@@ -100,6 +101,7 @@ function PawPrintFab() {
 
 export default function DashboardPage() {
   const [events, setEvents] = useState<Event[]>([]);
+  const [clusters, setClusters] = useState<ClusterData[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -119,11 +121,14 @@ export default function DashboardPage() {
       try {
         const token = localStorage.getItem("token");
 
-        const [profileRes, eventsRes] = await Promise.all([
+        const [profileRes, eventsRes, clustersRes] = await Promise.all([
           fetch(`${API}/api/user/profile`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
           fetch(`${API}/api/event`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API}/api/event/clusters`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -141,9 +146,17 @@ export default function DashboardPage() {
         } else {
           setEvents([]);
         }
+
+        if (clustersRes.ok) {
+          const clustersData = await clustersRes.json();
+          setClusters(Array.isArray(clustersData) ? clustersData : []);
+        } else {
+          setClusters([]);
+        }
       } catch (error) {
         console.error("Failed to load dashboard data:", error);
         setEvents([]);
+        setClusters([]);
       } finally {
         setLoading(false);
       }
@@ -187,6 +200,8 @@ export default function DashboardPage() {
     3: "Lend",
   };
 
+  const clusteredEventIds = new Set(clusters.map((c) => c.id));
+
   const filteredEvents = events.filter((e) => {
     const mappedType = typeof e.type === "number" ? typeMap[e.type] : (e.type as EventType);
 
@@ -195,6 +210,8 @@ export default function DashboardPage() {
     if (activeFilter !== "ALL" && EVENT_TAG_STYLES[mappedType]?.title !== activeFilter) {
       return false;
     }
+
+    if (clusteredEventIds.has(e.id)) return false;
 
     if (mappedType === "General") return true;
 
@@ -208,18 +225,23 @@ export default function DashboardPage() {
     return true;
   });
 
+  const visibleClusters = clusters.filter(() => {
+    if (activeFilter !== "ALL" && activeFilter !== "Emergency") return false;
+    if (isCrisisActive && showAll) return true;
+    return true;
+  });
+
+  const isEmpty = !loading && filteredEvents.length === 0 && visibleClusters.length === 0;
+
   return (
     <ThreeColumnLayout>
       {!isAdmin && <PawPrintFab />}
 
-      {/* Mobile: portal în document.body — fixed cu top dinamic bazat pe scroll */}
       {isSevereWeather && (
         <MobileSafetyPortal onClick={() => router.push("/severe-chat")} />
       )}
-      {/* Spacer care împinge conținutul sub poziția inițială a bannerului */}
       {isSevereWeather && <div className="lg:hidden h-[calc(5vh)]" />}
 
-      {/* Desktop: sticky în feed-scroll, deasupra filtrelor */}
       {isSevereWeather && (
         <div className="hidden lg:block sticky top-0 z-50 w-full pt-2 pb-1 bg-background">
           <SafetyBanner onClick={() => router.push("/severe-chat")} />
@@ -265,11 +287,17 @@ export default function DashboardPage() {
         {loading && (
           <p className="text-white/40 text-sm text-center mt-10">Loading...</p>
         )}
-        {!loading && filteredEvents.length === 0 && (
+
+        {isEmpty && (
           <p className="text-white/40 text-sm text-center mt-10">
             No events in your area.
           </p>
         )}
+
+        {!loading && visibleClusters.map((cluster) => (
+          <ClusterCard key={`cluster-${cluster.emergencySubType}-${cluster.isGlobal}`} cluster={cluster} />
+        ))}
+
         {filteredEvents.map((event) => (
           <EventCard key={event.id} event={event} />
         ))}

@@ -59,6 +59,104 @@ namespace UrbanPulse.API.Controllers
             _cloudinary = new Cloudinary(new Account(cloudName, apiKey, apiSecret));
         }
 
+        [HttpGet("clusters")]
+        public async Task<IActionResult> GetEmergencyClusters()
+        {
+            var emergencies = await _context.Events
+                .Include(e => e.CreatedByUser)
+                .Where(e => e.IsActive &&
+                            e.Type == EventType.Emergency &&
+                            e.EmergencySubType != null &&
+                            e.Neighbourhood != null)
+                .OrderByDescending(e => e.CreatedAt)
+                .ToListAsync();
+
+            var localClusters = emergencies
+                .GroupBy(e => new { e.EmergencySubType, e.Neighbourhood })
+                .Where(g => g.Count() >= 2)
+                .ToList();
+
+            var globalGroups = localClusters
+                .GroupBy(g => g.Key.EmergencySubType)
+                .ToList();
+
+            var result = new List<object>();
+
+            foreach (var globalGroup in globalGroups)
+            {
+                var neighbourhoodCount = globalGroup.Count();
+                var allEvents = globalGroup.SelectMany(g => g).ToList();
+                var representative = allEvents.First();
+
+                var affectedNeighbourhoods = globalGroup
+                    .Select(g => g.Key.Neighbourhood!)
+                    .Distinct()
+                    .ToList();
+
+                if (neighbourhoodCount >= 2)
+                {
+                    result.Add(new
+                    {
+                        isCluster = true,
+                        isGlobal = true,
+                        reportCount = allEvents.Count,
+                        neighbourhoodCount,
+                        emergencySubType = globalGroup.Key,
+                        affectedNeighbourhoods,
+                        latitude = allEvents.Average(e => e.Latitude),
+                        longitude = allEvents.Average(e => e.Longitude),
+                        id = representative.Id,
+                        description = representative.Description,
+                        type = representative.Type,
+                        imageUrl = representative.ImageUrl,
+                        tags = representative.Tags.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList(),
+                        createdByUserId = representative.CreatedByUserId,
+                        createdByEmail = representative.CreatedByUser?.Email,
+                        createdByFullName = representative.CreatedByUser?.FullName,
+                        createdByAvatarUrl = representative.CreatedByUser?.AvatarUrl,
+                        isVerifiedUser = representative.CreatedByUser?.IsVerified ?? false,
+                        createdAt = representative.CreatedAt,
+                        isActive = representative.IsActive,
+                        isCompleted = representative.IsCompleted,
+                    });
+                }
+                else
+                {
+                    foreach (var localCluster in globalGroup)
+                    {
+                        var localEvents = localCluster.ToList();
+                        var localRep = localEvents.First();
+                        result.Add(new
+                        {
+                            isCluster = true,
+                            isGlobal = false,
+                            reportCount = localEvents.Count,
+                            neighbourhoodCount = 1,
+                            emergencySubType = globalGroup.Key,
+                            affectedNeighbourhoods = new List<string> { localCluster.Key.Neighbourhood! },
+                            latitude = localEvents.Average(e => e.Latitude),
+                            longitude = localEvents.Average(e => e.Longitude),
+                            id = localRep.Id,
+                            description = localRep.Description,
+                            type = localRep.Type,
+                            imageUrl = localRep.ImageUrl,
+                            tags = localRep.Tags.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList(),
+                            createdByUserId = localRep.CreatedByUserId,
+                            createdByEmail = localRep.CreatedByUser?.Email,
+                            createdByFullName = localRep.CreatedByUser?.FullName,
+                            createdByAvatarUrl = localRep.CreatedByUser?.AvatarUrl,
+                            isVerifiedUser = localRep.CreatedByUser?.IsVerified ?? false,
+                            createdAt = localRep.CreatedAt,
+                            isActive = localRep.IsActive,
+                            isCompleted = localRep.IsCompleted,
+                        });
+                    }
+                }
+            }
+
+            return Ok(result.OrderByDescending(c => ((dynamic)c).reportCount));
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateEvent([FromForm] CreateEventDto dto, IFormFile? file)
         {

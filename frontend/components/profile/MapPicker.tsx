@@ -5,7 +5,7 @@ import { useState } from "react";
 import "leaflet/dist/leaflet.css";
 
 interface MapPickerProps {
-  onSelect: (address: string, lat: number, lng: number) => void;
+  onSelect: (address: string, lat: number, lng: number, neighbourhood: string) => void;
 }
 
 function DragHandler({ onSelect }: MapPickerProps) {
@@ -20,9 +20,23 @@ function DragHandler({ onSelect }: MapPickerProps) {
           `https://nominatim.openstreetmap.org/reverse?lat=${center.lat}&lon=${center.lng}&format=json`
         );
         const data = await res.json();
-        onSelect(data.display_name ?? `${center.lat}, ${center.lng}`, center.lat, center.lng);
+
+        const neighbourhood =
+          data.address?.suburb ??
+          data.address?.neighbourhood ??
+          data.address?.quarter ??
+          data.address?.city_district ??
+          data.address?.city ??
+          "";
+
+        onSelect(
+          data.display_name ?? `${center.lat}, ${center.lng}`,
+          center.lat,
+          center.lng,
+          neighbourhood
+        );
       } catch {
-        onSelect(`${center.lat}, ${center.lng}`, center.lat, center.lng);
+        onSelect(`${center.lat}, ${center.lng}`, center.lat, center.lng, "");
       } finally {
         setLoading(false);
       }

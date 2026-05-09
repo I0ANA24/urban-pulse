@@ -25,7 +25,8 @@ namespace UrbanPulse.Core.Services
                 CreatedByUserId = userId,
                 IsActive = true,
                 ImageUrl = imageUrl,
-                EmergencySubType = dto.EmergencySubType
+                EmergencySubType = dto.EmergencySubType,
+                Neighbourhood = dto.Neighbourhood
             };
 
             await _eventRepository.CreateAsync(ev);
@@ -92,7 +93,8 @@ namespace UrbanPulse.Core.Services
             CreatedAt = ev.CreatedAt,
             IsActive = ev.IsActive,
             IsCompleted = ev.IsCompleted,
-            EmergencySubType = ev.EmergencySubType
+            EmergencySubType = ev.EmergencySubType,
+            Neighbourhood = ev.Neighbourhood
         };
     }
 }

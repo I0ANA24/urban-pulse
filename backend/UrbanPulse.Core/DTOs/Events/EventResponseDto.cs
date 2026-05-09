@@ -20,5 +20,8 @@ namespace UrbanPulse.Core.DTOs.Events
         public bool IsActive { get; set; }
         public bool IsCompleted { get; set; }
         public string? EmergencySubType { get; set; } 
+        public string? Neighbourhood { get; set; }
+        public int ReportCount { get; set; } = 1;
+        public bool IsCluster { get; set; } = false;
     }
 }
