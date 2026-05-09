@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import Image from "next/image";
 
 interface CardMediaProps {
@@ -8,9 +5,7 @@ interface CardMediaProps {
 }
 
 export default function CardMedia({ imageUrl }: CardMediaProps) {
-  const [hasError, setHasError] = useState(false);
-
-  if (!imageUrl || hasError) return null;
+  if (!imageUrl) return null;
 
   const src = imageUrl.startsWith("http") ? imageUrl : `http://localhost:5248${imageUrl}`;
 
@@ -21,7 +16,6 @@ export default function CardMedia({ imageUrl }: CardMediaProps) {
         alt="Event Image"
         fill
         className="object-cover rounded-sm"
-        onError={() => setHasError(true)}
       />
     </div>
   );

@@ -5,10 +5,11 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { Plus } from "lucide-react";
 import DonutChart from "@/components/admin/DonutChart";
 import StatBar from "@/components/admin/StatBar";
 import OverviewCard from "@/components/admin/OverviewCard";
+import AddEventModal from "@/components/admin/AddEventModal";
 import UrbanTitle from "@/components/ui/UrbanTitle";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 import { useSevereWeather } from "@/context/SevereWeatherContext";
@@ -74,6 +75,7 @@ function MobileSafetyPortal({ onClick }: { onClick: () => void }) {
 }
 
 export default function AdminDashboard() {
+  const [isMobileEventModalOpen, setIsMobileEventModalOpen] = useState(false);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const { isSevereWeather } = useSevereWeather();
   const router = useRouter();
@@ -160,7 +162,7 @@ export default function AdminDashboard() {
           <UrbanTitle />
         </div>
 
-        {/* Mobile only: Crisis button */}
+        {/* Mobile only: Event button */}
         <div className="lg:hidden w-full h-27.5 flex p-4 justify-center items-center relative">
           <Image
             src="/rectangle.svg"
@@ -171,13 +173,13 @@ export default function AdminDashboard() {
             className="absolute object-cover z-0 top-0 w-full h-full rounded-3xl"
           />
           <div className="w-full h-18 flex justify-center relative z-10">
-            <Link
-              href="/admin/crisis"
-              className="w-full bg-red-emergency/20 border border-red-emergency/40 rounded-2xl px-6 py-3.5 flex items-center justify-between transition-transform active:scale-[0.97]"
+            <button
+              onClick={() => setIsMobileEventModalOpen(true)}
+              className="w-full bg-weather-nice rounded-2xl px-6 py-3.5 flex items-center justify-between transition-transform active:scale-[0.97] cursor-pointer"
             >
-              <span className="text-red-emergency font-bold text-xl">Crisis</span>
-              <AlertTriangle size={30} strokeWidth={2} className="text-red-emergency" />
-            </Link>
+              <span className="text-white font-bold text-xl">Event</span>
+              <Plus size={30} strokeWidth={3} className="text-white" />
+            </button>
           </div>
         </div>
 
@@ -231,6 +233,12 @@ export default function AdminDashboard() {
         <div className="h-4" />
       </div>
 
+      {/* Mobile event modal */}
+      <AddEventModal
+        isOpen={isMobileEventModalOpen}
+        onClose={() => setIsMobileEventModalOpen(false)}
+        onSave={(text) => console.log("Event saved:", text)}
+      />
     </ThreeColumnLayoutAdmin>
   );
 }

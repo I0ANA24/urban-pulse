@@ -2,11 +2,10 @@ interface CardContentProps {
   description: string;
   isVerified?: boolean;
   yesCount?: number;
-  forceVerified?: boolean;
 }
 
-export default function CardContent({ description, isVerified, yesCount, forceVerified }: CardContentProps) {
-  const showVerified = forceVerified || (isVerified && (yesCount ?? 0) >= 3);
+export default function CardContent({ description, isVerified, yesCount }: CardContentProps) {
+  const showVerified = isVerified && (yesCount ?? 0) >= 3;
 
   return (
     <div className="flex flex-col gap-2">

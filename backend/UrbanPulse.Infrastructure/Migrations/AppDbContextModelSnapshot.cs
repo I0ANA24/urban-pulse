@@ -166,9 +166,6 @@ namespace UrbanPulse.Infrastructure.Migrations
                     b.Property<double>("Longitude")
                         .HasColumnType("double precision");
 
-                    b.Property<string>("Neighbourhood")
-                        .HasColumnType("text");
-
                     b.Property<int>("NoCount")
                         .HasColumnType("integer");
 

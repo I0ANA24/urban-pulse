@@ -1,7 +1,6 @@
 import { Heart, MessageCircle, Bookmark, Flag, ThumbsUp } from "lucide-react";
 import EventTag from "@/components/ui/EventTag";
 import { EventType } from "@/types/Event";
-import { DEFAULT_INCIDENT_TYPES } from "@/lib/constants";
 
 interface CardFooterProps {
   likes: number;
@@ -10,7 +9,6 @@ interface CardFooterProps {
   saved: boolean;
   onSave: () => void;
   type: EventType;
-  tags?: string[];
   comments: number;
   onComment: () => void;
   flagCount?: number;
@@ -26,7 +24,6 @@ export default function CardFooter({
   saved,
   onSave,
   type,
-  tags,
   comments,
   onComment,
   flagCount,
@@ -34,20 +31,6 @@ export default function CardFooter({
   isAdminView,
 }: CardFooterProps) {
   const isAdmin = isAdminView === true;
-
-  const incidentMatch = Array.isArray(tags) && tags.length > 0
-    ? DEFAULT_INCIDENT_TYPES.find((it) =>
-        tags.some((t) => t.toUpperCase() === it.key || t.toUpperCase() === it.label.toUpperCase())
-      )
-    : null;
-
-  const typeTag = incidentMatch ? (
-    <span className="block w-fit min-w-22 lg:min-w-28 px-2 text-center py-2 rounded-[10px] text-[10px] lg:text-[12px] font-bold uppercase bg-red-emergency text-white">
-      {incidentMatch.icon} {incidentMatch.label}
-    </span>
-  ) : (
-    <EventTag type={type} />
-  );
 
   if (isAdmin) {
     return (
@@ -67,7 +50,7 @@ export default function CardFooter({
         </div>
 
         <div className="mt-3">
-          {typeTag}
+          <EventTag type={type} />
         </div>
       </div>
     );
@@ -111,7 +94,7 @@ export default function CardFooter({
       </div>
 
       <div className="mt-3">
-        {typeTag}
+        <EventTag type={type} />
       </div>
     </div>
   );

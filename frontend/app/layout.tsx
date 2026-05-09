@@ -5,7 +5,6 @@ import { UserProvider } from "@/context/UserContext";
 import { EventProvider } from "@/context/EventContext";
 import { RadiusProvider } from "@/context/RadiusContext";
 import { SevereWeatherProvider } from "@/context/SevereWeatherContext";
-import { CrisisModeProvider } from "@/context/CrisisModeContext";
 import "./globals.css";
 
 const montagu = Montagu_Slab({
@@ -40,15 +39,13 @@ export default function RootLayout({
       <body className="font-inter antialiased">
         <SevereWeatherProvider>
           <SignalRProvider>
-            <CrisisModeProvider>
-              <UserProvider>
-                <EventProvider>
-                  <RadiusProvider>
-                    {children}
-                  </RadiusProvider>
-                </EventProvider>
-              </UserProvider>
-            </CrisisModeProvider>
+            <UserProvider>
+              <EventProvider>
+                <RadiusProvider>
+                  {children}
+                </RadiusProvider>
+              </EventProvider>
+            </UserProvider>
           </SignalRProvider>
         </SevereWeatherProvider>
       </body>

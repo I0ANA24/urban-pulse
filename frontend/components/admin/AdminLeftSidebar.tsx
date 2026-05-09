@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Search, UserX, ClipboardList, AlertTriangle } from "lucide-react";
+import { Search, UserX, ClipboardList, Plus, Trash2, Check, X } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 function AdminNavItem({
   href,
@@ -40,8 +41,17 @@ function AdminNavItem({
   );
 }
 
-export default function AdminLeftSidebar() {
+export default function AdminLeftSidebar({
+  onEventClick,
+  event,
+  onDeleteEvent,
+}: {
+  onEventClick?: () => void;
+  event?: string;
+  onDeleteEvent?: () => void;
+}) {
   const pathname = usePathname();
+  const [pendingDelete, setPendingDelete] = useState(false);
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:flex-1">
@@ -74,13 +84,45 @@ export default function AdminLeftSidebar() {
       <div className="h-14" />
 
       <div className="px-2">
-        <Link
-          href="/admin/crisis"
-          className="w-full bg-red-emergency/15 border border-red-emergency/30 rounded-2xl px-8 h-30 flex justify-between items-center gap-1 cursor-pointer hover:bg-red-emergency/25 transition-colors"
-        >
-          <span className="text-red-emergency font-bold text-3xl">Crisis</span>
-          <AlertTriangle size={40} strokeWidth={2} className="text-red-emergency" />
-        </Link>
+        {event ? (
+          <div className="w-full bg-weather-nice rounded-2xl px-8 h-30 flex justify-between items-center">
+            <div className="flex flex-col gap-1">
+              <span className="text-white font-bold text-3xl">Event</span>
+              <span className="text-white text-xl">{event}</span>
+            </div>
+            {pendingDelete ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { onDeleteEvent?.(); setPendingDelete(false); }}
+                  className="bg-red-500 hover:bg-red-600 rounded-lg p-2 transition-colors cursor-pointer"
+                >
+                  <Check size={18} className="text-white" />
+                </button>
+                <button
+                  onClick={() => setPendingDelete(false)}
+                  className="bg-white/20 hover:bg-white/30 rounded-lg p-2 transition-colors cursor-pointer"
+                >
+                  <X size={18} className="text-white" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setPendingDelete(true)}
+                className="hover:opacity-70 transition-opacity cursor-pointer"
+              >
+                <Trash2 size={28} className="text-white" />
+              </button>
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={onEventClick}
+            className="w-full bg-weather-nice rounded-2xl px-8 h-30 flex justify-between items-center gap-1 cursor-pointer"
+          >
+            <span className="text-white font-bold text-3xl">Event</span>
+            <Plus size={40} strokeWidth={2.5} className="text-white" />
+          </button>
+        )}
       </div>
     </aside>
   );
