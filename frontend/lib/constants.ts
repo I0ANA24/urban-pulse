@@ -10,3 +10,14 @@ export const EVENT_TAG_STYLES: Record<EventType, { title: string; textColor: str
 };
 
 export const FILTER_OPTIONS = Object.values(EVENT_TAG_STYLES).map(style => style.title);
+
+export const DEFAULT_INCIDENT_TYPES: { key: string; label: string; icon: string }[] = [
+  { key: "POWER_OUTAGE", label: "Blackout", icon: "⚡" },
+  { key: "FIRE", label: "Fire", icon: "🔥" },
+  { key: "FLOOD", label: "Flood", icon: "🌊" },
+  { key: "EARTHQUAKE", label: "Earthquake", icon: "🌍" },
+  { key: "SEVERE_STORM", label: "Severe Storm", icon: "⛈️" },
+  { key: "ROAD_BLOCKAGE", label: "Road Blockage", icon: "🚧" },
+  { key: "INFRASTRUCTURE_DAMAGE", label: "Infrastructure Damage", icon: "🏗️" },
+  { key: "OTHER", label: "Other", icon: "⚠️" },
+];

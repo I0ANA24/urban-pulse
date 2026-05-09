@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Search, Map, MessageCircle, PawPrint } from "lucide-react";
+import { Plus, Search, Map, MessageCircle, PawPrint, LayoutList } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useCrisisMode } from "@/context/CrisisModeContext";
 
 function SidebarNavItem({
   href,
@@ -47,16 +48,26 @@ function SidebarNavItem({
 
 export default function LeftSidebar() {
   const pathname = usePathname();
+  const { isCrisisActive } = useCrisisMode();
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:flex-1">
-      <SidebarNavItem
-        href="/addPost"
-        icon={<Plus size={26} strokeWidth={2.5} className="text-white" />}
-        label="Add Post"
-        isGreen
-        isActive={pathname === "/addPost" || pathname.startsWith("/addPost/")}
-      />
+      {isCrisisActive ? (
+        <SidebarNavItem
+          href="/dashboard"
+          icon={<LayoutList size={26} strokeWidth={2} className="text-red-emergency" />}
+          label="All Posts"
+          isActive={false}
+        />
+      ) : (
+        <SidebarNavItem
+          href="/addPost"
+          icon={<Plus size={26} strokeWidth={2.5} className="text-white" />}
+          label="Add Post"
+          isGreen
+          isActive={pathname === "/addPost" || pathname.startsWith("/addPost/")}
+        />
+      )}
 
       <div className="h-14" />
 

@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PawPrint } from "lucide-react";
 import EventCard from "@/components/events/EventCard";
+import ClusterCard, { ClusterData } from "@/components/events/ClusterCard";
 import EventFilters from "@/components/dashboard/EventFilters";
 import DashboardBanner from "@/components/dashboard/DashboardBanner";
 import { Event, EventType } from "@/types/Event";
@@ -15,6 +16,7 @@ import { useSignalR } from "@/context/SignalRContext";
 import { useRadius } from "@/context/RadiusContext";
 import { useSevereWeather } from "@/context/SevereWeatherContext";
 import { useUser } from "@/context/UserContext";
+import { useCrisisMode } from "@/context/CrisisModeContext";
 import UrbanTitle from "@/components/ui/UrbanTitle";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 
@@ -99,6 +101,7 @@ function PawPrintFab() {
 
 export default function DashboardPage() {
   const [events, setEvents] = useState<Event[]>([]);
+  const [clusters, setClusters] = useState<ClusterData[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -107,20 +110,25 @@ export default function DashboardPage() {
   const { radiusKm } = useRadius();
   const { isSevereWeather } = useSevereWeather();
   const { isAdmin } = useUser();
+  const { isCrisisActive } = useCrisisMode();
   const router = useRouter();
   const searchParams = useSearchParams();
   const targetEventId = searchParams.get("eventId");
+  const showAll = searchParams.get("all") === "true";
 
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
         const token = localStorage.getItem("token");
 
-        const [profileRes, eventsRes] = await Promise.all([
+        const [profileRes, eventsRes, clustersRes] = await Promise.all([
           fetch(`${API}/api/user/profile`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
           fetch(`${API}/api/event`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API}/api/event/clusters`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -138,9 +146,17 @@ export default function DashboardPage() {
         } else {
           setEvents([]);
         }
+
+        if (clustersRes.ok) {
+          const clustersData = await clustersRes.json();
+          setClusters(Array.isArray(clustersData) ? clustersData : []);
+        } else {
+          setClusters([]);
+        }
       } catch (error) {
         console.error("Failed to load dashboard data:", error);
         setEvents([]);
+        setClusters([]);
       } finally {
         setLoading(false);
       }
@@ -184,12 +200,18 @@ export default function DashboardPage() {
     3: "Lend",
   };
 
+  const clusteredEventIds = new Set(clusters.map((c) => c.id));
+
   const filteredEvents = events.filter((e) => {
     const mappedType = typeof e.type === "number" ? typeMap[e.type] : (e.type as EventType);
+
+    if (isCrisisActive && !showAll && mappedType !== "Emergency") return false;
 
     if (activeFilter !== "ALL" && EVENT_TAG_STYLES[mappedType]?.title !== activeFilter) {
       return false;
     }
+
+    if (clusteredEventIds.has(e.id)) return false;
 
     if (mappedType === "General") return true;
 
@@ -203,21 +225,48 @@ export default function DashboardPage() {
     return true;
   });
 
+  const visibleClusters = clusters.filter(() => {
+    if (activeFilter !== "ALL" && activeFilter !== "Emergency") return false;
+    if (isCrisisActive && showAll) return true;
+    return true;
+  });
+
+  const isEmpty = !loading && filteredEvents.length === 0 && visibleClusters.length === 0;
+
   return (
     <ThreeColumnLayout>
       {!isAdmin && <PawPrintFab />}
 
-      {/* Mobile: portal în document.body — fixed cu top dinamic bazat pe scroll */}
       {isSevereWeather && (
         <MobileSafetyPortal onClick={() => router.push("/severe-chat")} />
       )}
-      {/* Spacer care împinge conținutul sub poziția inițială a bannerului */}
       {isSevereWeather && <div className="lg:hidden h-[calc(5vh)]" />}
 
-      {/* Desktop: sticky în feed-scroll, deasupra filtrelor */}
       {isSevereWeather && (
         <div className="hidden lg:block sticky top-0 z-50 w-full pt-2 pb-1 bg-background">
           <SafetyBanner onClick={() => router.push("/severe-chat")} />
+        </div>
+      )}
+
+      {isCrisisActive && (
+        <div className="w-full animate-fade-up mt-4 mb-2">
+          <div className="relative w-full">
+            <div className="absolute inset-0 bg-red-emergency rounded-2xl opacity-20" />
+            <div className="relative w-full bg-red-emergency/80 rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🚨</span>
+                <div>
+                  <p className="text-white font-bold text-sm">Crisis Mode Active</p>
+                  <p className="text-white/70 text-xs">Showing emergency posts only</p>
+                </div>
+              </div>
+              {!showAll && (
+                <Link href="/dashboard?all=true" className="text-white/80 text-xs font-bold underline underline-offset-2 shrink-0">
+                  View all posts
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -229,18 +278,26 @@ export default function DashboardPage() {
           <DashboardBanner />
         </div>
 
-        <EventFilters activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
+        {!isCrisisActive && (
+          <EventFilters activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
+        )}
       </div>
 
       <div className="flex flex-col gap-4 mt-2">
         {loading && (
           <p className="text-white/40 text-sm text-center mt-10">Loading...</p>
         )}
-        {!loading && filteredEvents.length === 0 && (
+
+        {isEmpty && (
           <p className="text-white/40 text-sm text-center mt-10">
             No events in your area.
           </p>
         )}
+
+        {!loading && visibleClusters.map((cluster) => (
+          <ClusterCard key={`cluster-${cluster.emergencySubType}-${cluster.isGlobal}`} cluster={cluster} />
+        ))}
+
         {filteredEvents.map((event) => (
           <EventCard key={event.id} event={event} />
         ))}

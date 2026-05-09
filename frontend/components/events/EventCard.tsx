@@ -12,6 +12,8 @@ import CardFooter from "./card/CardFooter";
 import CommentsSheet from "@/components/events/CommentsSheet";
 import { useSignalR } from "@/context/SignalRContext";
 import { useUser } from "@/context/UserContext";
+import { useCrisisMode } from "@/context/CrisisModeContext";
+import { DEFAULT_INCIDENT_TYPES } from "@/lib/constants";
 
 const API = "http://localhost:5248";
 
@@ -22,6 +24,7 @@ interface EventCardProps {
   flagCount?: number;
   onViewInsights?: (eventId: number) => void;
   isAdminView?: boolean;
+  crisisVerify?: { isVerified: boolean; onVerify: () => void };
 }
 
 function getInitials(name: string) {
@@ -38,9 +41,10 @@ function formatDate(dateStr: string) {
   return `${day}.${month}.${year} \u00A0 ${hours}:${minutes}`;
 }
 
-export default function EventCard({ event, isMyPost, onDelete, flagCount, onViewInsights, isAdminView }: EventCardProps) {
+export default function EventCard({ event, isMyPost, onDelete, flagCount, onViewInsights, isAdminView, crisisVerify }: EventCardProps) {
   const router = useRouter();
   const { user } = useUser();
+  const { setIsCrisisActive } = useCrisisMode();
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [likes, setLikes] = useState(0);
@@ -181,6 +185,10 @@ export default function EventCard({ event, isMyPost, onDelete, flagCount, onView
     }
   };
 
+  const isIncidentPost = mappedType === "Emergency" &&
+    Array.isArray(event.tags) &&
+    event.tags.some((t) => DEFAULT_INCIDENT_TYPES.some((it) => it.key === t.toUpperCase()));
+
   const handleVote = async (vote: boolean) => {
     try {
       const token = localStorage.getItem("token");
@@ -191,16 +199,20 @@ export default function EventCard({ event, isMyPost, onDelete, flagCount, onView
       });
       if (!res.ok) return;
       const d = await res.json();
-      setYesCount(Number(d.yesCount ?? 0));
+      const newYesCount = Number(d.yesCount ?? 0);
+      setYesCount(newYesCount);
       setNoCount(Number(d.noCount ?? 0));
       setUserVote(d.userVote ?? null);
+      if (isIncidentPost && newYesCount >= 3) {
+        setIsCrisisActive(true);
+      }
     } catch (error) {
       console.error("Failed to verify event:", error);
     }
   };
 
   return (
-    <div id={`event-${event.id}`} className="w-full relative mb-4">
+    <div id={`event-${event.id}`} className="w-full relative mb-4 isolate">
       <CardHeader
         initials={getInitials(displayName)}
         name={displayName}
@@ -219,6 +231,7 @@ export default function EventCard({ event, isMyPost, onDelete, flagCount, onView
           description={event.description}
           isVerified={mappedType === "Emergency"}
           yesCount={yesCount}
+          forceVerified={crisisVerify?.isVerified}
         />
         <CardActions
           type={mappedType}
@@ -228,11 +241,12 @@ export default function EventCard({ event, isMyPost, onDelete, flagCount, onView
           onComplete={handleComplete}
           onVote={handleVote}
           userVote={userVote}
+          crisisVerify={crisisVerify}
         />
         <CardFooter
           likes={likes} liked={liked} onLike={handleLike}
           saved={saved} onSave={handleSave}
-          type={mappedType} comments={commentCount} onComment={() => setShowComments(true)}
+          type={mappedType} tags={event.tags} comments={commentCount} onComment={() => setShowComments(true)}
           flagCount={flagCount}
           onViewInsights={onViewInsights ? () => onViewInsights(event.id) : undefined}
           isMyPost={isOwner}

@@ -1,3 +1,4 @@
+import { CheckCircle } from "lucide-react";
 import { EventType } from "@/types/Event";
 
 interface CardActionsProps {
@@ -8,6 +9,7 @@ interface CardActionsProps {
   onComplete?: () => void;
   onVote?: (vote: boolean) => void;
   userVote?: boolean | null;
+  crisisVerify?: { isVerified: boolean; onVerify: () => void };
 }
 
 export default function CardActions({
@@ -18,8 +20,26 @@ export default function CardActions({
   onComplete,
   onVote,
   userVote,
+  crisisVerify,
 }: CardActionsProps) {
   if (type === "Emergency") {
+    if (crisisVerify) {
+      return (
+        <div className="flex justify-center mt-4 pb-3">
+          <button
+            onClick={crisisVerify.onVerify}
+            disabled={crisisVerify.isVerified}
+            className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer
+              ${crisisVerify.isVerified
+                ? "bg-green-light/20 text-green-light cursor-default"
+                : "bg-red-emergency text-white hover:bg-red-emergency/85"}`}
+          >
+            <CheckCircle size={16} />
+            {crisisVerify.isVerified ? "Verified" : "Verify & Activate Crisis"}
+          </button>
+        </div>
+      );
+    }
     if (isMyPost === undefined) return null;
     if (isMyPost) return null;
     return (
