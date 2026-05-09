@@ -22,7 +22,8 @@ public class AppDbContext : DbContext
     public DbSet<GlobalMessage> GlobalMessages { get; set; }
     public DbSet<EventVerification> EventVerifications { get; set; }
     public DbSet<SevereMessage> SevereMessages { get; set; }
-    
+    public DbSet<EmergencySubtype> EmergencySubtypes { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

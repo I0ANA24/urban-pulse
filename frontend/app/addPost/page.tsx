@@ -74,6 +74,7 @@ export default function AddPostPage() {
 
   const [selectedTag, setSelectedTag] = useState<EventType | null>(null);
   const [emergencySubType, setEmergencySubType] = useState<string | null>(null);
+  const [dynamicSubtypes, setDynamicSubtypes] = useState<string[]>([]);
   const [photo, setPhoto] = useState<File | null>(null);
 
   const [requestedItem, setRequestedItem] = useState("");
@@ -109,6 +110,22 @@ export default function AddPostPage() {
       },
     },
   });
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch("http://localhost:5248/api/emergencysubtype", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data: { id: number; name: string }[]) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setDynamicSubtypes(data.map((s) => s.name));
+        } else {
+          setDynamicSubtypes(EMERGENCY_SUBTYPES);
+        }
+      })
+      .catch(() => setDynamicSubtypes(EMERGENCY_SUBTYPES));
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -317,7 +334,7 @@ export default function AddPostPage() {
               Emergency Type
             </h2>
             <div className="flex flex-wrap gap-3 mb-8 px-1 py-1">
-              {EMERGENCY_SUBTYPES.map((sub) => {
+              {(dynamicSubtypes.length > 0 ? dynamicSubtypes : EMERGENCY_SUBTYPES).map((sub) => {
                 const isSelected = emergencySubType === sub;
                 return (
                   <button

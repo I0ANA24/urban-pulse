@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using UrbanPulse.API.Hubs;
+using UrbanPulse.Core.Entities;
 using UrbanPulse.Core.Interfaces;
 using UrbanPulse.Core.Services;
 using UrbanPulse.Infrastructure.Data;
@@ -196,6 +197,28 @@ namespace UrbanPulse_Backend
             app.MapHub<NotificationHub>("/hubs/notifications");
             app.MapHub<GlobalChatHub>("/hubs/global-chat");
             app.MapHub<SevereChatHub>("/hubs/severe-chat");
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                if (!db.EmergencySubtypes.Any())
+                {
+                    var defaults = new[]
+                    {
+                        "Blackout", "Fire", "Flood", "Earthquake",
+                        "Severe Storm", "Road Blockage", "Infrastructure Damage"
+                    };
+                    foreach (var name in defaults)
+                    {
+                        db.EmergencySubtypes.Add(new EmergencySubtype
+                        {
+                            Name = name,
+                            CreatedAt = DateTime.UtcNow
+                        });
+                    }
+                    db.SaveChanges();
+                }
+            }
 
             app.Run();
         }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Search, UserX, ClipboardList } from "lucide-react";
+import { Search, UserX, ClipboardList, ShieldAlert } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 function AdminNavItem({
@@ -67,6 +67,14 @@ export default function AdminLeftSidebar() {
           label="Tasks"
           isActive={
             pathname === "/admin/tasks" || pathname.startsWith("/admin/tasks/")
+          }
+        />
+        <AdminNavItem
+          href="/admin/crises"
+          icon={<ShieldAlert size={24} className="text-white" />}
+          label="Crises Handling"
+          isActive={
+            pathname === "/admin/crises" || pathname.startsWith("/admin/crises/")
           }
         />
       </div>
