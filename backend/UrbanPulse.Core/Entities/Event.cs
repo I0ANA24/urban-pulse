@@ -30,4 +30,7 @@ public class Event : BaseEntity
     public string? AiTags { get; set; }
     public int CreatedByUserId { get; set; }
     public User CreatedByUser { get; set; } = null!;
+    public int? ClusterId { get; set; }
+    public Cluster? Cluster { get; set; }
+    public string? Neighborhood { get; set; }
 }

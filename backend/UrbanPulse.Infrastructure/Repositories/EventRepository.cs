@@ -29,7 +29,7 @@ namespace UrbanPulse.Infrastructure.Repositories
         public async Task<List<Event>> GetAllActiveAsync()
             => await _db.Events
                 .Include(e => e.CreatedByUser)
-                .Where(e => e.IsActive && e.Type != EventType.LostPet && e.Type != EventType.FoundPet)
+                .Where(e => e.IsActive && e.Type != EventType.LostPet && e.Type != EventType.FoundPet && e.ClusterId == null)
                 .OrderByDescending(e => e.CreatedAt)
                 .ToListAsync();
 

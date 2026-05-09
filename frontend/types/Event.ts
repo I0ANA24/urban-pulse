@@ -19,4 +19,6 @@ export interface Event {
   isActive: boolean;
   isCompleted?: boolean;
   emergencySubType?: string | null;
+  neighborhood?: string | null;
+  clusterId?: number | null;
 }

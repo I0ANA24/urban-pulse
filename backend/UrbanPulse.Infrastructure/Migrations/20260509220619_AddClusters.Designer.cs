@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UrbanPulse.Infrastructure.Data;
@@ -11,9 +12,11 @@ using UrbanPulse.Infrastructure.Data;
 namespace UrbanPulse.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260509220619_AddClusters")]
+    partial class AddClusters
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,9 +44,6 @@ namespace UrbanPulse.Infrastructure.Migrations
 
                     b.Property<bool>("IsResolved")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("Neighborhood")
-                        .HasColumnType("text");
 
                     b.Property<string>("SubType")
                         .IsRequired()
@@ -226,9 +226,6 @@ namespace UrbanPulse.Infrastructure.Migrations
 
                     b.Property<double>("Longitude")
                         .HasColumnType("double precision");
-
-                    b.Property<string>("Neighborhood")
-                        .HasColumnType("text");
 
                     b.Property<int>("NoCount")
                         .HasColumnType("integer");

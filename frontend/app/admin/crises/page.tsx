@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 import EventCard from "@/components/events/EventCard";
+import ClusterCard from "@/components/events/ClusterCard";
 import { Event } from "@/types/Event";
+import { Cluster } from "@/types/Cluster";
 import GoBackButton from "@/components/ui/GoBackButton";
 
 const API = "http://localhost:5248";
@@ -22,6 +24,7 @@ export default function CrisesHandlingPage() {
   const [addError, setAddError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
 
+  const [clusters, setClusters] = useState<Cluster[]>([]);
   const [emergencyPosts, setEmergencyPosts] = useState<Event[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
 
@@ -40,12 +43,17 @@ export default function CrisesHandlingPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch(`${API}/api/event/type/Emergency`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setEmergencyPosts(data);
+    Promise.all([
+      fetch(`${API}/api/event/type/Emergency`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then((r) => r.json()),
+      fetch(`${API}/api/cluster`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then((r) => r.json()),
+    ])
+      .then(([postsData, clustersData]) => {
+        setEmergencyPosts(Array.isArray(postsData) ? postsData : []);
+        setClusters(Array.isArray(clustersData) ? clustersData : []);
         setPostsLoading(false);
       })
       .catch(() => setPostsLoading(false));
@@ -96,6 +104,9 @@ export default function CrisesHandlingPage() {
   const handleDeletePost = (id: number) => {
     setEmergencyPosts((prev) => prev.filter((e) => e.id !== id));
   };
+
+  const standalonePosts = emergencyPosts.filter((e) => e.clusterId == null);
+  const totalCount = clusters.length + standalonePosts.length;
 
   return (
     <ThreeColumnLayoutAdmin>
@@ -179,13 +190,13 @@ export default function CrisesHandlingPage() {
           )}
         </section>
 
-        {/* Emergency Posts section */}
+        {/* Emergency content section */}
         <section className="flex flex-col gap-4 mt-2">
           <h2 className="text-white/70 font-bold text-sm uppercase tracking-widest border-b border-white/10 pb-2 flex items-center gap-2">
             Emergency Posts
             {!postsLoading && (
               <span className="text-white/40 font-normal normal-case tracking-normal">
-                ({emergencyPosts.length})
+                ({totalCount})
               </span>
             )}
           </h2>
@@ -198,17 +209,23 @@ export default function CrisesHandlingPage() {
             </div>
           )}
 
-          {!postsLoading && emergencyPosts.length === 0 && (
+          {!postsLoading && totalCount === 0 && (
             <p className="text-white/40 text-sm text-center mt-10">
               No active emergency posts.
             </p>
           )}
 
           {!postsLoading && (
-            <div className="flex flex-col gap-2">
-              {emergencyPosts.map((event) => (
+            <div className="flex flex-col gap-3">
+              {/* Active clusters */}
+              {clusters.map((cluster) => (
+                <ClusterCard key={`cluster-${cluster.id}`} cluster={cluster} />
+              ))}
+
+              {/* Standalone (non-clustered) posts */}
+              {standalonePosts.map((event) => (
                 <EventCard
-                  key={event.id}
+                  key={`event-${event.id}`}
                   event={event}
                   isAdminView={true}
                   onDelete={handleDeletePost}

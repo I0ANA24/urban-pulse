@@ -23,6 +23,7 @@ public class AppDbContext : DbContext
     public DbSet<EventVerification> EventVerifications { get; set; }
     public DbSet<SevereMessage> SevereMessages { get; set; }
     public DbSet<EmergencySubtype> EmergencySubtypes { get; set; }
+    public DbSet<Cluster> Clusters { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -43,6 +44,10 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.CreatedByUser)
                   .WithMany()
                   .HasForeignKey(e => e.CreatedByUserId);
+            entity.HasOne(e => e.Cluster)
+                  .WithMany(c => c.Events)
+                  .HasForeignKey(e => e.ClusterId)
+                  .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

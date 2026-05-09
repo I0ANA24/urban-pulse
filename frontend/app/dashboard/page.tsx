@@ -7,9 +7,11 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PawPrint } from "lucide-react";
 import EventCard from "@/components/events/EventCard";
+import ClusterCard from "@/components/events/ClusterCard";
 import EventFilters from "@/components/dashboard/EventFilters";
 import DashboardBanner from "@/components/dashboard/DashboardBanner";
 import { Event, EventType } from "@/types/Event";
+import { Cluster } from "@/types/Cluster";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
 import { useSignalR } from "@/context/SignalRContext";
 import { useRadius } from "@/context/RadiusContext";
@@ -97,8 +99,11 @@ function PawPrintFab() {
   );
 }
 
+type FeedItem = { kind: "event"; data: Event } | { kind: "cluster"; data: Cluster };
+
 export default function DashboardPage() {
   const [events, setEvents] = useState<Event[]>([]);
+  const [clusters, setClusters] = useState<Cluster[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -116,11 +121,14 @@ export default function DashboardPage() {
       try {
         const token = localStorage.getItem("token");
 
-        const [profileRes, eventsRes] = await Promise.all([
+        const [profileRes, eventsRes, clustersRes] = await Promise.all([
           fetch(`${API}/api/user/profile`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
           fetch(`${API}/api/event`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API}/api/cluster`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -137,6 +145,11 @@ export default function DashboardPage() {
           setEvents(Array.isArray(eventsData) ? eventsData : []);
         } else {
           setEvents([]);
+        }
+
+        if (clustersRes.ok) {
+          const clustersData = await clustersRes.json();
+          setClusters(Array.isArray(clustersData) ? clustersData : []);
         }
       } catch (error) {
         console.error("Failed to load dashboard data:", error);
@@ -160,12 +173,30 @@ export default function DashboardPage() {
       setEvents((prev) => prev.filter((e) => e.id !== eventId));
     };
 
+    const handleClusterCreated = (cluster: Cluster) => {
+      setClusters((prev) => [cluster, ...prev]);
+    };
+
+    const handleClusterUpdated = (cluster: Cluster) => {
+      setClusters((prev) => prev.map((c) => (c.id === cluster.id ? cluster : c)));
+    };
+
+    const handleClusterResolved = (clusterId: number) => {
+      setClusters((prev) => prev.filter((c) => c.id !== clusterId));
+    };
+
     connection.on("NewEvent", handleNewEvent);
     connection.on("EventDeactivated", handleEventDeactivated);
+    connection.on("ClusterCreated", handleClusterCreated);
+    connection.on("ClusterUpdated", handleClusterUpdated);
+    connection.on("ClusterResolved", handleClusterResolved);
 
     return () => {
       connection.off("NewEvent", handleNewEvent);
       connection.off("EventDeactivated", handleEventDeactivated);
+      connection.off("ClusterCreated", handleClusterCreated);
+      connection.off("ClusterUpdated", handleClusterUpdated);
+      connection.off("ClusterResolved", handleClusterResolved);
     };
   }, [connection]);
 
@@ -186,22 +217,21 @@ export default function DashboardPage() {
 
   const filteredEvents = events.filter((e) => {
     const mappedType = typeof e.type === "number" ? typeMap[e.type] : (e.type as EventType);
-
     if (activeFilter !== "ALL" && EVENT_TAG_STYLES[mappedType]?.title !== activeFilter) {
       return false;
     }
-
-    if (mappedType === "General") return true;
-
-    if (!userLocation) return true;
-
-    if (e.latitude && e.longitude) {
-      const dist = haversineKm(userLocation.lat, userLocation.lng, e.latitude, e.longitude);
-      return dist <= radiusKm;
-    }
-
     return true;
   });
+
+  const filteredClusters = clusters.filter((c) => {
+    if (activeFilter !== "ALL" && activeFilter !== "EMERGENCY") return false;
+    return true;
+  });
+
+  const feedItems: FeedItem[] = [
+    ...filteredEvents.map((e): FeedItem => ({ kind: "event", data: e })),
+    ...filteredClusters.map((c): FeedItem => ({ kind: "cluster", data: c })),
+  ].sort((a, b) => new Date(b.data.createdAt).getTime() - new Date(a.data.createdAt).getTime());
 
   return (
     <ThreeColumnLayout>
@@ -236,14 +266,18 @@ export default function DashboardPage() {
         {loading && (
           <p className="text-white/40 text-sm text-center mt-10">Loading...</p>
         )}
-        {!loading && filteredEvents.length === 0 && (
+        {!loading && feedItems.length === 0 && (
           <p className="text-white/40 text-sm text-center mt-10">
-            No events in your area.
+            No posts yet.
           </p>
         )}
-        {filteredEvents.map((event) => (
-          <EventCard key={event.id} event={event} />
-        ))}
+        {feedItems.map((item) =>
+          item.kind === "event" ? (
+            <EventCard key={`event-${item.data.id}`} event={item.data} />
+          ) : (
+            <ClusterCard key={`cluster-${item.data.id}`} cluster={item.data} />
+          )
+        )}
       </div>
     </ThreeColumnLayout>
   );
