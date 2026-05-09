@@ -67,6 +67,7 @@ function LocationModal({ onClose }: { onClose: () => void }) {
 
 export default function AddPostPage() {
   const router = useRouter();
+  const { isCrisisActive } = useCrisisMode();
 
   const [isVerified, setIsVerified] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
@@ -85,8 +86,8 @@ export default function AddPostPage() {
   const [emergencyLat, setEmergencyLat] = useState<number | null>(null);
   const [emergencyLng, setEmergencyLng] = useState<number | null>(null);
   const [emergencyAddress, setEmergencyAddress] = useState<string>("");
+  const [emergencyNeighbourhood, setEmergencyNeighbourhood] = useState<string>("");
   const [selectedIncidentType, setSelectedIncidentType] = useState<string | null>(null);
-  const { isCrisisActive } = useCrisisMode();
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -138,6 +139,11 @@ export default function AddPostPage() {
     if (e.target.files && e.target.files[0]) setPhoto(e.target.files[0]);
   };
 
+  const handleTagSelect = (type: EventType) => {
+    setSelectedTag(type);
+    if (type !== "Emergency") setSelectedIncidentType(null);
+  };
+
   const handlePost = async () => {
     const description = editor?.getText() ?? "";
 
@@ -187,10 +193,17 @@ export default function AddPostPage() {
     formData.append("longitude", lng.toString());
 
     const tags: string[] = [];
-    if (selectedTag === "Emergency" && selectedIncidentType) tags.push(selectedIncidentType);
     if (requestedItem) tags.push(requestedItem);
-    if (tags.length === 0) tags.push(selectedTag!);
+    if (tags.length === 0) tags.push(selectedTag);
     tags.forEach((tag) => formData.append("tags", tag));
+
+    if (selectedTag === "Emergency" && selectedIncidentType) {
+      formData.append("emergencySubType", selectedIncidentType);
+    }
+
+    if (selectedTag === "Emergency" && emergencyNeighbourhood) {
+      formData.append("neighbourhood", emergencyNeighbourhood);
+    }
 
     if (photo) formData.append("file", photo);
 
@@ -233,6 +246,7 @@ export default function AddPostPage() {
           </button>
         </div>
 
+        {/* editor */}
         <div className="w-full p-4 bg-secondary rounded-[30px] mb-8">
           <div className="bg-[#464646] w-full h-50 rounded-[20px] p-5 border border-white/5 flex flex-col overflow-scroll">
             <EditorContent editor={editor} />
@@ -284,6 +298,7 @@ export default function AddPostPage() {
           </div>
         </div>
 
+        {/* crisis banner sau tag selector */}
         {isCrisisActive ? (
           <div className="mb-8 flex items-center gap-3 bg-red-emergency/15 border border-red-emergency/30 rounded-2xl px-4 py-3">
             <span className="text-2xl">🚨</span>
@@ -298,37 +313,39 @@ export default function AddPostPage() {
               TAGS
             </h2>
             <div className="flex flex-wrap gap-3 mb-8 px-1 py-1">
-              {(Object.keys(EVENT_TAG_STYLES) as EventType[]).filter((type) => type !== "LostPet" && type !== "FoundPet").map((type) => {
-                const style = EVENT_TAG_STYLES[type];
-                const isSelected = selectedTag === type;
-                const isDisabled =
-                  (type === "Skill" || type === "Lend") && !isVerified;
+              {(Object.keys(EVENT_TAG_STYLES) as EventType[])
+                .filter((type) => type !== "LostPet" && type !== "FoundPet")
+                .map((type) => {
+                  const style = EVENT_TAG_STYLES[type];
+                  const isSelected = selectedTag === type;
+                  const isDisabled = (type === "Skill" || type === "Lend") && !isVerified;
 
-                return (
-                  <button
-                    key={type}
-                    onClick={() => !isDisabled && setSelectedTag(type)}
-                    disabled={isDisabled}
-                    className={`px-4 py-2.5 rounded-[10px] text-[10px] font-bold uppercase transition-all
-                    ${isDisabled ? "opacity-30 cursor-not-allowed grayscale" : "cursor-pointer"}
-                    ${isSelected ? "scale-105" : ""}
-                  `}
-                    style={{
-                      backgroundColor: style.bgColor,
-                      color: style.textColor,
-                      boxShadow: isSelected
-                        ? `0 0 10px ${style.bgColor}80, inset 0 0 3px white`
-                        : "none",
-                    }}
-                  >
-                    {style.title}
-                  </button>
-                );
-              })}
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => !isDisabled && handleTagSelect(type)}
+                      disabled={isDisabled}
+                      className={`px-4 py-2.5 rounded-[10px] text-[10px] font-bold uppercase transition-all
+                        ${isDisabled ? "opacity-30 cursor-not-allowed grayscale" : "cursor-pointer"}
+                        ${isSelected ? "scale-105" : ""}
+                      `}
+                      style={{
+                        backgroundColor: style.bgColor,
+                        color: style.textColor,
+                        boxShadow: isSelected
+                          ? `0 0 10px ${style.bgColor}80, inset 0 0 3px white`
+                          : "none",
+                      }}
+                    >
+                      {style.title}
+                    </button>
+                  );
+                })}
             </div>
           </>
         )}
 
+        {/* incident type */}
         {selectedTag === "Emergency" && (
           <div className="animate-fade-up mb-6">
             <h2 className="text-white font-bold text-xl mb-2 border-b border-white/20 pb-2 uppercase">
@@ -360,6 +377,7 @@ export default function AddPostPage() {
           </div>
         )}
 
+        {/* emergency map */}
         {selectedTag === "Emergency" && (
           <div className="animate-fade-up mb-8">
             <h2 className="text-white font-bold text-xl mb-2 border-b border-white/20 pb-2 uppercase">
@@ -373,16 +391,23 @@ export default function AddPostPage() {
                 📌 {emergencyAddress}
               </p>
             )}
+            {emergencyNeighbourhood && (
+              <p className="text-white/40 text-xs mb-3 px-1">
+                🏘 Zone: <span className="text-white/60 font-medium">{emergencyNeighbourhood}</span>
+              </p>
+            )}
             <MapPicker
-              onSelect={(addr, lat, lng) => {
+              onSelect={(addr, lat, lng, neighbourhood) => {
                 setEmergencyAddress(addr);
                 setEmergencyLat(lat);
                 setEmergencyLng(lng);
+                setEmergencyNeighbourhood(neighbourhood);
               }}
             />
           </div>
         )}
 
+        {/* skill/lend location */}
         {(selectedTag === "Skill" || selectedTag === "Lend") && (
           <div className="animate-fade-up mb-4">
             {userLat && userLng ? (
@@ -395,6 +420,7 @@ export default function AddPostPage() {
           </div>
         )}
 
+        {/* skill/lend item */}
         {(selectedTag === "Skill" || selectedTag === "Lend") && (
           <div className="animate-fade-up">
             <h2 className="text-white font-bold text-xl mb-2 border-b border-white/20 pb-2 uppercase">
@@ -433,11 +459,7 @@ export default function AddPostPage() {
                       setIsAddingItem(false);
                     }}
                   >
-                    <X
-                      size={20}
-                      className="text-red-emergency"
-                      strokeWidth={3}
-                    />
+                    <X size={20} className="text-red-emergency" strokeWidth={3} />
                   </button>
                 </div>
               )}
