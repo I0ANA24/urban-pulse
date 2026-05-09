@@ -8,7 +8,8 @@ public enum EventType
     Skill,
     Lend,
     LostPet,
-    FoundPet
+    FoundPet,
+    FoundDocument
 }
 
 
@@ -28,6 +29,7 @@ public class Event : BaseEntity
     public ICollection<EventVerification> Verifications { get; set; } = new List<EventVerification>();
     public bool IsCompleted { get; set; } = false;
     public string? AiTags { get; set; }
+    public string? SearchIndex { get; set; }
     public int CreatedByUserId { get; set; }
     public User CreatedByUser { get; set; } = null!;
 }

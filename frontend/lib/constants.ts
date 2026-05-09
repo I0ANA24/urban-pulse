@@ -7,6 +7,7 @@ export const EVENT_TAG_STYLES: Record<EventType, { title: string; textColor: str
   Lend: { title: "LEND", textColor: "#023612", bgColor: "#4ADE80" },
   LostPet: { title: "LOST PETS", textColor: "#4D3B03", bgColor: "#FFF081" },
   FoundPet: { title: "FOUND PETS", textColor: "#04007D", bgColor: "#BEDCF5" },
+  FoundDocument: { title: "Document", bgColor: "#1E3A5F", textColor: "#60A5FA" },
 };
 
 export const FILTER_OPTIONS = Object.values(EVENT_TAG_STYLES).map(style => style.title);

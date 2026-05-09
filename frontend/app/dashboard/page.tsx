@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { PawPrint } from "lucide-react";
+import { PawPrint, FileText } from "lucide-react";
 import EventCard from "@/components/events/EventCard";
 import EventFilters from "@/components/dashboard/EventFilters";
 import DashboardBanner from "@/components/dashboard/DashboardBanner";
@@ -81,18 +81,26 @@ function SafetyBanner({ onClick }: { onClick: () => void }) {
   );
 }
 
-function PawPrintFab() {
+function MobileFabs() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
   if (!mounted) return null;
 
   return createPortal(
-    <Link
-      href="/pets"
-      className="fixed bottom-22 right-6 z-50 w-14 h-14 rounded-full bg-green-light flex items-center justify-center shadow-lg hover:scale-105 transition-transform lg:hidden"
-    >
-      <PawPrint size={26} strokeWidth={2} fill="black" className="text-black" />
-    </Link>,
+    <div className="fixed bottom-22 right-6 z-50 flex flex-col gap-3 items-center lg:hidden">
+      <Link
+        href="/documents"
+        className="w-12 h-12 rounded-full bg-blue flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+      >
+        <FileText size={22} strokeWidth={2} className="text-white" />
+      </Link>
+      <Link
+        href="/pets"
+        className="w-14 h-14 rounded-full bg-green-light flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+      >
+        <PawPrint size={26} strokeWidth={2} fill="black" className="text-black" />
+      </Link>
+    </div>,
     document.body
   );
 }
@@ -155,7 +163,6 @@ export default function DashboardPage() {
     const handleNewEvent = (newEvent: Event) => {
       setEvents((prev) => [newEvent, ...prev]);
     };
-
     const handleEventDeactivated = (eventId: number) => {
       setEvents((prev) => prev.filter((e) => e.id !== eventId));
     };
@@ -172,9 +179,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (loading || !targetEventId) return;
     const el = document.getElementById(`event-${targetEventId}`);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [loading, targetEventId]);
 
   const typeMap: Record<number, EventType> = {
@@ -187,12 +192,9 @@ export default function DashboardPage() {
   const filteredEvents = events.filter((e) => {
     const mappedType = typeof e.type === "number" ? typeMap[e.type] : (e.type as EventType);
 
-    if (activeFilter !== "ALL" && EVENT_TAG_STYLES[mappedType]?.title !== activeFilter) {
-      return false;
-    }
+    if (activeFilter !== "ALL" && EVENT_TAG_STYLES[mappedType]?.title !== activeFilter) return false;
 
     if (mappedType === "General") return true;
-
     if (!userLocation) return true;
 
     if (e.latitude && e.longitude) {
@@ -205,16 +207,12 @@ export default function DashboardPage() {
 
   return (
     <ThreeColumnLayout>
-      {!isAdmin && <PawPrintFab />}
+      {!isAdmin && <MobileFabs />}
 
-      {/* Mobile: portal în document.body — fixed cu top dinamic bazat pe scroll */}
       {isSevereWeather && (
         <MobileSafetyPortal onClick={() => router.push("/severe-chat")} />
       )}
-      {/* Spacer care împinge conținutul sub poziția inițială a bannerului */}
       {isSevereWeather && <div className="lg:hidden h-[calc(5vh)]" />}
-
-      {/* Desktop: sticky în feed-scroll, deasupra filtrelor */}
       {isSevereWeather && (
         <div className="hidden lg:block sticky top-0 z-50 w-full pt-2 pb-1 bg-background">
           <SafetyBanner onClick={() => router.push("/severe-chat")} />
@@ -228,7 +226,6 @@ export default function DashboardPage() {
         <div className="lg:hidden w-full">
           <DashboardBanner />
         </div>
-
         <EventFilters activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
       </div>
 
@@ -237,9 +234,7 @@ export default function DashboardPage() {
           <p className="text-white/40 text-sm text-center mt-10">Loading...</p>
         )}
         {!loading && filteredEvents.length === 0 && (
-          <p className="text-white/40 text-sm text-center mt-10">
-            No events in your area.
-          </p>
+          <p className="text-white/40 text-sm text-center mt-10">No events in your area.</p>
         )}
         {filteredEvents.map((event) => (
           <EventCard key={event.id} event={event} />
