@@ -2,7 +2,7 @@
 
 import { createPortal } from "react-dom";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 interface Props {
   onClose: () => void;

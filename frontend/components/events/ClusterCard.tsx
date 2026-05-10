@@ -53,7 +53,15 @@ export default function ClusterCard({ cluster }: ClusterCardProps) {
         <h2 className="text-white font-bold text-2xl font-montagu tracking-tight">
           {cluster.subType}
         </h2>
-        <span className="text-white/40 text-sm">+{cluster.eventCount} posts</span>
+        {cluster.neighborhood && (
+          <span className="text-white/60 text-xs font-medium">{cluster.neighborhood}</span>
+        )}
+        <div className="flex items-center gap-3 mt-0.5">
+          <span className="text-white/40 text-sm">+{cluster.eventCount} reports</span>
+          {cluster.confidenceScore != null && cluster.confidenceScore > 0 && (
+            <span className="text-white/40 text-xs">· {Math.round(cluster.confidenceScore)}% confidence</span>
+          )}
+        </div>
       </div>
 
       {latest && (

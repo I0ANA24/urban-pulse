@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+export const dynamic = "force-dynamic";
+
+import { useEffect, useState, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
@@ -11,6 +13,7 @@ import ClusterCard from "@/components/events/ClusterCard";
 import CrisisBanner from "@/components/layout/CrisisBanner";
 import EventFilters from "@/components/dashboard/EventFilters";
 import DashboardBanner from "@/components/dashboard/DashboardBanner";
+import SafetyCheckInModal from "@/components/map/SafetyCheckInModal";
 import { Event, EventType } from "@/types/Event";
 import { Cluster } from "@/types/Cluster";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
@@ -99,19 +102,28 @@ function MobileFabs() {
 
 type FeedItem = { kind: "event"; data: Event } | { kind: "cluster"; data: Cluster };
 
+function EventIdReader({ onRead }: { onRead: (id: string | null) => void }) {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    onRead(searchParams.get("eventId"));
+  }, [searchParams, onRead]);
+  return null;
+}
+
 export default function DashboardPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("ALL");
+  const [showSafetyModal, setShowSafetyModal] = useState(false);
+  const [myStatus, setMyStatus] = useState(0);
+  const [targetEventId, setTargetEventId] = useState<string | null>(null);
   const { connection } = useSignalR();
   const { isSevereWeather } = useSevereWeather();
   const { isAdmin } = useUser();
   const { isInLocalCrisis, isInGlobalCrisis, viewRegularContent } = useCrisis();
   const isInCrisis = isInLocalCrisis || isInGlobalCrisis;
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const targetEventId = searchParams.get("eventId");
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -222,19 +234,41 @@ export default function DashboardPage() {
   const feedItems: FeedItem[] = [
     ...filteredEvents.map((e): FeedItem => ({ kind: "event", data: e })),
     ...filteredClusters.map((c): FeedItem => ({ kind: "cluster", data: c })),
-  ].sort((a, b) => new Date(b.data.createdAt).getTime() - new Date(a.data.createdAt).getTime());
+  ].sort((a, b) => {
+    if (isInCrisis && !viewRegularContent) {
+      const aV = a.kind === "event" ? (a.data.isVerifiedUser ? 1 : 0) : 0;
+      const bV = b.kind === "event" ? (b.data.isVerifiedUser ? 1 : 0) : 0;
+      if (aV !== bV) return bV - aV;
+    }
+    return new Date(b.data.createdAt).getTime() - new Date(a.data.createdAt).getTime();
+  });
 
   return (
     <ThreeColumnLayout>
+      <Suspense fallback={null}>
+        <EventIdReader onRead={setTargetEventId} />
+      </Suspense>
+
       {!isAdmin && <MobileFabs />}
 
-      {isSevereWeather && (
+      {isSevereWeather && !isInCrisis && (
         <MobileSafetyPortal onClick={() => router.push("/severe-chat")} />
       )}
-      {isSevereWeather && <div className="lg:hidden h-[calc(5vh)]" />}
-      {isSevereWeather && (
+      {isSevereWeather && !isInCrisis && <div className="lg:hidden h-[calc(5vh)]" />}
+      {isSevereWeather && !isInCrisis && (
         <div className="hidden lg:block sticky top-0 z-50 w-full pt-2 pb-1 bg-background">
           <SafetyBanner onClick={() => router.push("/severe-chat")} />
+        </div>
+      )}
+
+      {/* Safety check-in banner în crisis mode */}
+      {isInCrisis && (
+        <MobileSafetyPortal onClick={() => setShowSafetyModal(true)} />
+      )}
+      {isInCrisis && <div className="lg:hidden h-[calc(5vh)]" />}
+      {isInCrisis && (
+        <div className="hidden lg:block sticky top-0 z-50 w-full pt-2 pb-1 bg-background">
+          <SafetyBanner onClick={() => setShowSafetyModal(true)} />
         </div>
       )}
 
@@ -242,6 +276,13 @@ export default function DashboardPage() {
       <div className="hidden lg:block sticky top-0 z-40 w-full pt-2 pb-1 bg-background">
         <CrisisBanner />
       </div>
+
+      {showSafetyModal && (
+        <SafetyCheckInModal
+          onClose={() => setShowSafetyModal(false)}
+          onStatusSet={(s) => setMyStatus(s)}
+        />
+      )}
 
       <div className="w-full py-2 flex flex-col items-center gap-4 mb-4 mt-4">
         <div className="lg:hidden">

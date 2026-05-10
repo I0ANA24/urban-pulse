@@ -64,3 +64,13 @@ input:-webkit-autofill:active {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* Crisis mode — high contrast visual indicator */
+html.crisis-mode {
+  filter: saturate(0.85) contrast(1.08);
+}
+
+html.crisis-mode * {
+  animation-duration: 0.1s !important;
+  transition-duration: 0.1s !important;
+}

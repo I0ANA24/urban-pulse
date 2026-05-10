@@ -99,6 +99,15 @@ export const CrisisProvider = ({ children }: { children: React.ReactNode }) => {
   const isInGlobalCrisis = globalCrises.length > 0;
   const isInCrisis = isInLocalCrisis || isInGlobalCrisis;
 
+  // Apply crisis-mode class for high-contrast visual
+  useEffect(() => {
+    if (isInCrisis) {
+      document.documentElement.classList.add("crisis-mode");
+    } else {
+      document.documentElement.classList.remove("crisis-mode");
+    }
+  }, [isInCrisis]);
+
   // Reset "view regular" when a new crisis starts
   useEffect(() => {
     if (isInCrisis && !wasInCrisis) {
