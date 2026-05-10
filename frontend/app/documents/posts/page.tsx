@@ -8,7 +8,7 @@ import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 import { useUser } from "@/context/UserContext";
 import { Event, EventType } from "@/types/Event";
-import { Search } from "lucide-react";
+import { Search, Eye } from "lucide-react";
 
 const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
 
@@ -45,6 +45,21 @@ export default function DocumentPostsPage() {
       .catch(() => setDocs([]))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleUnblur = async (id: number) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API}/api/event/${id}/unblur`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      setDocs((prev) =>
+        prev.map((d) =>
+          d.id === id ? { ...d, originalImageUrl: null } : d
+        )
+      );
+    }
+  };
 
   useEffect(() => {
     const hasAnalyzing = docs.some((d) => !d.aiTags);
@@ -127,6 +142,15 @@ export default function DocumentPostsPage() {
                 imageUrl: isAdmin ? doc.imageUrl : (doc.aiTags ? doc.imageUrl : null),
               }}
             />
+            {isAdmin && doc.originalImageUrl && (
+              <button
+                onClick={() => handleUnblur(doc.id)}
+                className="w-full flex items-center justify-center gap-2 mb-4 -mt-2 bg-yellow-primary/10 hover:bg-yellow-primary/20 border border-yellow-primary/40 text-yellow-primary font-semibold text-sm rounded-2xl px-4 py-3 transition-colors cursor-pointer"
+              >
+                <Eye size={16} />
+                Unblur for all users
+              </button>
+            )}
           </div>
         ))}
       </div>

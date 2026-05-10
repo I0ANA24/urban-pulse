@@ -8,11 +8,15 @@ import Placeholder from "@tiptap/extension-placeholder";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
+import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
+import { useUser } from "@/context/UserContext";
 
 const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
 
 export default function AddDocumentPage() {
   const router = useRouter();
+  const { isAdmin } = useUser();
+  const Layout = isAdmin ? ThreeColumnLayoutAdmin : ThreeColumnLayout;
   const [photo, setPhoto] = useState<File | null>(null);
   const [isBold, setIsBold] = useState(false);
   const [isUnderlineActive, setIsUnderlineActive] = useState(false);
@@ -92,7 +96,7 @@ export default function AddDocumentPage() {
   };
 
   return (
-    <ThreeColumnLayout>
+    <Layout>
       <div className="w-full pb-[8vh] lg:pb-0 flex flex-col">
         <div className="flex items-center justify-between mb-10">
           <button
@@ -183,6 +187,6 @@ export default function AddDocumentPage() {
           </div>
         )}
       </div>
-    </ThreeColumnLayout>
+    </Layout>
   );
 }

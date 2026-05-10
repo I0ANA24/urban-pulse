@@ -317,6 +317,7 @@ namespace UrbanPulse.API.Controllers
                 description = e.Description,
                 type = e.Type,
                 imageUrl = isAdmin && e.OriginalImageUrl != null ? e.OriginalImageUrl : e.ImageUrl,
+                originalImageUrl = isAdmin ? e.OriginalImageUrl : null,
                 aiTags = e.AiTags,
                 createdByUserId = e.CreatedByUserId,
                 createdByEmail = e.CreatedByUser?.Email,
@@ -347,6 +348,7 @@ namespace UrbanPulse.API.Controllers
                 description = e.Description,
                 type = e.Type,
                 imageUrl = isAdmin && e.OriginalImageUrl != null ? e.OriginalImageUrl : e.ImageUrl,
+                originalImageUrl = isAdmin ? e.OriginalImageUrl : null,
                 aiTags = e.AiTags,
                 createdByUserId = e.CreatedByUserId,
                 createdByEmail = e.CreatedByUser?.Email,
@@ -358,6 +360,23 @@ namespace UrbanPulse.API.Controllers
             });
 
             return Ok(result);
+        }
+
+        [HttpPut("{id}/unblur")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UnblurDocument(int id)
+        {
+            var ev = await _context.Events.FindAsync(id);
+            if (ev == null || ev.Type != EventType.FoundDocument)
+                return NotFound();
+
+            if (ev.OriginalImageUrl == null)
+                return BadRequest("Document has no blurred version.");
+
+            ev.ImageUrl = ev.OriginalImageUrl;
+            ev.OriginalImageUrl = null;
+            await _context.SaveChangesAsync();
+            return Ok();
         }
 
         [HttpGet]

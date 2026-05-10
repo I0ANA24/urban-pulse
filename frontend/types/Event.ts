@@ -19,6 +19,7 @@ export interface Event {
   isActive: boolean;
   isCompleted?: boolean;
   aiTags?: string | null;
+  originalImageUrl?: string | null;
   emergencySubType?: string | null;
   neighborhood?: string | null;
   clusterId?: number | null;
