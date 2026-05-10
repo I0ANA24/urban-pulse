@@ -45,7 +45,8 @@ namespace UrbanPulse_Backend
                 {
                     policy.WithOrigins(
                         "http://localhost:3000", 
-                        "http://localhost:5173"
+                        "http://localhost:5173",
+                        "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net"
                     )
                     .AllowAnyHeader()
                     .AllowAnyMethod()
