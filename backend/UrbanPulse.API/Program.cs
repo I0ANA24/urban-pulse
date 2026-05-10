@@ -47,7 +47,7 @@ namespace UrbanPulse_Backend
                         "http://localhost:3000", 
                         "http://localhost:5173",
                         "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net",
-                        "https://urban-pulse-self.vercel.app/"
+                        "https://urban-pulse-self.vercel.app"
                     )
                     .AllowAnyHeader()
                     .AllowAnyMethod()
