@@ -1,9 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import GoBackButton from "@/components/ui/GoBackButton";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
+import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
+import { useUser } from "@/context/UserContext";
 
 export default function DocumentsPage() {
+  const { isAdmin } = useUser();
+  const Layout = isAdmin ? ThreeColumnLayoutAdmin : ThreeColumnLayout;
+
   return (
     <>
       {/* Mobile header */}
@@ -14,7 +21,7 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      <ThreeColumnLayout>
+      <Layout>
         <div className="flex flex-col py-2 gap-6">
           <Link
             href="/documents/posts"
@@ -44,7 +51,7 @@ export default function DocumentsPage() {
             </Link>
           </div>
         </div>
-      </ThreeColumnLayout>
+      </Layout>
     </>
   );
 }

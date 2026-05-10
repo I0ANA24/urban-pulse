@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
+import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 import EventCard from "@/components/events/EventCard";
 import GoBackButton from "@/components/ui/GoBackButton";
+import { useUser } from "@/context/UserContext";
 import { Event, EventType } from "@/types/Event";
 import { Search } from "lucide-react";
 
@@ -23,6 +25,8 @@ const SEARCH_OPTIONS: { key: SearchType; label: string; placeholder: string; hin
 ];
 
 export default function DocumentSearchPage() {
+  const { isAdmin } = useUser();
+  const Layout = isAdmin ? ThreeColumnLayoutAdmin : ThreeColumnLayout;
   const [selectedType, setSelectedType] = useState<SearchType>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Event[]>([]);
@@ -66,7 +70,7 @@ export default function DocumentSearchPage() {
   const currentOption = SEARCH_OPTIONS.find((o) => o.key === selectedType);
 
   return (
-    <ThreeColumnLayout>
+    <Layout>
       <div className="w-full pb-[8vh] lg:pb-0 flex flex-col mt-4">
 
         <div className="flex items-center gap-3 mb-6">
@@ -146,6 +150,6 @@ export default function DocumentSearchPage() {
           />
         ))}
       </div>
-    </ThreeColumnLayout>
+    </Layout>
   );
 }

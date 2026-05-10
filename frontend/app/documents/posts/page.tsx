@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import EventCard from "@/components/events/EventCard";
 import GoBackButton from "@/components/ui/GoBackButton";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
+import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
+import { useUser } from "@/context/UserContext";
 import { Event, EventType } from "@/types/Event";
 import { Search } from "lucide-react";
 
@@ -21,6 +23,8 @@ const typeMap: Record<number, EventType> = {
 };
 
 export default function DocumentPostsPage() {
+  const { isAdmin } = useUser();
+  const Layout = isAdmin ? ThreeColumnLayoutAdmin : ThreeColumnLayout;
   const [docs, setDocs] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -75,7 +79,7 @@ export default function DocumentPostsPage() {
         </div>
       </div>
 
-      <ThreeColumnLayout>
+      <Layout>
       <div className="w-full pb-[8vh] lg:pb-0 flex flex-col mt-4">
 
         <h1 className="hidden lg:block text-white font-black text-2xl font-montagu uppercase mb-4">
@@ -108,7 +112,7 @@ export default function DocumentPostsPage() {
 
         {docs.map((doc) => (
           <div key={doc.id}>
-            {!doc.aiTags && (
+            {!isAdmin && !doc.aiTags && (
               <div className="w-full bg-blue/10 border border-blue/20 rounded-2xl px-4 py-3 mb-2 flex items-center gap-3 animate-pulse">
                 <span className="text-lg">🔒</span>
                 <div>
@@ -120,13 +124,13 @@ export default function DocumentPostsPage() {
             <EventCard
               event={{
                 ...doc,
-                imageUrl: doc.aiTags ? doc.imageUrl : null,
+                imageUrl: isAdmin ? doc.imageUrl : (doc.aiTags ? doc.imageUrl : null),
               }}
             />
           </div>
         ))}
       </div>
-      </ThreeColumnLayout>
+      </Layout>
     </>
   );
 }
