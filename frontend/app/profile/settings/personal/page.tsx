@@ -75,11 +75,11 @@ export default function PersonalInfoPage() {
     }, 1000);
   };
 
-  const handleMapSelect = (addr: string, selectedLat: number, selectedLng: number) => {
-    setAddress(addr);
+  const handleMapSelect = (addr: string, selectedLat: number, selectedLng: number, _neighborhood: string) => {
+    if (addr) setAddress(addr);
     setLat(selectedLat);
     setLng(selectedLng);
-    autoSave(phoneNumber, addr, selectedLat, selectedLng);
+    autoSave(phoneNumber, addr || address, selectedLat, selectedLng);
   };
 
   return (

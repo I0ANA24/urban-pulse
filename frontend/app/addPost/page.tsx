@@ -86,6 +86,7 @@ export default function AddPostPage() {
   const [emergencyLat, setEmergencyLat] = useState<number | null>(null);
   const [emergencyLng, setEmergencyLng] = useState<number | null>(null);
   const [emergencyAddress, setEmergencyAddress] = useState<string>("");
+  const [emergencyNeighborhood, setEmergencyNeighborhood] = useState<string>("");
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -203,6 +204,7 @@ export default function AddPostPage() {
     if (photo) formData.append("file", photo);
     if (selectedTag === "Emergency" && emergencySubType) {
       formData.append("emergencySubType", emergencySubType);
+      if (emergencyNeighborhood) formData.append("neighborhood", emergencyNeighborhood);
     }
 
     try {
@@ -369,10 +371,11 @@ export default function AddPostPage() {
               </p>
             )}
             <MapPicker
-              onSelect={(addr, lat, lng) => {
-                setEmergencyAddress(addr);
+              onSelect={(addr, lat, lng, hood) => {
+                if (addr) setEmergencyAddress(addr);
                 setEmergencyLat(lat);
                 setEmergencyLng(lng);
+                setEmergencyNeighborhood(hood);
               }}
             />
           </div>

@@ -5,7 +5,8 @@ namespace UrbanPulse.Core.Entities
         Emergency,
         HeroAlert,
         Comment,
-        BadgeEarned
+        BadgeEarned,
+        CrisisAlert
     }
 
     public class Notification : BaseEntity

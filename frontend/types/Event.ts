@@ -20,4 +20,6 @@ export interface Event {
   isCompleted?: boolean;
   aiTags?: string | null;
   emergencySubType?: string | null;
+  neighborhood?: string | null;
+  clusterId?: number | null;
 }

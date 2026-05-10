@@ -7,12 +7,14 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PawPrint, FileText } from "lucide-react";
 import EventCard from "@/components/events/EventCard";
+import ClusterCard from "@/components/events/ClusterCard";
+import CrisisBanner from "@/components/layout/CrisisBanner";
 import EventFilters from "@/components/dashboard/EventFilters";
 import DashboardBanner from "@/components/dashboard/DashboardBanner";
 import { Event, EventType } from "@/types/Event";
+import { Cluster } from "@/types/Cluster";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
 import { useSignalR } from "@/context/SignalRContext";
-import { useRadius } from "@/context/RadiusContext";
 import { useSevereWeather } from "@/context/SevereWeatherContext";
 import { useUser } from "@/context/UserContext";
 import UrbanTitle from "@/components/ui/UrbanTitle";
@@ -20,17 +22,6 @@ import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 
 const API = "http://localhost:5248";
 
-function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-    Math.cos((lat2 * Math.PI) / 180) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 
 function MobileSafetyPortal({ onClick }: { onClick: () => void }) {
   const [mounted, setMounted] = useState(false);
@@ -105,14 +96,14 @@ function MobileFabs() {
   );
 }
 
+type FeedItem = { kind: "event"; data: Event } | { kind: "cluster"; data: Cluster };
+
 export default function DashboardPage() {
   const [events, setEvents] = useState<Event[]>([]);
+  const [clusters, setClusters] = useState<Cluster[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("ALL");
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-
   const { connection } = useSignalR();
-  const { radiusKm } = useRadius();
   const { isSevereWeather } = useSevereWeather();
   const { isAdmin } = useUser();
   const router = useRouter();
@@ -124,27 +115,25 @@ export default function DashboardPage() {
       try {
         const token = localStorage.getItem("token");
 
-        const [profileRes, eventsRes] = await Promise.all([
-          fetch(`${API}/api/user/profile`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+        const [eventsRes, clustersRes] = await Promise.all([
           fetch(`${API}/api/event`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
+          fetch(`${API}/api/cluster`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
-
-        if (profileRes.ok) {
-          const profileData = await profileRes.json();
-          if (profileData.latitude && profileData.longitude) {
-            setUserLocation({ lat: profileData.latitude, lng: profileData.longitude });
-          }
-        }
 
         if (eventsRes.ok) {
           const eventsData = await eventsRes.json();
           setEvents(Array.isArray(eventsData) ? eventsData : []);
         } else {
           setEvents([]);
+        }
+
+        if (clustersRes.ok) {
+          const clustersData = await clustersRes.json();
+          setClusters(Array.isArray(clustersData) ? clustersData : []);
         }
       } catch (error) {
         console.error("Failed to load dashboard data:", error);
@@ -167,12 +156,30 @@ export default function DashboardPage() {
       setEvents((prev) => prev.filter((e) => e.id !== eventId));
     };
 
+    const handleClusterCreated = (cluster: Cluster) => {
+      setClusters((prev) => [cluster, ...prev]);
+    };
+
+    const handleClusterUpdated = (cluster: Cluster) => {
+      setClusters((prev) => prev.map((c) => (c.id === cluster.id ? cluster : c)));
+    };
+
+    const handleClusterResolved = (clusterId: number) => {
+      setClusters((prev) => prev.filter((c) => c.id !== clusterId));
+    };
+
     connection.on("NewEvent", handleNewEvent);
     connection.on("EventDeactivated", handleEventDeactivated);
+    connection.on("ClusterCreated", handleClusterCreated);
+    connection.on("ClusterUpdated", handleClusterUpdated);
+    connection.on("ClusterResolved", handleClusterResolved);
 
     return () => {
       connection.off("NewEvent", handleNewEvent);
       connection.off("EventDeactivated", handleEventDeactivated);
+      connection.off("ClusterCreated", handleClusterCreated);
+      connection.off("ClusterUpdated", handleClusterUpdated);
+      connection.off("ClusterResolved", handleClusterResolved);
     };
   }, [connection]);
 
@@ -191,19 +198,20 @@ export default function DashboardPage() {
 
   const filteredEvents = events.filter((e) => {
     const mappedType = typeof e.type === "number" ? typeMap[e.type] : (e.type as EventType);
-
-    if (activeFilter !== "ALL" && EVENT_TAG_STYLES[mappedType]?.title !== activeFilter) return false;
-
-    if (mappedType === "General") return true;
-    if (!userLocation) return true;
-
-    if (e.latitude && e.longitude) {
-      const dist = haversineKm(userLocation.lat, userLocation.lng, e.latitude, e.longitude);
-      return dist <= radiusKm;
+    if (activeFilter !== "ALL" && EVENT_TAG_STYLES[mappedType]?.title !== activeFilter) {
+      return false;
     }
-
     return true;
   });
+
+  const filteredClusters = activeFilter === "ALL" || activeFilter === "EMERGENCY"
+    ? clusters
+    : [];
+
+  const feedItems: FeedItem[] = [
+    ...filteredEvents.map((e): FeedItem => ({ kind: "event", data: e })),
+    ...filteredClusters.map((c): FeedItem => ({ kind: "cluster", data: c })),
+  ].sort((a, b) => new Date(b.data.createdAt).getTime() - new Date(a.data.createdAt).getTime());
 
   return (
     <ThreeColumnLayout>
@@ -219,6 +227,11 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Crisis Mode banner — desktop */}
+      <div className="hidden lg:block sticky top-0 z-40 w-full pt-2 pb-1 bg-background">
+        <CrisisBanner />
+      </div>
+
       <div className="w-full py-2 flex flex-col items-center gap-4 mb-4 mt-4">
         <div className="lg:hidden">
           <UrbanTitle />
@@ -233,12 +246,18 @@ export default function DashboardPage() {
         {loading && (
           <p className="text-white/40 text-sm text-center mt-10">Loading...</p>
         )}
-        {!loading && filteredEvents.length === 0 && (
-          <p className="text-white/40 text-sm text-center mt-10">No events in your area.</p>
+        {!loading && feedItems.length === 0 && (
+          <p className="text-white/40 text-sm text-center mt-10">
+            No posts yet.
+          </p>
         )}
-        {filteredEvents.map((event) => (
-          <EventCard key={event.id} event={event} />
-        ))}
+        {feedItems.map((item) =>
+          item.kind === "event" ? (
+            <EventCard key={`event-${item.data.id}`} event={item.data} />
+          ) : (
+            <ClusterCard key={`cluster-${item.data.id}`} cluster={item.data} />
+          )
+        )}
       </div>
     </ThreeColumnLayout>
   );
