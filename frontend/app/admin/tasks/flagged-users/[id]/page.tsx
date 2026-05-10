@@ -10,7 +10,7 @@ import ResolveTaskModal from "@/components/ui/ResolveTaskModal";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 interface UserReport {
   id: number;

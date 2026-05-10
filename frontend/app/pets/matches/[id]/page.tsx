@@ -9,7 +9,7 @@ import { Event } from "@/types/Event";
 import { use } from "react";
 import { useSearchParams } from "next/navigation";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 interface Match {
   score: number;

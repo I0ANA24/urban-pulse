@@ -7,7 +7,7 @@ import { useSignalR } from "@/context/SignalRContext";
 import { NotificationItem } from "@/components/notifications/NotificationTypes";
 import NotificationCard from "@/components/notifications/NotificationCard";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);

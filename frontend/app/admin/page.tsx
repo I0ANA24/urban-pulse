@@ -12,7 +12,7 @@ import UrbanTitle from "@/components/ui/UrbanTitle";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 import { useSevereWeather } from "@/context/SevereWeatherContext";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 interface AdminStats {
   resolvedTasks: number;

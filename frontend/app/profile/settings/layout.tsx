@@ -43,7 +43,7 @@ function SettingsNav() {
     setDeleting(true);
     try {
       const token = localStorage.getItem("token");
-      await fetch("http://localhost:5248/api/user", { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+      await fetch("process.env.NEXT_PUBLIC_API_URL/api/user", { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
       localStorage.removeItem("token");
       document.cookie = "token=; path=/; max-age=0";
       router.push("/");

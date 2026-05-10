@@ -7,7 +7,7 @@ interface CardMediaProps {
 export default function CardMedia({ imageUrl }: CardMediaProps) {
   if (!imageUrl) return null;
 
-  const src = imageUrl.startsWith("http") ? imageUrl : `http://localhost:5248${imageUrl}`;
+  const src = imageUrl.startsWith("http") ? imageUrl : `process.env.NEXT_PUBLIC_API_URL${imageUrl}`;
 
   return (
     <div className="relative w-full h-72 -mt-3 -z-10">

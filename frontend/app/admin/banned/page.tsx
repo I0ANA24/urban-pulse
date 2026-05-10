@@ -7,7 +7,7 @@ import { BannedUser } from "@/types/BannedUser";
 import SearchBar from "../../../components/search/SearchBar";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function BannedUsersPage() {
   const [searchQuery, setSearchQuery] = useState("");

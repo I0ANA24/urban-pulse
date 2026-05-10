@@ -21,7 +21,7 @@ export default function LoginForm() {
 
     try {
       const endpoint = activeTab === "login" ? "login" : "register";
-      const res = await fetch(`http://localhost:5248/api/auth/${endpoint}`, {
+      const res = await fetch(`process.env.NEXT_PUBLIC_API_URL/api/auth/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, role: "User", fullName: activeTab === "signup" ? fullName : undefined }),

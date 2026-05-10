@@ -8,7 +8,7 @@ import { Event, EventType } from "@/types/Event";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
 import { Bookmark } from "lucide-react";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 const typeMap: Record<number, EventType> = {
   0: "General", 1: "Emergency", 2: "Skill", 3: "Lend",

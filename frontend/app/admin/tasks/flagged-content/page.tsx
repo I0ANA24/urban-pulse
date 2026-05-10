@@ -9,7 +9,7 @@ import { EVENT_TAG_STYLES } from "@/lib/constants";
 import GoBackButton from "@/components/ui/GoBackButton";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function FlaggedContentPage() {
   const router = useRouter();

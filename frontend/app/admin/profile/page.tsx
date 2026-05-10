@@ -8,7 +8,7 @@ import CrownIcon from "@/components/icons/profile/CrownIcon";
 import { useUser } from "@/context/UserContext";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 interface AdminProfile {
   displayName: string;

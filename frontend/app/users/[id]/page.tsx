@@ -8,7 +8,7 @@ import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { useUser } from "@/context/UserContext";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 interface UserProfile {
   id: number;

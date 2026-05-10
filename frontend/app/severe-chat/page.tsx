@@ -9,7 +9,7 @@ import TopBar from "@/components/layout/TopBar";
 import LeftSidebar from "@/components/layout/LeftSidebar";
 import ChatRightSidebar from "@/components/layout/ChatRightSidebar";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 interface SevereMessage {
   id: number;

@@ -6,7 +6,7 @@ import Image from "next/image";
 import GoBackButton from "@/components/ui/GoBackButton";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 function ReportForm() {
   const router = useRouter();

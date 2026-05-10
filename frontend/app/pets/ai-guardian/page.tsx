@@ -12,7 +12,7 @@ import EventTag from "@/components/ui/EventTag";
 import { useUser } from "@/context/UserContext";
 import { Event } from "@/types/Event";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 function getInitials(name: string) {
   return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);

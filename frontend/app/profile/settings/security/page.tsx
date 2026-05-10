@@ -15,7 +15,7 @@ export default function SecurityPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("http://localhost:5248/api/user/profile", {
+    fetch("process.env.NEXT_PUBLIC_API_URL/api/user/profile", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -42,7 +42,7 @@ export default function SecurityPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5248/api/user/change-password", {
+      const res = await fetch("process.env.NEXT_PUBLIC_API_URL/api/user/change-password", {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,

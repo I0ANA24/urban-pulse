@@ -12,7 +12,7 @@ import EventTag from "@/components/ui/EventTag";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 import { EventType } from "@/types/Event";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 interface ContentReport {
   id: number;
