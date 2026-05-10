@@ -6,6 +6,8 @@ import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 import { Event } from "@/types/Event";
 import { API_BASE_URL as API } from "@/lib/api";
 
+type PetTab = "LostPet" | "FoundPet";
+
 export default function PetsPostsPage() {
   const [activeTab, setActiveTab] = useState<PetTab>("LostPet");
   const [posts, setPosts] = useState<Event[]>([]);
