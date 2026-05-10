@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Settings() {
   const [displayName, setDisplayName] = useState("");

@@ -8,7 +8,7 @@ import { ChevronRight } from "lucide-react";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 import GoBackButton from "@/components/ui/GoBackButton";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 interface TaskStats {
   flaggedUsersCount: number;

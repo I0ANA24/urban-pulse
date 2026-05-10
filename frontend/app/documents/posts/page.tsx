@@ -8,7 +8,7 @@ import GoBackButton from "@/components/ui/GoBackButton";
 import { Event, EventType } from "@/types/Event";
 import { Search } from "lucide-react";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 const typeMap: Record<number, EventType> = {
   0: "General",

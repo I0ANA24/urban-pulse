@@ -13,7 +13,7 @@ import SafetyCheckInModal from "./SafetyCheckInModal";
 
 const DEFAULT_CENTER: [number, number] = [27.6014, 47.1585];
 const DEFAULT_ZOOM = 12;
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
 type FilterMode = "disponibili" | "pot-ajuta";

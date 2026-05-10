@@ -11,7 +11,7 @@ import SearchBar from "@/components/search/SearchBar";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 import { useUser } from "@/context/UserContext";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 type TabType = "Posts" | "People";
 

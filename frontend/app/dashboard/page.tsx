@@ -21,7 +21,7 @@ import { useCrisis } from "@/context/CrisisContext";
 import UrbanTitle from "@/components/ui/UrbanTitle";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 
 function MobileSafetyPortal({ onClick }: { onClick: () => void }) {

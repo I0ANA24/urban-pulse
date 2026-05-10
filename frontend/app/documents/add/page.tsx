@@ -9,7 +9,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function AddDocumentPage() {
   const router = useRouter();

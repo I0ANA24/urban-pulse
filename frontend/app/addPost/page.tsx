@@ -122,7 +122,7 @@ export default function AddPostPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("http://localhost:5248/api/emergencysubtype", {
+    fetch("process.env.NEXT_PUBLIC_API_URL/api/emergencysubtype", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -138,7 +138,7 @@ export default function AddPostPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("http://localhost:5248/api/user/profile", {
+    fetch("process.env.NEXT_PUBLIC_API_URL/api/user/profile", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -216,7 +216,7 @@ export default function AddPostPage() {
     }
 
     try {
-      const res = await fetch("http://localhost:5248/api/event", {
+      const res = await fetch("process.env.NEXT_PUBLIC_API_URL/api/event", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,

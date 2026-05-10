@@ -21,7 +21,7 @@ export default function MyPostsPage() {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://localhost:5248/api/user/my-posts", {
+        const res = await fetch("process.env.NEXT_PUBLIC_API_URL/api/user/my-posts", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -50,7 +50,7 @@ export default function MyPostsPage() {
     setShowDeleteConfirm(false);
     try {
       const token = localStorage.getItem("token");
-      await fetch(`http://localhost:5248/api/event/${deleteId}`, {
+      await fetch(`process.env.NEXT_PUBLIC_API_URL/api/event/${deleteId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

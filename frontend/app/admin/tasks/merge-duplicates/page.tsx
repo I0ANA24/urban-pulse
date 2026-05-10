@@ -7,7 +7,7 @@ import GoBackButton from "@/components/ui/GoBackButton";
 import { HiUsers } from "react-icons/hi";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 interface DuplicateSuspect {
   id: number;

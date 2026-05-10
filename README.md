@@ -88,7 +88,7 @@ npm run dev
 Required environment variables:
 
 ```
-NEXT_PUBLIC_API_URL=http://localhost:5248
+NEXT_PUBLIC_API_URL=process.env.NEXT_PUBLIC_API_URL
 NEXT_PUBLIC_MAPBOX_TOKEN=your_mapbox_token
 NEXT_PUBLIC_OPENWEATHER_API_KEY=your_openweather_key
 ```

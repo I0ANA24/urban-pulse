@@ -55,7 +55,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const loadUser = async () => {
       try {
-        const res = await fetch("http://localhost:5248/api/user/profile", {
+        const res = await fetch("process.env.NEXT_PUBLIC_API_URL/api/user/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) {

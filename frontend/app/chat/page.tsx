@@ -6,7 +6,7 @@ import Image from "next/image";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 import { useSevereWeather } from "@/context/SevereWeatherContext";
 
-const API = "http://localhost:5248";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 interface Conversation {
   id: number;
