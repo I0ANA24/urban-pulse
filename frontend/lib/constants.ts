@@ -20,4 +20,10 @@ export const EMERGENCY_SUBTYPES = [
   "Severe Storm",
   "Road Blockage",
   "Infrastructure Damage",
+  "Medical Help",
+  "Water Needed",
+  "Shelter Needed",
+  "SOS",
+  "Missing Person",
+  "Evacuation Info",
 ];

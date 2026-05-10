@@ -4,10 +4,15 @@ using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using UrbanPulse.API.Hubs;
 using UrbanPulse.Core.DTOs;
 using UrbanPulse.Core.DTOs.User;
+using UrbanPulse.Core.Entities;
 using UrbanPulse.Core.Interfaces;
+using UrbanPulse.Infrastructure.Data;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -17,11 +22,15 @@ public class UserController : ControllerBase
     private readonly IUserService _userService;
     private readonly IEventService _eventService;
     private readonly Cloudinary _cloudinary;
+    private readonly AppDbContext _context;
+    private readonly IHubContext<EventHub> _hubContext;
 
-    public UserController(IUserService userService, IEventService eventService)
+    public UserController(IUserService userService, IEventService eventService, AppDbContext context, IHubContext<EventHub> hubContext)
     {
         _userService = userService;
         _eventService = eventService;
+        _context = context;
+        _hubContext = hubContext;
 
         var cloudName = Environment.GetEnvironmentVariable("CLOUDINARY_CLOUD_NAME");
         var apiKey = Environment.GetEnvironmentVariable("CLOUDINARY_API_KEY");
@@ -152,5 +161,47 @@ public class UserController : ControllerBase
         var result = await _userService.ChangePasswordAsync(userId, dto);
         if (!result) return BadRequest("Current password is incorrect.");
         return Ok();
+    }
+
+    [HttpPut("safety-status")]
+    public async Task<IActionResult> UpdateSafetyStatus([FromBody] UpdateSafetyStatusDto dto)
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
+        user.CurrentSafetyStatus = dto.Status;
+        user.SafetyStatusUpdatedAt = DateTime.UtcNow;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        await _hubContext.Clients.All.SendAsync("SafetyStatusUpdated", new
+        {
+            userId,
+            status = (int)dto.Status,
+            latitude = user.Latitude,
+            longitude = user.Longitude,
+        });
+
+        return Ok(new { status = (int)dto.Status });
+    }
+
+    [HttpGet("safety-statuses")]
+    public async Task<IActionResult> GetSafetyStatuses()
+    {
+        var users = await _context.Users
+            .Where(u => u.IsActive && !u.IsBanned && u.Latitude.HasValue && u.Longitude.HasValue)
+            .Select(u => new
+            {
+                id = u.Id,
+                fullName = u.FullName,
+                avatarUrl = u.AvatarUrl,
+                latitude = u.Latitude,
+                longitude = u.Longitude,
+                safetyStatus = u.CurrentSafetyStatus.HasValue ? (int)u.CurrentSafetyStatus.Value : 0,
+            })
+            .ToListAsync();
+
+        return Ok(users);
     }
 }

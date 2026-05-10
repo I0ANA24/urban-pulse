@@ -12,6 +12,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import dynamic from "next/dynamic";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
+import { useCrisis } from "@/context/CrisisContext";
 
 const MapPicker = dynamic(() => import("@/components/profile/MapPicker"), {
   ssr: false,
@@ -66,6 +67,8 @@ function LocationModal({ onClose }: { onClose: () => void }) {
 
 export default function AddPostPage() {
   const router = useRouter();
+  const { isInLocalCrisis, isInGlobalCrisis, viewRegularContent } = useCrisis();
+  const isInCrisis = (isInLocalCrisis || isInGlobalCrisis) && !viewRegularContent;
 
   const [isVerified, setIsVerified] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
@@ -111,6 +114,11 @@ export default function AddPostPage() {
       },
     },
   });
+
+  // Pre-select Emergency tag when in crisis mode
+  useEffect(() => {
+    if (isInCrisis) setSelectedTag("Emergency");
+  }, [isInCrisis]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -300,12 +308,18 @@ export default function AddPostPage() {
         <h2 className="text-white font-bold text-2xl mb-4 border-b-2 border-white/20 pb-2">
           TAGS
         </h2>
+        {isInCrisis && (
+          <p className="text-red-emergency/80 text-xs font-medium mb-3 tracking-wide">
+            ⚠️ Crisis mode active — only Emergency posts are allowed
+          </p>
+        )}
         <div className="flex flex-wrap gap-3 mb-8 px-1 py-1">
           {(Object.keys(EVENT_TAG_STYLES) as EventType[]).filter((type) => type !== "LostPet" && type !== "FoundPet" && type !== "FoundDocument").map((type) => {
             const style = EVENT_TAG_STYLES[type];
             const isSelected = selectedTag === type;
             const isDisabled =
-              (type === "Skill" || type === "Lend") && !isVerified;
+              (type === "Skill" || type === "Lend") && !isVerified ||
+              (isInCrisis && type !== "Emergency");
 
             return (
               <button

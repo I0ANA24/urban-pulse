@@ -12,8 +12,7 @@ import CardFooter from "./card/CardFooter";
 import CommentsSheet from "@/components/events/CommentsSheet";
 import { useSignalR } from "@/context/SignalRContext";
 import { useUser } from "@/context/UserContext";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 interface EventCardProps {
   event: Event;

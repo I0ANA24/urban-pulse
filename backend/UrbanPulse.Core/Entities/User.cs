@@ -1,5 +1,14 @@
 ﻿namespace UrbanPulse.Core.Entities
 {
+    public enum SafetyStatus
+    {
+        NoResponse = 0,
+        Safe = 1,
+        Injured = 2,
+        NeedHelp = 3,
+        AvailableToHelp = 4
+    }
+
     public class User : BaseEntity
     {
         public string Email { get; set; } = string.Empty;
@@ -25,5 +34,7 @@
         public DateTime? BannedAt { get; set; }
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
+        public SafetyStatus? CurrentSafetyStatus { get; set; }
+        public DateTime? SafetyStatusUpdatedAt { get; set; }
     }
 }

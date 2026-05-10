@@ -8,8 +8,7 @@ import { useSignalR } from "@/context/SignalRContext";
 import { NotificationItem } from "./NotificationTypes";
 import NotificationCard from "./NotificationCard";
 import { GiRingingBell } from "react-icons/gi";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 interface NotificationsPanelProps {
   open: boolean;

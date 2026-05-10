@@ -10,7 +10,7 @@ import { useUser } from "@/context/UserContext";
 import { Event, EventType } from "@/types/Event";
 import { Search, Eye } from "lucide-react";
 
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 const typeMap: Record<number, EventType> = {
   0: "General",

@@ -145,5 +145,7 @@ public class UserService : IUserService
         CreatedAt = user.CreatedAt,
         Latitude = user.Latitude,
         Longitude = user.Longitude,
+        CurrentSafetyStatus = user.CurrentSafetyStatus,
+        SafetyStatusUpdatedAt = user.SafetyStatusUpdatedAt,
     };
 }

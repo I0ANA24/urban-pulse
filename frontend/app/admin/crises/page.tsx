@@ -9,8 +9,7 @@ import { Event } from "@/types/Event";
 import { Cluster } from "@/types/Cluster";
 import { GlobalCrisis } from "@/types/GlobalCrisis";
 import GoBackButton from "@/components/ui/GoBackButton";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 interface EmergencySubtype {
   id: number;

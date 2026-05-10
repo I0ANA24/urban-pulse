@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect, useState, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
@@ -11,16 +13,17 @@ import ClusterCard from "@/components/events/ClusterCard";
 import CrisisBanner from "@/components/layout/CrisisBanner";
 import EventFilters from "@/components/dashboard/EventFilters";
 import DashboardBanner from "@/components/dashboard/DashboardBanner";
+import SafetyCheckInModal from "@/components/map/SafetyCheckInModal";
 import { Event, EventType } from "@/types/Event";
 import { Cluster } from "@/types/Cluster";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
 import { useSignalR } from "@/context/SignalRContext";
 import { useSevereWeather } from "@/context/SevereWeatherContext";
 import { useUser } from "@/context/UserContext";
+import { useCrisis } from "@/context/CrisisContext";
 import UrbanTitle from "@/components/ui/UrbanTitle";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 function MobileSafetyPortal({ onClick }: { onClick: () => void }) {
   const [mounted, setMounted] = useState(false);
@@ -97,17 +100,28 @@ function MobileFabs() {
 
 type FeedItem = { kind: "event"; data: Event } | { kind: "cluster"; data: Cluster };
 
-function DashboardContent() {
+function EventIdReader({ onRead }: { onRead: (id: string | null) => void }) {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    onRead(searchParams.get("eventId"));
+  }, [searchParams, onRead]);
+  return null;
+}
+
+export default function DashboardPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("ALL");
+  const [showSafetyModal, setShowSafetyModal] = useState(false);
+  const [myStatus, setMyStatus] = useState(0);
+  const [targetEventId, setTargetEventId] = useState<string | null>(null);
   const { connection } = useSignalR();
   const { isSevereWeather } = useSevereWeather();
   const { isAdmin } = useUser();
+  const { isInLocalCrisis, isInGlobalCrisis, viewRegularContent } = useCrisis();
+  const isInCrisis = isInLocalCrisis || isInGlobalCrisis;
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const targetEventId = searchParams.get("eventId");
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -194,38 +208,76 @@ function DashboardContent() {
 
   const filteredEvents = events.filter((e) => {
     const mappedType = typeof e.type === "number" ? typeMap[e.type] : (e.type as EventType);
+
+    // In crisis mode (without opting into regular content), show only Emergency
+    if (isInCrisis && !viewRegularContent) {
+      return mappedType === "Emergency";
+    }
+
     if (activeFilter !== "ALL" && EVENT_TAG_STYLES[mappedType]?.title !== activeFilter) {
       return false;
     }
     return true;
   });
 
-  const filteredClusters = activeFilter === "ALL" || activeFilter === "EMERGENCY"
+  const filteredClusters = isInCrisis && !viewRegularContent
     ? clusters
-    : [];
+    : activeFilter === "ALL" || activeFilter === "EMERGENCY"
+      ? clusters
+      : [];
 
   const feedItems: FeedItem[] = [
     ...filteredEvents.map((e): FeedItem => ({ kind: "event", data: e })),
     ...filteredClusters.map((c): FeedItem => ({ kind: "cluster", data: c })),
-  ].sort((a, b) => new Date(b.data.createdAt).getTime() - new Date(a.data.createdAt).getTime());
+  ].sort((a, b) => {
+    if (isInCrisis && !viewRegularContent) {
+      const aV = a.kind === "event" ? (a.data.isVerifiedUser ? 1 : 0) : 0;
+      const bV = b.kind === "event" ? (b.data.isVerifiedUser ? 1 : 0) : 0;
+      if (aV !== bV) return bV - aV;
+    }
+    return new Date(b.data.createdAt).getTime() - new Date(a.data.createdAt).getTime();
+  });
 
   return (
     <ThreeColumnLayout>
+      <Suspense fallback={null}>
+        <EventIdReader onRead={setTargetEventId} />
+      </Suspense>
+
       {!isAdmin && <MobileFabs />}
 
-      {isSevereWeather && (
+      {isSevereWeather && !isInCrisis && (
         <MobileSafetyPortal onClick={() => router.push("/severe-chat")} />
       )}
-      {isSevereWeather && <div className="lg:hidden h-[calc(5vh)]" />}
-      {isSevereWeather && (
+      {isSevereWeather && !isInCrisis && <div className="lg:hidden h-[calc(5vh)]" />}
+      {isSevereWeather && !isInCrisis && (
         <div className="hidden lg:block sticky top-0 z-50 w-full pt-2 pb-1 bg-background">
           <SafetyBanner onClick={() => router.push("/severe-chat")} />
         </div>
       )}
 
+      {/* Safety check-in banner în crisis mode */}
+      {isInCrisis && (
+        <MobileSafetyPortal onClick={() => setShowSafetyModal(true)} />
+      )}
+      {isInCrisis && <div className="lg:hidden h-[calc(5vh)]" />}
+      {isInCrisis && (
+        <div className="hidden lg:block sticky top-0 z-50 w-full pt-2 pb-1 bg-background">
+          <SafetyBanner onClick={() => setShowSafetyModal(true)} />
+        </div>
+      )}
+
+      {/* Crisis Mode banner — desktop */}
       <div className="hidden lg:block sticky top-0 z-40 w-full pt-2 pb-1 bg-background">
         <CrisisBanner />
       </div>
+
+      {showSafetyModal && (
+        <SafetyCheckInModal
+          onClose={() => setShowSafetyModal(false)}
+          onStatusSet={(s) => setMyStatus(s)}
+        />
+      )}
 
       <div className="w-full py-2 flex flex-col items-center gap-4 mb-4 mt-4">
         <div className="lg:hidden">
@@ -234,7 +286,14 @@ function DashboardContent() {
         <div className="lg:hidden w-full">
           <DashboardBanner />
         </div>
-        <EventFilters activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
+        {(!isInCrisis || viewRegularContent) && (
+          <EventFilters activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
+        )}
+        {isInCrisis && !viewRegularContent && (
+          <p className="text-red-emergency/80 text-xs font-medium text-center tracking-wide uppercase">
+            ⚠️ Showing emergency content only
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-4 mt-2">
@@ -255,13 +314,5 @@ function DashboardContent() {
         )}
       </div>
     </ThreeColumnLayout>
-  );
-}
-
-export default function DashboardPage() {
-  return (
-    <Suspense fallback={null}>
-      <DashboardContent />
-    </Suspense>
   );
 }

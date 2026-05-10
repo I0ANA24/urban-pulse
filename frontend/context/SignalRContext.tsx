@@ -18,8 +18,9 @@ const SignalRContext = createContext<SignalRContextType>({
   severeChatConnection: null,
 });
 
+import { API_BASE_URL as API } from "@/lib/api";
+
 const PUBLIC_ROUTES = ["/", "/login", "/register", "/forgot-password"];
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
 
 export const SignalRProvider = ({ children }: { children: React.ReactNode }) => {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);

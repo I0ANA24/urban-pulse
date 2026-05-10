@@ -5,8 +5,7 @@ import { useUser } from "./UserContext";
 import { useSignalR } from "./SignalRContext";
 import { Cluster } from "@/types/Cluster";
 import { GlobalCrisis } from "@/types/GlobalCrisis";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   const R = 6371;
@@ -27,6 +26,8 @@ interface CrisisContextType {
   isInLocalCrisis: boolean;
   isInGlobalCrisis: boolean;
   crisisSubTypes: string[];
+  viewRegularContent: boolean;
+  toggleViewRegularContent: () => void;
 }
 
 const CrisisContext = createContext<CrisisContextType>({
@@ -35,6 +36,8 @@ const CrisisContext = createContext<CrisisContextType>({
   isInLocalCrisis: false,
   isInGlobalCrisis: false,
   crisisSubTypes: [],
+  viewRegularContent: false,
+  toggleViewRegularContent: () => {},
 });
 
 export const CrisisProvider = ({ children }: { children: React.ReactNode }) => {
@@ -42,6 +45,8 @@ export const CrisisProvider = ({ children }: { children: React.ReactNode }) => {
   const { connection } = useSignalR();
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [globalCrises, setGlobalCrises] = useState<GlobalCrisis[]>([]);
+  const [viewRegularContent, setViewRegularContent] = useState(false);
+  const [wasInCrisis, setWasInCrisis] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -91,6 +96,26 @@ export const CrisisProvider = ({ children }: { children: React.ReactNode }) => {
 
   const isInLocalCrisis = localCrises.length > 0;
   const isInGlobalCrisis = globalCrises.length > 0;
+  const isInCrisis = isInLocalCrisis || isInGlobalCrisis;
+
+  // Apply crisis-mode class for high-contrast visual
+  useEffect(() => {
+    if (isInCrisis) {
+      document.documentElement.classList.add("crisis-mode");
+    } else {
+      document.documentElement.classList.remove("crisis-mode");
+    }
+  }, [isInCrisis]);
+
+  // Reset "view regular" when a new crisis starts
+  useEffect(() => {
+    if (isInCrisis && !wasInCrisis) {
+      setViewRegularContent(false);
+    }
+    setWasInCrisis(isInCrisis);
+  }, [isInCrisis, wasInCrisis]);
+
+  const toggleViewRegularContent = () => setViewRegularContent(prev => !prev);
 
   const crisisSubTypes = useMemo(() => {
     const types = new Set<string>();
@@ -100,7 +125,7 @@ export const CrisisProvider = ({ children }: { children: React.ReactNode }) => {
   }, [localCrises, globalCrises]);
 
   return (
-    <CrisisContext.Provider value={{ localCrises, globalCrises, isInLocalCrisis, isInGlobalCrisis, crisisSubTypes }}>
+    <CrisisContext.Provider value={{ localCrises, globalCrises, isInLocalCrisis, isInGlobalCrisis, crisisSubTypes, viewRegularContent, toggleViewRegularContent }}>
       {children}
     </CrisisContext.Provider>
   );

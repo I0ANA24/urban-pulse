@@ -7,10 +7,12 @@ import { useRouter } from "next/navigation";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "./map.css";
 import { useRadius } from "@/context/RadiusContext";
-
+import { useCrisis } from "@/context/CrisisContext";
+import { useSignalR } from "@/context/SignalRContext";
+import SafetyCheckInModal from "./SafetyCheckInModal";
 const DEFAULT_CENTER: [number, number] = [27.6014, 47.1585];
 const DEFAULT_ZOOM = 12;
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
 type FilterMode = "disponibili" | "pot-ajuta";
@@ -60,6 +62,23 @@ interface SelectedUser {
   user: UserProfile;
   filterType: MarkerFilterType;
 }
+
+interface SafetyUserMarker {
+  id: number;
+  fullName?: string;
+  avatarUrl?: string;
+  latitude: number;
+  longitude: number;
+  safetyStatus: number; // 0=NoResponse, 1=Safe, 2=Injured, 3=NeedHelp, 4=AvailableToHelp
+}
+
+const SAFETY_COLORS: Record<number, string> = {
+  0: "#6b7280", // gray - no response
+  1: "#22c55e", // green - safe
+  2: "#f97316", // orange - injured
+  3: "#ef4444", // red - need help
+  4: "#3b82f6", // blue - available to help
+};
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   const R = 6371;
@@ -253,11 +272,20 @@ export default function MapView() {
   const [selectedUser, setSelectedUser] = useState<SelectedUser | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
 
+  const [safetyUsers, setSafetyUsers] = useState<SafetyUserMarker[]>([]);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showOtherFeatures, setShowOtherFeatures] = useState(false);
+  const [myStatus, setMyStatus] = useState<number>(0);
+
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const safetyMarkersRef = useRef<any[]>([]);
   const radiusRef = useRef<HTMLDivElement>(null);
   const { radiusKm, setRadiusKm } = useRadius();
+  const { isInLocalCrisis, isInGlobalCrisis } = useCrisis();
+  const { connection } = useSignalR();
+  const isInCrisis = isInLocalCrisis || isInGlobalCrisis;
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -348,6 +376,30 @@ export default function MapView() {
     fetchEvents();
   }, [mounted]);
 
+  // Safety statuses fetch + SignalR updates
+  useEffect(() => {
+    if (!mounted || !isInCrisis) return;
+    const token = localStorage.getItem("token");
+    fetch(`${API}/api/user/safety-statuses`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data)) setSafetyUsers(data); })
+      .catch(() => {});
+  }, [mounted, isInCrisis]);
+
+  useEffect(() => {
+    if (!connection || !isInCrisis) return;
+    const onUpdate = (data: { userId: number; status: number; latitude?: number; longitude?: number }) => {
+      setSafetyUsers((prev) => {
+        const existing = prev.find((u) => u.id === data.userId);
+        if (existing) return prev.map((u) => u.id === data.userId ? { ...u, safetyStatus: data.status } : u);
+        if (data.latitude && data.longitude) return [...prev, { id: data.userId, latitude: data.latitude, longitude: data.longitude, safetyStatus: data.status }];
+        return prev;
+      });
+    };
+    connection.on("SafetyStatusUpdated", onUpdate);
+    return () => connection.off("SafetyStatusUpdated", onUpdate);
+  }, [connection, isInCrisis]);
+
   const handleUserClick = useCallback((user: UserProfile, filterType: MarkerFilterType) => {
     setSelectedUser({ user, filterType });
     setSelectedEvent(null);
@@ -370,8 +422,9 @@ export default function MapView() {
     return event.description?.toLowerCase().includes(q) || tags.some((t) => t.toLowerCase().includes(q)) || event.createdByFullName?.toLowerCase().includes(q);
   });
 
-  const activeUserMarkers = filter === "disponibili" ? filteredUserMarkers : [];
-  const activeEventMarkers = filteredEventMarkers;
+  const hideNormalMarkers = isInCrisis && !showOtherFeatures;
+  const activeUserMarkers = hideNormalMarkers ? [] : (filter === "disponibili" ? filteredUserMarkers : []);
+  const activeEventMarkers = hideNormalMarkers ? [] : filteredEventMarkers;
   const isLoading = loadingUsers || loadingEvents;
 
   useEffect(() => {
@@ -439,6 +492,35 @@ export default function MapView() {
     }
   }, [activeUserMarkers, activeEventMarkers, handleUserClick, handleEventClick]);
 
+  // Safety markers rendering
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const map = mapRef.current;
+
+    const doSafetyUpdate = async () => {
+      const mapboxgl = (await import("mapbox-gl")).default;
+      safetyMarkersRef.current.forEach((m) => m.remove());
+      safetyMarkersRef.current = [];
+
+      if (!isInCrisis) return;
+
+      safetyUsers.forEach(({ id, latitude, longitude, safetyStatus }) => {
+        const color = SAFETY_COLORS[safetyStatus] ?? SAFETY_COLORS[0];
+        const el = document.createElement("div");
+        el.style.cssText = `width:26px !important;height:26px !important;min-width:26px !important;min-height:26px !important;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 0 8px ${color}80;cursor:default;box-sizing:border-box;`;
+        const seed = id * 9301 + 49297;
+        const [dLng, dLat] = seededGeoOffset(seed);
+        const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
+          .setLngLat([longitude + dLng, latitude + dLat])
+          .addTo(map);
+        safetyMarkersRef.current.push(marker);
+      });
+    };
+
+    if (map.isStyleLoaded()) doSafetyUpdate();
+    else map.once("load", doSafetyUpdate);
+  }, [safetyUsers, isInCrisis]);
+
   if (!mounted) return null;
 
   return (
@@ -461,10 +543,31 @@ export default function MapView() {
           </div>
         </div>
 
-        <div className="filter-bar">
-          <button className={`filter-btn ${filter === "disponibili" ? "filter-btn--active" : ""}`} onClick={() => { setFilter("disponibili"); setSearchQuery(""); }}>👤 Available</button>
-          <button className={`filter-btn ${filter === "pot-ajuta" ? "filter-btn--active pot-ajuta-active" : ""}`} onClick={() => { setFilter("pot-ajuta"); setSearchQuery(""); }}>🤝 Can Help</button>
-        </div>
+        {isInCrisis && (
+          <div
+            style={{ position: "absolute", top: 72, left: 16, zIndex: 20 }}
+            className="flex items-center gap-2 bg-black/80 backdrop-blur-sm px-4 py-2.5 rounded-2xl border border-white/10 cursor-pointer"
+            onClick={() => setShowOtherFeatures((v) => !v)}
+          >
+            <div
+              className="w-10 h-5 rounded-full relative transition-colors"
+              style={{ background: showOtherFeatures ? "#ef4444" : "#374151" }}
+            >
+              <div
+                className="absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all"
+                style={{ left: showOtherFeatures ? "calc(100% - 18px)" : "2px" }}
+              />
+            </div>
+            <span className="text-white text-sm font-medium">Show other features</span>
+          </div>
+        )}
+
+        {(!isInCrisis || showOtherFeatures) && (
+          <div className="filter-bar">
+            <button className={`filter-btn ${filter === "disponibili" ? "filter-btn--active" : ""}`} onClick={() => { setFilter("disponibili"); setSearchQuery(""); }}>👤 Available</button>
+            <button className={`filter-btn ${filter === "pot-ajuta" ? "filter-btn--active pot-ajuta-active" : ""}`} onClick={() => { setFilter("pot-ajuta"); setSearchQuery(""); }}>🤝 Can Help</button>
+          </div>
+        )}
 
         <div className="map-legend">
           <div className="legend-item"><span className="legend-dot skill-dot" />Skills</div>
@@ -491,6 +594,27 @@ export default function MapView() {
           </div>
         </div>
 
+        {isInCrisis && (
+          <button
+            onClick={() => setShowStatusModal(true)}
+            className="absolute cursor-pointer"
+            style={{ bottom: 80, right: 16, zIndex: 20 }}
+          >
+            <div
+              className="px-5 py-2.5 rounded-full font-bold text-sm flex items-center gap-2"
+              style={{
+                background: myStatus > 0 ? SAFETY_COLORS[myStatus] : "#1a1a1a",
+                color: "white",
+                border: myStatus > 0 ? `2px solid ${SAFETY_COLORS[myStatus]}` : "2px solid rgba(255,255,255,0.2)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+              }}
+            >
+              <span>{myStatus > 0 ? "✓" : "●"}</span>
+              My status
+            </div>
+          </button>
+        )}
+
         {isLoading && (
           <div className="map-loading">
             <div className="map-loading-dot" />
@@ -508,6 +632,12 @@ export default function MapView() {
         />
       )}
       {selectedEvent && <EventCard event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
+      {showStatusModal && (
+        <SafetyCheckInModal
+          onClose={() => setShowStatusModal(false)}
+          onStatusSet={(s) => setMyStatus(s)}
+        />
+      )}
     </>
   );
 }

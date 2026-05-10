@@ -9,8 +9,7 @@ import CheckButton from "@/components/admin/CheckButton";
 import ResolveTaskModal from "@/components/ui/ResolveTaskModal";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 interface UserReport {
   id: number;

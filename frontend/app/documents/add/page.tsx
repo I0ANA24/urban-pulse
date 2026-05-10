@@ -11,7 +11,7 @@ import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 import { useUser } from "@/context/UserContext";
 
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 export default function AddDocumentPage() {
   const router = useRouter();

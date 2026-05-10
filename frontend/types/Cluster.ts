@@ -7,6 +7,7 @@ export interface Cluster {
   centerLongitude: number;
   isResolved: boolean;
   eventCount: number;
+  confidenceScore?: number;
   createdAt: string;
   latestEvent: Event | null;
   events?: Event[];

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSevereWeather } from "@/context/SevereWeatherContext";
+import { useCrisis } from "@/context/CrisisContext";
 
 function DesktopWeatherCard() {
   const [weather, setWeather] = useState<{
@@ -65,8 +66,19 @@ function DesktopWeatherCard() {
 }
 
 export default function RightSidebar() {
+  const { isInLocalCrisis, isInGlobalCrisis, viewRegularContent, toggleViewRegularContent } = useCrisis();
+  const isInCrisis = isInLocalCrisis || isInGlobalCrisis;
+
   return (
     <aside className="hidden lg:flex lg:flex-1 lg:flex-col lg:gap-4">
+      {isInCrisis && (
+        <button
+          onClick={toggleViewRegularContent}
+          className="w-full rounded-2xl h-14 bg-[#111111] text-white font-bold text-sm flex items-center justify-center cursor-pointer hover:bg-[#1a1a1a] transition-colors border border-white/10"
+        >
+          {viewRegularContent ? "← Back to crisis feed" : "View regular content"}
+        </button>
+      )}
       <DesktopWeatherCard />
     </aside>
   );

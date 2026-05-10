@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 import GoBackButton from "@/components/ui/GoBackButton";
 import { HiUsers } from "react-icons/hi";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 interface DuplicateSuspect {
   id: number;

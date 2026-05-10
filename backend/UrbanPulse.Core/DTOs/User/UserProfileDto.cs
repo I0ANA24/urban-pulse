@@ -1,4 +1,6 @@
-﻿namespace UrbanPulse.Core.DTOs.User
+﻿using UrbanPulse.Core.Entities;
+
+namespace UrbanPulse.Core.DTOs.User
 {
     public class UserProfileDto
     {
@@ -23,5 +25,7 @@
         public DateTime CreatedAt { get; set; }
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
+        public SafetyStatus? CurrentSafetyStatus { get; set; }
+        public DateTime? SafetyStatusUpdatedAt { get; set; }
     }
 }

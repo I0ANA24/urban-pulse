@@ -7,8 +7,7 @@ import EventFilters from "@/components/dashboard/EventFilters";
 import { Event, EventType } from "@/types/Event";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
 import { Bookmark } from "lucide-react";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 const typeMap: Record<number, EventType> = {
   0: "General", 1: "Emergency", 2: "Skill", 3: "Lend",

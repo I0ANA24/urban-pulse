@@ -6,8 +6,7 @@ import BannedUserCard from "@/components/admin/banned/BannedUserCard";
 import { BannedUser } from "@/types/BannedUser";
 import SearchBar from "../../../components/search/SearchBar";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 export default function BannedUsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
