@@ -24,12 +24,10 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Build with dotnet
-        run: dotnet build --configuration Release
-        working-directory: backend/UrbanPulse.API
+        run: dotnet build backend/UrbanPulse.API/UrbanPulse.API.csproj --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
-        working-directory: backend/UrbanPulse.API
+        run: dotnet publish backend/UrbanPulse.API/UrbanPulse.API.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -64,4 +62,3 @@ jobs:
           app-name: 'UrbanPulseBackend'
           slot-name: 'Production'
           package: .
-          
