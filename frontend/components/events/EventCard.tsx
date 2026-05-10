@@ -39,7 +39,7 @@ function formatDate(dateStr: string) {
 
 export default function EventCard({ event, isMyPost, onDelete, flagCount, onViewInsights, isAdminView }: EventCardProps) {
   const router = useRouter();
-  const { user, isAdmin } = useUser();
+  const { user } = useUser();
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [likes, setLikes] = useState(0);
@@ -50,22 +50,14 @@ export default function EventCard({ event, isMyPost, onDelete, flagCount, onView
   const [showComments, setShowComments] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [isCompleted, setIsCompleted] = useState(event.isCompleted ?? false);
-  const [showOriginal, setShowOriginal] = useState(false);
   const { connection } = useSignalR();
 
   const typeMap: Record<number, EventType> = {
     0: "General", 1: "Emergency", 2: "Skill", 3: "Lend", 4: "LostPet", 5: "FoundPet", 6: "FoundDocument"
   };
   const mappedType = typeof event.type === "number" ? typeMap[event.type] : (event.type as EventType);
-
-  console.log("DEBUG:", { isAdmin, mappedType, originalImageUrl: event.originalImageUrl, hasOriginal: !!event.originalImageUrl });
-
   const isOwner = isMyPost || (currentUserId !== null && currentUserId === event.createdByUserId);
   const displayName = event.createdByFullName ?? event.createdByEmail?.split("@")[0] ?? "Unknown";
-
-  const displayImageUrl = isAdmin && showOriginal && event.originalImageUrl
-    ? event.originalImageUrl
-    : event.imageUrl;
 
   useEffect(() => {
     if (user) setCurrentUserId(user.id);
@@ -219,20 +211,16 @@ export default function EventCard({ event, isMyPost, onDelete, flagCount, onView
         imageUrl={event.imageUrl}
         eventId={event.id}
         userId={event.createdByUserId}
-        type={mappedType}
+        type={mappedType}  
         aiTags={event.aiTags}
-        isAdmin={isAdmin}
-        hasOriginalImage={!!event.originalImageUrl}
-        showOriginal={showOriginal}
-        onToggleOriginal={() => setShowOriginal((v) => !v)}
       />
-      <CardMedia imageUrl={displayImageUrl} />
-      <div className={`bg-secondary -mt-4 z-10 rounded-4xl ${displayImageUrl ? "rounded-t-4xl" : "rounded-t-none"} p-5 lg:px-10`}>
+      <CardMedia imageUrl={event.imageUrl} />
+      <div className={`bg-secondary -mt-4 z-10 rounded-4xl ${event.imageUrl ? "rounded-t-4xl" : "rounded-t-none"} p-5 lg:px-10`}>
         <CardContent
           description={event.description}
           isVerified={mappedType === "Emergency"}
           yesCount={yesCount}
-          type={mappedType}
+          type={mappedType} 
         />
         <CardActions
           type={mappedType}

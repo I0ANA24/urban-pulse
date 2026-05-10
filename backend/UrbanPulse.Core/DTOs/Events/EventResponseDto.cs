@@ -18,8 +18,6 @@ namespace UrbanPulse.Core.DTOs.Events
         public bool IsVerifiedUser { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsActive { get; set; }
-        public string? AiTags { get; set; }
-        public string? OriginalImageUrl { get; set; }
         public bool IsCompleted { get; set; }
         public string? EmergencySubType { get; set; }
         public string? Neighborhood { get; set; }

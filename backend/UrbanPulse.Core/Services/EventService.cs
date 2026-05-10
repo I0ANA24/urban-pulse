@@ -95,8 +95,6 @@ namespace UrbanPulse.Core.Services
             IsCompleted = ev.IsCompleted,
             EmergencySubType = ev.EmergencySubType,
             Neighborhood = ev.Neighborhood,
-            AiTags = ev.AiTags,
-            OriginalImageUrl = ev.OriginalImageUrl,
             ClusterId = ev.ClusterId
         };
     }

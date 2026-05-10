@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreVertical, BadgeCheck, Trash2, Eye, EyeOff } from "lucide-react";
+import { MoreVertical, BadgeCheck, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -40,10 +40,6 @@ interface CardHeaderProps {
   userId: number;
   type?: string;
   aiTags?: string | null;
-  isAdmin?: boolean;
-  hasOriginalImage?: boolean;
-  showOriginal?: boolean;
-  onToggleOriginal?: () => void;
 }
 
 export default function CardHeader({
@@ -59,10 +55,6 @@ export default function CardHeader({
   userId,
   type,
   aiTags,
-  isAdmin,
-  hasOriginalImage,
-  showOriginal,
-  onToggleOriginal,
 }: CardHeaderProps) {
   const [showMenu, setShowMenu] = useState(false);
   const router = useRouter();
@@ -114,24 +106,6 @@ export default function CardHeader({
               <span className="text-white/30 text-xs">🤖 Analyzing...</span>
             </div>
           )
-        )}
-
-        {isAdmin && isDocument && hasOriginalImage && (
-          <button
-            onClick={onToggleOriginal}
-            className={`p-1.5 rounded-md transition-colors cursor-pointer ${
-              showOriginal
-                ? "bg-yellow-primary/20 hover:bg-yellow-primary/30"
-                : "bg-white/5 hover:bg-white/10"
-            }`}
-            title={showOriginal ? "Show blurred" : "Show original"}
-          >
-            {showOriginal ? (
-              <EyeOff size={18} className="text-yellow-primary" />
-            ) : (
-              <Eye size={18} className="text-white/50" />
-            )}
-          </button>
         )}
 
         <div className="relative flex justify-center items-center">
