@@ -54,7 +54,7 @@ export default function EventCard({ event, isMyPost, onDelete, flagCount, onView
   const { connection } = useSignalR();
 
   const typeMap: Record<number, EventType> = {
-    0: "General", 1: "Emergency", 2: "Skill", 3: "Lend", 4: "LostPet", 5: "FoundPet"
+    0: "General", 1: "Emergency", 2: "Skill", 3: "Lend", 4: "LostPet", 5: "FoundPet", 6: "FoundDocument"
   };
   const mappedType = typeof event.type === "number" ? typeMap[event.type] : (event.type as EventType);
   const isOwner = isMyPost || (currentUserId !== null && currentUserId === event.createdByUserId);
@@ -212,6 +212,8 @@ export default function EventCard({ event, isMyPost, onDelete, flagCount, onView
         imageUrl={event.imageUrl}
         eventId={event.id}
         userId={event.createdByUserId}
+        type={mappedType}  
+        aiTags={event.aiTags}
       />
       <CardMedia imageUrl={event.imageUrl} />
       <div className={`bg-secondary -mt-4 z-10 rounded-4xl ${event.imageUrl ? "rounded-t-4xl" : "rounded-t-none"} p-5 lg:px-10`}>
@@ -219,6 +221,7 @@ export default function EventCard({ event, isMyPost, onDelete, flagCount, onView
           description={event.description}
           isVerified={mappedType === "Emergency"}
           yesCount={yesCount}
+          type={mappedType} 
         />
         <CardActions
           type={mappedType}

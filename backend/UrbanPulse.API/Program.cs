@@ -11,6 +11,8 @@ using UrbanPulse.Core.Services;
 using UrbanPulse.Infrastructure.Data;
 using UrbanPulse.Infrastructure.Repositories;
 using ClusterService = UrbanPulse.Infrastructure.Repositories.ClusterService;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 
 namespace UrbanPulse_Backend
 {
@@ -73,6 +75,14 @@ namespace UrbanPulse_Backend
 
             // SignalR
             builder.Services.AddSignalR();
+
+            var cloudinary = new Cloudinary(new Account(
+                Environment.GetEnvironmentVariable("CLOUDINARY_CLOUD_NAME"),
+                Environment.GetEnvironmentVariable("CLOUDINARY_API_KEY"),
+                Environment.GetEnvironmentVariable("CLOUDINARY_API_SECRET")
+            ));
+            builder.Services.AddSingleton(cloudinary);
+            builder.Services.AddSingleton<DocumentRedactionService>();
 
             builder.Services.AddSwaggerGen(options =>
             {

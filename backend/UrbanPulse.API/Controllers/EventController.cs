@@ -34,6 +34,7 @@ namespace UrbanPulse.API.Controllers
         private readonly ClaudeVisionService _claudeVisionService;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ClusterService _clusterService;
+        private readonly DocumentRedactionService _redactionService;
 
         public EventController(
             IEventService eventService,
@@ -45,7 +46,8 @@ namespace UrbanPulse.API.Controllers
             AppDbContext context,
             ClaudeVisionService claudeVisionService,
             IServiceScopeFactory scopeFactory,
-            ClusterService clusterService)
+            ClusterService clusterService,
+            DocumentRedactionService redactionService)
         {
             _eventService = eventService;
             _hubContext = hubContext;
@@ -57,6 +59,7 @@ namespace UrbanPulse.API.Controllers
             _claudeVisionService = claudeVisionService;
             _scopeFactory = scopeFactory;
             _clusterService = clusterService;
+            _redactionService = redactionService;
 
             var cloudName = Environment.GetEnvironmentVariable("CLOUDINARY_CLOUD_NAME");
             var apiKey = Environment.GetEnvironmentVariable("CLOUDINARY_API_KEY");
@@ -67,6 +70,7 @@ namespace UrbanPulse.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateEvent([FromForm] CreateEventDto dto, IFormFile? file)
         {
+            Console.WriteLine($"[DEBUG] CreateEvent called. Type: {dto.Type} ({(int)dto.Type})");
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             string? imageUrl = null;
@@ -156,6 +160,44 @@ namespace UrbanPulse.API.Controllers
                 });
             }
 
+            if (dto.Type == EventType.FoundDocument && imageUrl != null)
+            {
+                Console.WriteLine($"[DOC] Starting analysis for event {result.Id}");
+                var eventId = result.Id;
+                var capturedImageUrl = imageUrl;
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var aiTagsTask = _claudeVisionService.AnalyzeDocumentImageAsync(capturedImageUrl);
+                        var redactionTask = _redactionService.RedactAndUploadAsync(capturedImageUrl);
+
+                        await Task.WhenAll(aiTagsTask, redactionTask);
+
+                        var aiTags = aiTagsTask.Result;
+                        var redactionResult = redactionTask.Result;
+
+                        using var scope = _scopeFactory.CreateScope();
+                        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                        var createdEvent = await db.Events.FindAsync(eventId);
+                        if (createdEvent != null)
+                        {
+                            if (aiTags != null) createdEvent.AiTags = aiTags;
+                            if (redactionResult.RedactedImageUrl != null)
+                                createdEvent.ImageUrl = redactionResult.RedactedImageUrl;
+                            if (redactionResult.SearchIndex != null)
+                                createdEvent.SearchIndex = redactionResult.SearchIndex;
+                            await db.SaveChangesAsync();
+                            Console.WriteLine($"[DOC] Done for event {eventId}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[DOC] Error: {ex.Message}");
+                    }
+                });
+            }
+
             var poster = await _userRepository.GetByIdAsync(userId);
             var posterName = poster?.FullName ?? poster?.Email?.Split('@')[0] ?? "Someone";
 
@@ -241,6 +283,73 @@ namespace UrbanPulse.API.Controllers
                 }
                 // clusterAction == "updated" → no notification
             }
+
+            return Ok(result);
+        }
+
+        [HttpGet("documents/search")]
+        public async Task<IActionResult> SearchDocuments([FromQuery] string q)
+        {
+            if (string.IsNullOrWhiteSpace(q) || q.Length < 2)
+                return Ok(new List<object>());
+
+            var qUpper = q.ToUpper();
+
+            var docs = await _context.Events
+                .Include(e => e.CreatedByUser)
+                .Where(e => e.IsActive &&
+                            e.Type == EventType.FoundDocument &&
+                            e.AiTags != null &&
+                            (
+                                e.AiTags.ToUpper().Contains(qUpper) ||
+                                (e.SearchIndex != null && e.SearchIndex.ToUpper().Contains(qUpper))
+                            ))
+                .OrderByDescending(e => e.CreatedAt)
+                .ToListAsync();
+
+            var result = docs.Select(e => new
+            {
+                id = e.Id,
+                description = e.Description,
+                type = e.Type,
+                imageUrl = e.ImageUrl,
+                aiTags = e.AiTags,
+                createdByUserId = e.CreatedByUserId,
+                createdByEmail = e.CreatedByUser?.Email,
+                createdByFullName = e.CreatedByUser?.FullName,
+                createdByAvatarUrl = e.CreatedByUser?.AvatarUrl,
+                isVerifiedUser = e.CreatedByUser?.IsVerified ?? false,
+                createdAt = e.CreatedAt,
+                isActive = e.IsActive,
+            });
+
+            return Ok(result);
+        }
+
+        [HttpGet("documents")]
+        public async Task<IActionResult> GetFoundDocuments()
+        {
+            var docs = await _context.Events
+                .Include(e => e.CreatedByUser)
+                .Where(e => e.IsActive && e.Type == EventType.FoundDocument)
+                .OrderByDescending(e => e.CreatedAt)
+                .ToListAsync();
+
+            var result = docs.Select(e => new
+            {
+                id = e.Id,
+                description = e.Description,
+                type = e.Type,
+                imageUrl = e.ImageUrl,
+                aiTags = e.AiTags,
+                createdByUserId = e.CreatedByUserId,
+                createdByEmail = e.CreatedByUser?.Email,
+                createdByFullName = e.CreatedByUser?.FullName,
+                createdByAvatarUrl = e.CreatedByUser?.AvatarUrl,
+                isVerifiedUser = e.CreatedByUser?.IsVerified ?? false,
+                createdAt = e.CreatedAt,
+                isActive = e.IsActive,
+            });
 
             return Ok(result);
         }
