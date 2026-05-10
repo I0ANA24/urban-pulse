@@ -5,8 +5,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 const DOC_TYPE_ICONS: Record<string, string> = {
   "ID Card": "🪪",

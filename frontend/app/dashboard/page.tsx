@@ -23,8 +23,7 @@ import { useUser } from "@/context/UserContext";
 import { useCrisis } from "@/context/CrisisContext";
 import UrbanTitle from "@/components/ui/UrbanTitle";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 function MobileSafetyPortal({ onClick }: { onClick: () => void }) {
   const [mounted, setMounted] = useState(false);

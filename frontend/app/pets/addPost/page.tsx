@@ -7,10 +7,9 @@ import { EVENT_TAG_STYLES } from "@/lib/constants";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 import PostEditor, { PostEditorRef } from "@/components/post/PostEditor";
 import PostFormActions from "@/components/post/PostFormActions";
+import { API_BASE_URL as API } from "@/lib/api";
 
 const PET_TAGS: EventType[] = ["LostPet", "FoundPet"];
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
 
 export default function AddPetPostPage() {
   const router = useRouter();

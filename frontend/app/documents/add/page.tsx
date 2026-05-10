@@ -8,8 +8,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 export default function AddDocumentPage() {
   const router = useRouter();

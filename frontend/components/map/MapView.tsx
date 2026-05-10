@@ -10,10 +10,9 @@ import { useRadius } from "@/context/RadiusContext";
 import { useCrisis } from "@/context/CrisisContext";
 import { useSignalR } from "@/context/SignalRContext";
 import SafetyCheckInModal from "./SafetyCheckInModal";
-
 const DEFAULT_CENTER: [number, number] = [27.6014, 47.1585];
 const DEFAULT_ZOOM = 12;
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
 type FilterMode = "disponibili" | "pot-ajuta";

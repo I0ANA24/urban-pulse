@@ -7,8 +7,7 @@ import { ArrowLeftRight } from "lucide-react";
 import CrownIcon from "@/components/icons/profile/CrownIcon";
 import { useUser } from "@/context/UserContext";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 interface AdminProfile {
   displayName: string;

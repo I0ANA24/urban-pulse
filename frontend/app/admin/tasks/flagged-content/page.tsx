@@ -8,8 +8,7 @@ import { Event, EventType } from "@/types/Event";
 import { EVENT_TAG_STYLES } from "@/lib/constants";
 import GoBackButton from "@/components/ui/GoBackButton";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 export default function FlaggedContentPage() {
   const router = useRouter();

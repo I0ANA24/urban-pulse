@@ -8,8 +8,7 @@ import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 import { Event } from "@/types/Event";
 import { use } from "react";
 import { useSearchParams } from "next/navigation";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 interface Match {
   score: number;

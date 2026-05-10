@@ -10,8 +10,7 @@ import { EVENT_TAG_STYLES } from "@/lib/constants";
 import SearchBar from "@/components/search/SearchBar";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 import { useUser } from "@/context/UserContext";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 type TabType = "Posts" | "People";
 

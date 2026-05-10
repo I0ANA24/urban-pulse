@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 import { BadgeCheck, User, Camera, ArrowLeftRight } from "lucide-react";
 import { useUser } from "@/context/UserContext";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 interface UserProfile {
   id: number;

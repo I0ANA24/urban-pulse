@@ -4,10 +4,7 @@ import { useState, useEffect } from "react";
 import EventCard from "@/components/events/EventCard";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 import { Event } from "@/types/Event";
-
-type PetTab = "LostPet" | "FoundPet";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 export default function PetsPostsPage() {
   const [activeTab, setActiveTab] = useState<PetTab>("LostPet");

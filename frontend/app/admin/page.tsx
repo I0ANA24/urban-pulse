@@ -11,8 +11,7 @@ import OverviewCard from "@/components/admin/OverviewCard";
 import UrbanTitle from "@/components/ui/UrbanTitle";
 import ThreeColumnLayoutAdmin from "@/components/layout/ThreeColumnLayoutAdmin";
 import { useSevereWeather } from "@/context/SevereWeatherContext";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 interface AdminStats {
   resolvedTasks: number;

@@ -6,8 +6,7 @@ import { ChevronRight, LogOut, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import ConfirmModal from "@/components/ui/ConfirmModal";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 export default function Settings() {
   const [displayName, setDisplayName] = useState("");

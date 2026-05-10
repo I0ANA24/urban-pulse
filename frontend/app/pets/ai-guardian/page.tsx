@@ -11,8 +11,7 @@ import ConfirmModal from "@/components/ui/ConfirmModal";
 import EventTag from "@/components/ui/EventTag";
 import { useUser } from "@/context/UserContext";
 import { Event } from "@/types/Event";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 function getInitials(name: string) {
   return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);

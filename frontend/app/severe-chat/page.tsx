@@ -8,8 +8,7 @@ import { useSevereWeather } from "@/context/SevereWeatherContext";
 import TopBar from "@/components/layout/TopBar";
 import LeftSidebar from "@/components/layout/LeftSidebar";
 import ChatRightSidebar from "@/components/layout/ChatRightSidebar";
-
-const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
+import { API_BASE_URL as API } from "@/lib/api";
 
 interface SevereMessage {
   id: number;
