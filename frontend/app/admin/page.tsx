@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { ShieldAlert, FileText } from "lucide-react";
 import DonutChart from "@/components/admin/DonutChart";
 import StatBar from "@/components/admin/StatBar";
 import OverviewCard from "@/components/admin/OverviewCard";
@@ -207,6 +208,20 @@ export default function AdminDashboard() {
         </div>
 
         <div className="h-4" />
+      </div>
+
+      {/* Mobile FABs — crises & documents */}
+      <div className="lg:hidden fixed bottom-[calc(8vh+1.25rem)] right-4 flex flex-col gap-3 z-40">
+        <Link href="/admin/crises">
+          <div className="w-14 h-14 rounded-full bg-[#1F1F1F] flex items-center justify-center shadow-[0_4px_4px_rgba(0,0,0,0.25),inset_0_0_5px_rgba(255,255,255,0.4)] border border-white/30 active:scale-95 transition-transform">
+            <ShieldAlert size={26} className="text-white" />
+          </div>
+        </Link>
+        <Link href="/admin/documents">
+          <div className="w-14 h-14 rounded-full bg-blue flex items-center justify-center shadow-[0_4px_4px_rgba(0,0,0,0.25)] active:scale-95 transition-transform">
+            <FileText size={26} strokeWidth={2} className="text-black" />
+          </div>
+        </Link>
       </div>
 
     </ThreeColumnLayoutAdmin>
