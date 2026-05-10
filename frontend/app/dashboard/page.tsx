@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
@@ -21,7 +21,6 @@ import UrbanTitle from "@/components/ui/UrbanTitle";
 import ThreeColumnLayout from "@/components/layout/ThreeColumnLayout";
 
 const API = "https://urbanpulsebackend-gedpgwakd5euh2bp.switzerlandnorth-01.azurewebsites.net";
-
 
 function MobileSafetyPortal({ onClick }: { onClick: () => void }) {
   const [mounted, setMounted] = useState(false);
@@ -98,7 +97,7 @@ function MobileFabs() {
 
 type FeedItem = { kind: "event"; data: Event } | { kind: "cluster"; data: Cluster };
 
-export default function DashboardPage() {
+function DashboardContent() {
   const [events, setEvents] = useState<Event[]>([]);
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [loading, setLoading] = useState(true);
@@ -155,15 +154,12 @@ export default function DashboardPage() {
     const handleEventDeactivated = (eventId: number) => {
       setEvents((prev) => prev.filter((e) => e.id !== eventId));
     };
-
     const handleClusterCreated = (cluster: Cluster) => {
       setClusters((prev) => [cluster, ...prev]);
     };
-
     const handleClusterUpdated = (cluster: Cluster) => {
       setClusters((prev) => prev.map((c) => (c.id === cluster.id ? cluster : c)));
     };
-
     const handleClusterResolved = (clusterId: number) => {
       setClusters((prev) => prev.filter((c) => c.id !== clusterId));
     };
@@ -227,7 +223,6 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Crisis Mode banner — desktop */}
       <div className="hidden lg:block sticky top-0 z-40 w-full pt-2 pb-1 bg-background">
         <CrisisBanner />
       </div>
@@ -260,5 +255,13 @@ export default function DashboardPage() {
         )}
       </div>
     </ThreeColumnLayout>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardContent />
+    </Suspense>
   );
 }
